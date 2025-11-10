@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, redirect, url_for
-import json, os
+import json, os, re
 from PIL import Image
 import google.generativeai as genai
 import uuid
@@ -10,8 +10,6 @@ from flask import jsonify
 import fitz  # PyMuPDF
 from flask import flash
 
-
-
 app = Flask(__name__)
 app.secret_key = 'your_secret_key_here'
 
@@ -19,16 +17,80 @@ app.secret_key = 'your_secret_key_here'
 UPLOAD_FOLDER = os.path.join('static', 'uploads')
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-os.environ["GOOGLE_API_KEY"] = "AIzaSyDpcoZtAwSf7kXBJB954SD4pje-bv-XgJ0"
+os.environ["GOOGLE_API_KEY"] = "AIzaSyDyucgFgQgemWGcXmAXY4i-euwHikvGKyI"
 genai.configure(api_key=os.environ["GOOGLE_API_KEY"])
-model = genai.GenerativeModel("models/gemini-1.5-flash")
+model = genai.GenerativeModel("models/gemini-2.0-flash")
+
+# Định nghĩa các extension được phép
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'bmp', 'webp', 'pdf'}
+
+def allowed_file(filename):
+    """Kiểm tra file có extension hợp lệ không"""
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+def extract_text_from_pdf(pdf_path):
+    """Trích xuất text từ file PDF"""
+    try:
+        doc = fitz.open(pdf_path)
+        text = ""
+        for page in doc:
+            text += page.get_text()
+        doc.close()
+        return text
+    except Exception as e:
+        return f"Lỗi khi đọc PDF: {str(e)}"
+
+def generate_feedback(text):
+    """Tạo feedback từ text bằng AI"""
+    try:
+        prompt = f"Đây là nội dung bài làm của học sinh:\n\n{text}\n\nHãy phân tích, chỉ ra lỗi sai và đề xuất cải thiện. Trả lời bằng tiếng Việt."
+        response = model.generate_content([prompt])
+        return response.text
+    except Exception as e:
+        return f"❌ Lỗi khi tạo feedback: {str(e)}"
+
+def generate_score_feedback(text):
+    """Tạo feedback chấm điểm từ text bằng AI"""
+    try:
+        prompt = f"""Dựa trên bài làm của học sinh sau:
+
+{text}
+
+Hãy chấm điểm theo các tiêu chí sau:
+1. Nội dung đầy đủ (0–10)
+2. Trình bày rõ ràng (0–10)
+3. Kỹ thuật chính xác (0–10)
+4. Thái độ học tập (0–10)
+
+Sau đó, tổng kết điểm trung bình và đưa ra nhận xét ngắn gọn. Trả lời bằng tiếng Việt."""
+        response = model.generate_content([prompt])
+        return response.text
+    except Exception as e:
+        return f"❌ Lỗi khi chấm điểm: {str(e)}"
+
+def extract_average_from_feedback(feedback: str):
+    """
+    Thử tìm số điểm trung bình trong chuỗi feedback của AI.
+    Ví dụ: 'Tổng điểm trung bình: 8.5' -> 8.5
+    Nếu không tìm thấy thì trả về None.
+    """
+    if not feedback:
+        return None
+    match = re.search(r'(\d+(\.\d+)?)', feedback)
+    if match:
+        try:
+            return float(match.group(1))
+        except:
+            return None
+    return None
+
 ###########
 @app.route('/vanbai', methods=['GET', 'POST'])
 def vanbai():
     if request.method == 'GET':
-        return render_template('vanbai_form.html')  # Form nhập bài văn
+        return render_template('vanbai_form.html')
 
-    # Nhận bài văn từ form
     essay = request.form.get("essay", "").strip()
     if not essay:
         return "Vui lòng nhập bài văn."
@@ -36,7 +98,6 @@ def vanbai():
     if len(essay) > 1900:
         return "Bài văn vượt quá giới hạn 600 chữ. Vui lòng rút gọn."
 
-    # Prompt gửi đến Gemini
     prompt = (
         f"Học sinh gửi bài văn sau:\n\n{essay}\n\n"
         "Bạn là giáo viên môn Ngữ văn. Hãy:\n"
@@ -62,14 +123,12 @@ def vanbai():
 ###
 @app.route("/")
 def home():
-    return render_template("index.html")###3####
+    return render_template("index.html")
 
-#  Trang nhập nickname (chỉ dùng cho game)
 @app.route("/enter_nickname")
 def enter_nickname():
     return render_template("nickname.html")
 
-#  Xử lý form nickname → vào game
 @app.route("/start_game", methods=["POST"])
 def start_game():
     nickname = request.form["nickname"]
@@ -78,14 +137,12 @@ def start_game():
     session["bai"] = bai
     return redirect("/game")
 
-#  Trang chơi game
 @app.route("/game")
 def game():
     if "nickname" not in session or "bai" not in session:
         return redirect("/enter_nickname")
     return render_template("game.html")
 
-#  API lấy câu hỏi
 @app.route("/get_questions")
 def get_questions():
     bai = session.get("bai", "bai_1")
@@ -97,11 +154,10 @@ def get_questions():
         random.shuffle(q["options"])
     return jsonify(questions[:20])
 
-# 
 @app.route("/submit_score", methods=["POST"])
 def submit_score():
     nickname = session.get("nickname")
-    bai = session.get("bai")  # lấy tên bài từ session
+    bai = session.get("bai")
     score = request.json["score"]
 
     if not nickname:
@@ -117,7 +173,6 @@ def submit_score():
         scores = json.load(f)
         now = datetime.now().strftime("%d/%m/%Y %H:%M")
 
-        # tìm điểm cũ theo nickname và bài
         existing = next((s for s in scores if s["nickname"] == nickname and s.get("bai") == bai), None)
 
         if existing:
@@ -129,14 +184,12 @@ def submit_score():
                 "nickname": nickname,
                 "score": score,
                 "time": now,
-                "bai": bai  #  lưu tên bài
+                "bai": bai
             })
 
-        #  giữ lại tối đa 50 điểm cao nhất cho mỗi bài
         filtered = [s for s in scores if s.get("bai") == bai]
         top50 = sorted(filtered, key=lambda x: x["score"], reverse=True)[:50]
 
-        #  giữ lại các bài khác + top50 của bài hiện tại
         others = [s for s in scores if s.get("bai") != bai]
         final_scores = others + top50
 
@@ -145,13 +198,13 @@ def submit_score():
         f.truncate()
 
     return jsonify({"status": "ok"})
-#  Trang bảng xếp hạng
+
 @app.route("/leaderboard")
 def leaderboard():
-    bai = session.get("bai")  #  lấy tên bài từ session
+    bai = session.get("bai")
 
     if not bai:
-        bai = "bai_1"  # hoặc gán mặc định nếu chưa có
+        bai = "bai_1"
 
     if not os.path.exists("scores.json"):
         top5 = []
@@ -159,19 +212,15 @@ def leaderboard():
         with open("scores.json", "r", encoding="utf-8") as f:
             scores = json.load(f)
 
-        #  lọc điểm theo bài
         filtered = [s for s in scores if s.get("bai") == bai]
         top5 = sorted(filtered, key=lambda x: x["score"], reverse=True)[:5]
 
     return render_template("leaderboard.html", players=top5, bai=bai)
 
-#  (Tuỳ chọn) Đăng xuất để đổi nickname
 @app.route("/logout")
 def logout():
     session.clear()
     return redirect("/enter_nickname")
-
-
 
 # Đường dẫn file dữ liệu
 DATA_FOLDER = 'data'
@@ -180,18 +229,15 @@ PROJECTS_FILE = os.path.join(DATA_FOLDER, 'projects.json')
 PROJECT_IMAGES_FILE = os.path.join(DATA_FOLDER, 'project_images.json')
 GENERAL_IMAGES_FILE = os.path.join(DATA_FOLDER, 'data.json')
 
-# Load đề thi trắc n
 def load_exam(de_id):
     with open(EXAM_FILE, 'r', encoding='utf-8') as f:
         data = json.load(f)
     return data.get(de_id)
 
-# Load danh sách đề bài sản phẩm
 def load_projects():
     with open(PROJECTS_FILE, 'r', encoding='utf-8') as f:
         projects = json.load(f)
 
-    # Đảm bảo luôn có đề bài "general"
     if not any(p["id"] == "general" for p in projects):
         projects.append({
             "id": "general",
@@ -201,7 +247,6 @@ def load_projects():
 
     return projects
 
-# Load ảnh theo đề bài
 def load_project_images():
     try:
         with open(PROJECT_IMAGES_FILE, 'r', encoding='utf-8') as f:
@@ -209,12 +254,10 @@ def load_project_images():
     except:
         return {}
 
-# Lưu ảnh theo đề bài
 def save_project_images(data):
     with open(PROJECT_IMAGES_FILE, 'w', encoding='utf-8') as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
 
-# Load ảnh không phân loại
 def load_general_images():
     try:
         with open(GENERAL_IMAGES_FILE, 'r', encoding='utf-8') as f:
@@ -222,19 +265,10 @@ def load_general_images():
     except:
         return []
 
-# Lưu ảnh không phân loại
 def save_general_images(data):
     with open(GENERAL_IMAGES_FILE, 'w', encoding='utf-8') as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
 
-# Trang chọn đề trắc nghiệm
-
-@app.route('/')
-def index():
-    return render_template('index.html')
-
-
-# Trang làm bài trắc nghiệm
 @app.route('/exam/<de_id>')
 def exam(de_id):
     questions = load_exam(de_id)
@@ -242,15 +276,11 @@ def exam(de_id):
         return "Không tìm thấy đề thi."
     return render_template('exam.html', questions=questions, de_id=de_id)
 
-# Nộp bài trắc nghiệm
-
-
 @app.route('/projects')
 def projects():
     project_list = load_projects()
     return render_template('projects.html', projects=project_list)
 
-# Trang gửi ảnh theo đề bài
 @app.route('/submit/<de_id>', methods=['GET', 'POST'])
 def submit(de_id):
     if request.method != 'POST':
@@ -265,7 +295,6 @@ def submit(de_id):
     feedback = []
     results = []
 
-    # Trắc nghiệm
     for i, q in enumerate(questions.get("multiple_choice", [])):
         user_answer = request.form.get(f"mc_{i}")
         correct = q["answer"]
@@ -278,7 +307,6 @@ def submit(de_id):
             results.append({"status": "Sai", "note": msg})
             feedback.append(msg)
 
-    # Đúng sai
     for i, tf in enumerate(questions.get("true_false", [])):
         for j, correct_tf in enumerate(tf["answers"]):
             user_tf_raw = request.form.get(f"tf_{i}_{j}", "").lower()
@@ -296,7 +324,6 @@ def submit(de_id):
     summary = f"Học sinh làm đúng {correct_count} / {total_questions} câu."
     detailed_errors = "\n".join(feedback)
 
-    # Prompt dành cho giáo viên môn Toán
     prompt = (
         f"{summary}\n\n"
         "Dưới đây là danh sách các lỗi học sinh đã mắc phải trong bài làm:\n"
@@ -306,13 +333,14 @@ def submit(de_id):
         "2. Phân tích từng lỗi sai đã nêu: giải thích lý do sai, kiến thức liên quan, và cách sửa.\n"
         "3. Đề xuất ít nhất 3 dạng bài tập cụ thể để học sinh luyện tập đúng phần bị sai.\n"
         "Trình bày rõ ràng, dễ hiểu, thân thiện như một giáo viên đang trò chuyện với học sinh."
+        "4. Hãy chấm điểm trên thang 10"
     )
 
     try:
         response = model.generate_content([prompt])
         ai_feedback = response.text
     except Exception as e:
-        ai_feedback = f" Lỗi khi gọi AI: {str(e)}"
+        ai_feedback = f"❌ Lỗi khi gọi AI: {str(e)}"
 
     return render_template(
         'result.html',
@@ -322,8 +350,7 @@ def submit(de_id):
         total_questions=total_questions,
         results=results
     )
-###### cần sửa
-# Trang danh sách đề bài sản phẩm
+
 @app.route('/project/<project_id>', methods=['GET', 'POST'])
 def project(project_id):
     projects = load_projects()
@@ -345,7 +372,7 @@ def project(project_id):
                 'project.html',
                 project=project_info,
                 images=images,
-                feedback=" Thiếu ảnh hoặc tên nhóm."
+                feedback="❌ Thiếu ảnh hoặc tên nhóm."
             )
 
         image_id = str(uuid.uuid4())
@@ -357,12 +384,12 @@ def project(project_id):
             img = Image.open(image_path)
             prompt = (
                 f"Đây là ảnh bài làm của học sinh. "
-                f"Hãy phân tích nội dung, chỉ ra lỗi sai nếu có, và đề xuất cải thiện."
+                f"Hãy phân tích nội dung, chỉ ra lỗi sai nếu có, và đề xuất cải thiện, chấm bài làm trên thang 10."
             )
             response = model.generate_content([img, prompt])
             ai_feedback = response.text
         except Exception as e:
-            ai_feedback = f" Lỗi khi xử lý ảnh: {str(e)}"
+            ai_feedback = f"❌ Lỗi khi xử lý ảnh: {str(e)}"
 
         new_image = {
             "id": image_id,
@@ -383,15 +410,12 @@ def project(project_id):
         feedback=ai_feedback
     )
 
-# Bình luận ảnh theo đề bài
-# Bình luận ảnh theo đề bài
 @app.route('/comment/<project_id>/<image_id>', methods=['POST'])
 def comment(project_id, image_id):
     student_name = request.form.get('student_name', '').strip()
     comment_text = request.form.get('comment_text', '').strip()
     score = request.form.get('score', '').strip()
 
-    # Kiểm tra dữ liệu đầu vào
     if not student_name or not comment_text or not score:
         flash("Vui lòng nhập đầy đủ tên, bình luận và điểm số.")
         return redirect(url_for('project', project_id=project_id))
@@ -405,7 +429,6 @@ def comment(project_id, image_id):
         flash("Điểm phải là số hợp lệ.")
         return redirect(url_for('project', project_id=project_id))
 
-    # Tải dữ liệu ảnh
     all_images = load_project_images()
     images = all_images.get(project_id)
 
@@ -413,14 +436,12 @@ def comment(project_id, image_id):
         flash("Đề bài không tồn tại.")
         return redirect(url_for('home'))
 
-    # Tìm ảnh cần bình luận
     target_image = next((img for img in images if img.get("id") == image_id), None)
 
     if target_image is None:
         flash("Không tìm thấy ảnh để bình luận.")
         return redirect(url_for('project', project_id=project_id))
 
-    # Kiểm tra bình luận trùng (tuỳ chọn)
     for c in target_image.get("comments", []):
         if (c["student_name"] == student_name 
             and c["comment_text"] == comment_text 
@@ -428,44 +449,21 @@ def comment(project_id, image_id):
             flash("Bình luận đã tồn tại.")
             return redirect(url_for('project', project_id=project_id))
 
-    # Thêm bình luận mới
     target_image.setdefault("comments", []).append({
         "student_name": student_name,
         "comment_text": comment_text,
         "score": score
     })
 
-    # 👉 Tính điểm trung bình của ảnh sau khi thêm
     scores = [c["score"] for c in target_image.get("comments", []) if "score" in c]
     avg_score = round(sum(scores) / len(scores), 2) if scores else 0
-    target_image["average_score"] = avg_score  # lưu lại để hiển thị
+    target_image["average_score"] = avg_score
 
-    # Lưu lại dữ liệu
     all_images[project_id] = images
     save_project_images(all_images)
 
     flash(f"Bình luận đã được thêm. Điểm trung bình hiện tại: {avg_score}")
     return redirect(url_for('project', project_id=project_id))
-
-
-# Gửi ảnh không phân loại theo đề bài
-
-def extract_average_from_feedback(feedback: str):
-    """
-    Thử tìm số điểm trung bình trong chuỗi feedback của AI.
-    Ví dụ: 'Tổng điểm trung bình: 8.5' -> 8.5
-    Nếu không tìm thấy thì trả về None.
-    """
-    if not feedback:
-        return None
-    match = re.search(r'(\d+(\.\d+)?)', feedback)
-    if match:
-        try:
-            return float(match.group(1))
-        except:
-            return None
-    return None
-
 
 @app.route('/upload_image', methods=['GET', 'POST'])
 def upload_image():
@@ -500,23 +498,46 @@ def upload_image():
                     ai_feedback = generate_feedback(text)
                     score_feedback = generate_score_feedback(text)
 
-            elif file_ext in ['png', 'jpg', 'jpeg']:
+            elif file_ext in ['png', 'jpg', 'jpeg', 'gif', 'bmp', 'webp']:
                 img = Image.open(file_path)
 
+                # ===== SỬA PROMPT ĐỂ HIỂN THỊ ĐẸP HƠN =====
                 ai_response = model.generate_content([
                     img,
-                    "Đây là ảnh bài làm của học sinh. Hãy phân tích nội dung, chỉ ra lỗi sai nếu có, và đề xuất cải thiện. Trả lời bằng tiếng Việt."
+                    """Đây là ảnh bài làm của học sinh. Hãy phân tích nội dung, chỉ ra lỗi sai nếu có, và đề xuất cải thiện.
+
+QUAN TRỌNG - Quy tắc trình bày:
+- KHÔNG dùng dấu **, ***, ##, ### 
+- Công thức toán viết dạng văn bản thường: ví dụ (3x + 6)/(4x - 8) thay vì LaTeX
+- Xuống dòng rõ ràng giữa các phần
+- Dùng số thứ tự 1., 2., 3. để liệt kê
+- Thụt lề đầu dòng khi cần
+
+Trả lời bằng tiếng Việt, trình bày dễ đọc, rõ ràng."""
                 ])
                 ai_feedback = ai_response.text
 
                 score_response = model.generate_content([
                     img,
                     """Dựa trên bài làm của học sinh, hãy chấm điểm theo các tiêu chí sau:
-                    1. Nội dung đầy đủ (0–10)
-                    2. Trình bày rõ ràng (0–10)
-                    3. Kỹ thuật chính xác (0–10)
-                    4. Thái độ học tập (0–10)
-                    Sau đó, tổng kết điểm trung bình và đưa ra nhận xét ngắn gọn. Trả lời bằng tiếng Việt."""
+
+1. Nội dung đầy đủ (0-10 điểm)
+2. Trình bày rõ ràng (0-10 điểm)
+3. Kỹ thuật chính xác (0-10 điểm)
+4. Thái độ học tập (0-10 điểm)
+
+Sau đó tổng kết điểm trung bình trên thang 10 và đưa ra nhận xét ngắn gọn.
+
+QUAN TRỌNG - Quy tắc trình bày:
+- KHÔNG dùng dấu **, ***, ##, ###
+- Công thức toán viết văn bản thường, không LaTeX
+- Xuống dòng rõ ràng
+- Format kiểu:
+  Nội dung đầy đủ: 8/10
+  Trình bày rõ ràng: 7/10
+  (mỗi tiêu chí 1 dòng)
+
+Trả lời bằng tiếng Việt."""
                 ])
                 score_feedback = score_response.text
 
@@ -528,7 +549,6 @@ def upload_image():
             ai_feedback = f"❌ Lỗi khi xử lý file: {str(e)}"
             score_feedback = ""
 
-        # 🔹 Trích số điểm trung bình từ phản hồi AI (nếu có)
         ai_score = extract_average_from_feedback(score_feedback)
 
         new_image = {
@@ -539,8 +559,8 @@ def upload_image():
             "ai_feedback": ai_feedback,
             "score_feedback": score_feedback,
             "comments": [],
-            "scores": [],            # lưu tất cả điểm số
-            "average_score": None    # điểm trung bình
+            "scores": [],
+            "average_score": None
         }
 
         if ai_score is not None:
@@ -552,7 +572,6 @@ def upload_image():
         all_images["general"] = images
         save_project_images(all_images)
 
-    # 🔹 Cập nhật lại average_score cho từng ảnh dựa trên scores
     for img in images:
         if "scores" in img and img["scores"]:
             avg = sum(img["scores"]) / len(img["scores"])
@@ -564,10 +583,6 @@ def upload_image():
                            feedback=ai_feedback,
                            score=score_feedback,
                            images=images)
-# Chạy ứng dụng  
-#if __name__ == "__main__":
-    #app.run(debug=True)
 
-
-
-
+if __name__ == "__main__":
+    app.run(debug=True)

@@ -2,6 +2,94 @@
 {% block title %}Gửi bài làm{% endblock %}
 
 {% block content %}
+<style>
+  /* Style cho feedback section */
+  .feedback-box {
+    margin-top: 30px;
+    padding: 20px;
+    border-radius: 8px;
+    white-space: pre-wrap; /* Giữ nguyên xuống dòng */
+    line-height: 1.8;
+    font-size: 15px;
+  }
+  
+  .feedback-box.ai {
+    background-color: #e0f2f1;
+    border-left: 5px solid #009688;
+  }
+  
+  .feedback-box.score {
+    background-color: #fff3e0;
+    border-left: 5px solid #ff9800;
+  }
+  
+  .feedback-box h3 {
+    margin-top: 0;
+    margin-bottom: 15px;
+  }
+  
+  /* Style cho content bên trong */
+  .feedback-content {
+    white-space: pre-line; /* Xuống dòng theo \n */
+    word-wrap: break-word;
+  }
+  
+  /* Style cho bài làm đã gửi */
+  .submission-card {
+    border: 1px solid #ccc;
+    padding: 20px;
+    margin-bottom: 30px;
+    border-radius: 8px;
+    background: white;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  }
+  
+  .ai-comment {
+    background: #f5f5f5;
+    padding: 15px;
+    border-radius: 5px;
+    margin: 15px 0;
+    white-space: pre-line;
+    line-height: 1.7;
+  }
+  
+  .score-display {
+    background: #e8f5e9;
+    padding: 15px;
+    border-radius: 5px;
+    margin: 15px 0;
+    white-space: pre-line;
+    line-height: 1.7;
+  }
+  
+  .comment-item {
+    background: #f9f9f9;
+    padding: 12px;
+    margin: 10px 0;
+    border-left: 3px solid #2196F3;
+    border-radius: 4px;
+  }
+  
+  textarea {
+    width: 100%;
+    height: 80px;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-family: inherit;
+    resize: vertical;
+  }
+  
+  input[type="text"], input[type="number"] {
+    width: 100%;
+    max-width: 400px;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    margin-bottom: 10px;
+  }
+</style>
+
 <h2>📤 Gửi bài làm</h2>
 
 <form method="POST" enctype="multipart/form-data" style="margin-bottom: 30px;">
@@ -15,62 +103,78 @@
 </form>
 
 {% if feedback %}
-  <div style="margin-top: 30px; background-color: #e0f2f1; padding: 20px; border-left: 5px solid #009688; border-radius: 8px;">
+  <div class="feedback-box ai">
     <h3>🤖 Phản hồi từ AI:</h3>
-    <p>{{ feedback }}</p>
+    <div class="feedback-content">{{ feedback }}</div>
   </div>
 {% endif %}
 
 {% if score %}
-  <div style="margin-top: 20px; background-color: #fff3e0; padding: 20px; border-left: 5px solid #ff9800; border-radius: 8px;">
+  <div class="feedback-box score">
     <h3>📊 Đánh giá điểm:</h3>
-    <p>{{ score }}</p>
+    <div class="feedback-content">{{ score }}</div>
   </div>
 {% endif %}
 
-<hr>
+<hr style="margin: 40px 0;">
 <h2>📚 Các bài làm đã gửi</h2>
 
 {% for img in images %}
-  <div style="border: 1px solid #ccc; padding: 15px; margin-bottom: 30px; border-radius: 8px;">
+  <div class="submission-card">
     <h3>👥 Nhóm: {{ img.group_name }}</h3>
 
     {% if img.file_type == 'pdf' %}
-      <p>📄 <a href="{{ url_for('static', filename='uploads/' + img.filename) }}" target="_blank">Xem file PDF</a></p>
+      <p>📄 <a href="{{ url_for('static', filename='uploads/' + img.filename) }}" target="_blank" style="color: #2196F3;">Xem file PDF</a></p>
     {% else %}
-      <img src="{{ url_for('static', filename='uploads/' + img.filename) }}" style="max-width: 300px; border-radius: 5px;">
+      <img src="{{ url_for('static', filename='uploads/' + img.filename) }}" style="max-width: 100%; max-height: 400px; border-radius: 5px; margin: 10px 0;">
     {% endif %}
 
-    <p><strong>🤖 Nhận xét của AI:</strong><br>{{ img.ai_feedback }}</p>
+    <div class="ai-comment">
+      <strong>🤖 Nhận xét của AI:</strong><br><br>
+      {{ img.ai_feedback }}
+    </div>
 
     {% if img.score_feedback %}
-      <p><strong>📊 Đánh giá điểm (AI):</strong><br>{{ img.score_feedback }}</p>
+      <div class="score-display">
+        <strong>📊 Đánh giá điểm (AI):</strong><br><br>
+        {{ img.score_feedback }}
+      </div>
     {% endif %}
 
-    <p><strong>📊 Điểm trung bình hiện tại:</strong>
-       {{ img.average_score if img.average_score else "Chưa có" }}
+    <p style="font-size: 18px; margin: 20px 0;">
+      <strong>📊 Điểm trung bình hiện tại:</strong>
+      <span style="color: #4CAF50; font-size: 22px; font-weight: bold;">
+        {{ img.average_score if img.average_score else "Chưa có" }}
+      </span>
     </p>
+
+    <hr style="margin: 25px 0; border: none; border-top: 1px dashed #ccc;">
 
     <form action="{{ url_for('comment', project_id='general', image_id=img.id) }}" method="POST" style="margin-top: 20px;">
       <label for="student_name">Tên của bạn:</label><br>
-      <input type="text" name="student_name" placeholder="Nhập tên" required><br><br>
+      <input type="text" name="student_name" placeholder="Nhập tên" required><br>
 
       <label for="comment_text">Nhận xét bài làm:</label><br>
-      <textarea name="comment_text" placeholder="Viết nhận xét..." required style="width:100%; height:60px;"></textarea><br><br>
+      <textarea name="comment_text" placeholder="Viết nhận xét..." required></textarea><br>
 
       <label for="score">Chấm điểm (0–10):</label><br>
-      <input type="number" name="score" placeholder="Nhập điểm" min="0" max="10" step="0.1" required><br><br>
+      <input type="number" name="score" placeholder="Nhập điểm" min="0" max="10" step="0.1" required style="max-width: 150px;"><br>
 
-      <button type="submit">💬 Gửi nhận xét & điểm</button>
+      <button type="submit" style="margin-top: 10px;">💬 Gửi nhận xét & điểm</button>
     </form>
 
     {% if img.comments %}
-      <h4 style="margin-top: 20px;">💬 Bình luận & Điểm:</h4>
-      <div style="margin-left: 10px;">
+      <h4 style="margin-top: 25px; color: #555;">💬 Bình luận & Điểm:</h4>
+      <div style="margin-left: 0;">
         {% for cmt in img.comments %}
-          <p><strong>{{ cmt.student_name }}:</strong> {{ cmt.comment_text }}
-             {% if cmt.score is defined %}(Điểm: {{ cmt.score }}){% endif %}
-          </p>
+          <div class="comment-item">
+            <strong style="color: #2196F3;">{{ cmt.student_name }}:</strong> {{ cmt.comment_text }}
+            {% if cmt.score is defined %}
+              <span style="float: right; background: #4CAF50; color: white; padding: 3px 10px; border-radius: 12px; font-size: 14px;">
+                Điểm: {{ cmt.score }}
+              </span>
+            {% endif %}
+          </div>
         {% endfor %}
       </div>
     {% endif %}
@@ -78,6 +182,6 @@
 {% endfor %}
 
 <div style="margin-top: 30px;">
-  <a href="{{ url_for('projects') }}">⬅️ Quay về danh sách đề bài</a>
+  <a href="{{ url_for('projects') }}" style="color: #2196F3; text-decoration: none; font-size: 16px;">⬅️ Quay về danh sách đề bài</a>
 </div>
 {% endblock %}
