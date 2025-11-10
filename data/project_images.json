@@ -1,17 +1,1 @@
-{
-  "general": [
-    {
-      "id": "a9f2f836-9166-430c-85a1-9d43a9a47e65",
-      "filename": "a9f2f836-9166-430c-85a1-9d43a9a47e65_3148cbb2-4a16-4c76-a45b-9689086d9a5d.jpg",
-      "group_name": "test",
-      "file_type": "jpg",
-      "ai_feedback": "Phân tích bài làm của học sinh:\n\n1.  **Đề bài:**\n    *   (3x + 6)/(4x - 8) * (2x - 4)/(x + 2)\n\n2.  **Điều kiện:**\n    *   x ≠ 2\n    *   x ≠ -2\n    *   Điều kiện này là chính xác để mẫu số của các phân thức khác 0.\n\n3.  **Phân tích thành nhân tử:**\n    *   (3(x + 2))/(4(x - 2)) * (2(x - 2))/(x + 2)\n\n4.  **Rút gọn:**\n    *   (3(x + 2) * 2(x - 2)) / (4(x - 2)(x + 2))\n    *   = (3 * 2) / 4\n    *   = 6/4\n    *   = 3/2\n\n**Kết luận:** Bài làm của học sinh là chính xác. Tất cả các bước đều đúng và hợp lý. Kết quả cuối cùng là 3/2.\n",
-      "score_feedback": "Nội dung đầy đủ: 10/10\nTrình bày rõ ràng: 10/10\nKỹ thuật chính xác: 10/10\nThái độ học tập: 10/10\n\nTổng điểm: 10/10\nNhận xét: Bài làm hoàn hảo, trình bày rõ ràng, tính toán chính xác. Thể hiện thái độ học tập tốt.\n",
-      "comments": [],
-      "scores": [
-        10.0
-      ],
-      "average_score": 10.0
-    }
-  ]
-}
+{}
