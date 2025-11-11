@@ -464,7 +464,6 @@ def comment(project_id, image_id):
 
     flash(f"Bình luận đã được thêm. Điểm trung bình hiện tại: {avg_score}")
     return redirect(url_for('project', project_id=project_id))
-
 @app.route('/upload_image', methods=['GET', 'POST'])
 def upload_image():
     ai_feedback = None
@@ -501,45 +500,76 @@ def upload_image():
             elif file_ext in ['png', 'jpg', 'jpeg', 'gif', 'bmp', 'webp']:
                 img = Image.open(file_path)
 
-                # ===== SỬA PROMPT ĐỂ HIỂN THỊ ĐẸP HƠN =====
+                # ===== PROMPT CẢI THIỆN CHO PHẢN HỒI AI =====
                 ai_response = model.generate_content([
                     img,
-                    """Đây là ảnh bài làm của học sinh. Hãy phân tích nội dung, chỉ ra lỗi sai nếu có, và đề xuất cải thiện.
+                    """Bạn là giáo viên đang chấm bài học sinh. Hãy phân tích bài làm trong ảnh và đưa ra nhận xét chi tiết.
 
-QUAN TRỌNG - Quy tắc trình bày:
-- KHÔNG dùng dấu **, ***, ##, ### 
-- Công thức toán viết dạng văn bản thường: ví dụ (3x + 6)/(4x - 8) thay vì LaTeX
-- Xuống dòng rõ ràng giữa các phần
-- Dùng số thứ tự 1., 2., 3. để liệt kê
-- Thụt lề đầu dòng khi cần
+NHIỆM VỤ:
+1. Mô tả ngắn gọn nội dung bài làm
+2. Chỉ ra các điểm làm đúng (nếu có)
+3. Chỉ ra các lỗi sai cụ thể (nếu có)
+4. Đề xuất cách cải thiện
 
-Trả lời bằng tiếng Việt, trình bày dễ đọc, rõ ràng."""
+QUY TẮC TRÌNH BÀY QUAN TRỌNG:
+• TUYỆT ĐỐI KHÔNG dùng: **, ***, ##, ###, ````
+• Công thức toán viết văn bản thường, ví dụ: (3x + 6)/(4x - 8) hoặc x^2 + 2x + 1
+• Mỗi ý PHẢI xuống dòng rõ ràng
+• Dùng dấu đầu dòng đơn giản: - hoặc số thứ tự 1. 2. 3.
+• Không viết quá dài, mỗi đoạn tối đa 3-4 dòng
+
+VÍ DỤ TRÌNH BÀY ĐÚNG:
+
+Nội dung bài làm:
+Học sinh đã giải phương trình (x + 2)(x - 3) = 0
+
+Điểm tốt:
+- Nhận diện đúng dạng phương trình tích
+- Áp dụng đúng quy tắc tích bằng 0
+
+Lỗi sai:
+- Bước 2: Viết x + 2 = 0 hoặc x - 3 = 0 (thiếu chữ "hoặc")
+- Kết luận thiếu tập nghiệm S = {-2; 3}
+
+Đề xuất cải thiện:
+Cần ghi rõ "hoặc" khi tách nhân tử. Luôn viết tập nghiệm ở cuối.
+
+Trả lời bằng tiếng Việt, ngắn gọn, dễ hiểu."""
                 ])
-                ai_feedback = ai_response.text
+                ai_feedback = clean_ai_output(ai_response.text)
 
+                # ===== PROMPT CẢI THIỆN CHO CHẤM ĐIỂM =====
                 score_response = model.generate_content([
                     img,
-                    """Dựa trên bài làm của học sinh, hãy chấm điểm theo các tiêu chí sau:
+                    """Hãy chấm điểm bài làm của học sinh theo 4 tiêu chí sau:
 
-1. Nội dung đầy đủ (0-10 điểm)
-2. Trình bày rõ ràng (0-10 điểm)
-3. Kỹ thuật chính xác (0-10 điểm)
-4. Thái độ học tập (0-10 điểm)
+TIÊU CHÍ CHẤM ĐIỂM:
+1. Nội dung (0-10): Độ đầy đủ, đúng đắn của bài làm
+2. Trình bày (0-10): Sạch sẽ, rõ ràng, dễ đọc
+3. Phương pháp (0-10): Cách giải, logic tư duy
+4. Kết quả (0-10): Đáp án cuối cùng có chính xác không
 
-Sau đó tổng kết điểm trung bình trên thang 10 và đưa ra nhận xét ngắn gọn.
+QUY TẮC TRÌNH BÀY:
+• KHÔNG dùng **, ***, ##, ###, ````
+• Mỗi tiêu chí ghi trên 1 dòng riêng
+• Format: Tên tiêu chí: X/10 - Lý do ngắn gọn
+• Cuối cùng ghi điểm trung bình và nhận xét chung
 
-QUAN TRỌNG - Quy tắc trình bày:
-- KHÔNG dùng dấu **, ***, ##, ###
-- Công thức toán viết văn bản thường, không LaTeX
-- Xuống dòng rõ ràng
-- Format kiểu:
-  Nội dung đầy đủ: 8/10
-  Trình bày rõ ràng: 7/10
-  (mỗi tiêu chí 1 dòng)
+VÍ DỤ TRÌNH BÀY ĐÚNG:
+
+Nội dung: 8/10 - Làm đầy đủ các bước, có một chỗ thiếu
+Trình bày: 7/10 - Khá rõ ràng nhưng chữ hơi nhỏ
+Phương pháp: 9/10 - Áp dụng đúng công thức và logic tốt
+Kết quả: 6/10 - Đáp án sai do nhầm dấu ở bước cuối
+
+Điểm trung bình: 7.5/10
+
+Nhận xét chung:
+Bài làm khá tốt, phương pháp đúng. Cần cẩn thận hơn ở bước tính toán cuối cùng để tránh sai số.
 
 Trả lời bằng tiếng Việt."""
                 ])
-                score_feedback = score_response.text
+                score_feedback = clean_ai_output(score_response.text)
 
             else:
                 ai_feedback = "❌ Định dạng file không hỗ trợ."
@@ -584,5 +614,30 @@ Trả lời bằng tiếng Việt."""
                            score=score_feedback,
                            images=images)
 
+
+# ===== HÀM HỖ TRỢ LÀM SẠCH OUTPUT CỦA AI =====
+def clean_ai_output(text):
+    """
+    Làm sạch output của AI để hiển thị đẹp hơn
+    """
+    import re
+    
+    # Loại bỏ các dấu markdown không mong muốn
+    text = re.sub(r'\*\*\*', '', text)  # Loại bỏ ***
+    text = re.sub(r'\*\*', '', text)    # Loại bỏ **
+    text = re.sub(r'#{1,6}\s', '', text)  # Loại bỏ ##, ###
+    
+    # Loại bỏ code blocks
+    text = re.sub(r'```[a-z]*\n', '', text)
+    text = re.sub(r'```', '', text)
+    
+    # Chuẩn hóa xuống dòng (loại bỏ xuống dòng thừa)
+    text = re.sub(r'\n{3,}', '\n\n', text)
+    
+    # Loại bỏ khoảng trắng thừa đầu/cuối dòng
+    lines = [line.strip() for line in text.split('\n')]
+    text = '\n'.join(lines)
+    
+    return text.strip()
 if __name__ == "__main__":
     app.run(debug=True)
