@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tạo phiên sinh hoạt mới</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .form-container {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+            max-width: 600px;
+            width: 100%;
+        }
+        h1 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+        }
+        .form-group {
+            margin-bottom: 25px;
+        }
+        label {
+            display: block;
+            color: #333;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+            font-family: inherit;
+        }
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+        .btn-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+        .btn {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .btn-submit {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+        .btn-back {
+            background: #e0e0e0;
+            color: #333;
+        }
+        .btn-back:hover {
+            background: #d0d0d0;
+        }
+        .info-box {
+            background: #f0f7ff;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+        }
+        .info-box h3 {
+            color: #667eea;
+            font-size: 16px;
+            margin-bottom: 8px;
+        }
+        .info-box ul {
+            margin-left: 20px;
+            color: #666;
+            line-height: 1.8;
+        }
+    </style>
+</head>
+<body>
+    <div class="form-container">
+        <h1>📝 Tạo phiên sinh hoạt mới</h1>
+        <p class="subtitle">Thiết lập thông tin cho tuần sinh hoạt lớp</p>
+
+        <div class="info-box">
+            <h3>📌 Hướng dẫn:</h3>
+            <ul>
+                <li>Đặt tên cho tuần sinh hoạt (VD: Tuần 1 - Tháng 12/2024)</li>
+                <li>Sau khi tạo, các tổ và giáo viên sẽ upload báo cáo</li>
+                <li>Khi đủ báo cáo, nhấn "Phân tích" để AI đánh giá</li>
+            </ul>
+        </div>
+
+        <form method="POST">
+            <div class="form-group">
+                <label for="week_name">Tên tuần sinh hoạt *</label>
+                <input type="text" 
+                       id="week_name" 
+                       name="week_name" 
+                       placeholder="VD: Tuần 15 - Tháng 12/2024"
+                       required>
+            </div>
+
+            <div class="form-group">
+                <label for="description">Mô tả (tùy chọn)</label>
+                <textarea id="description" 
+                          name="description" 
+                          placeholder="Nhập mô tả về tuần sinh hoạt này (mục tiêu, hoạt động chính...)"></textarea>
+            </div>
+
+            <div class="btn-group">
+                <button type="submit" class="btn btn-submit">✅ Tạo phiên</button>
+                <a href="/class_activity" class="btn btn-back" style="text-align: center; line-height: 50px; text-decoration: none;">❌ Hủy</a>
+            </div>
+        </form>
+    </div>
+</body>
+</html>

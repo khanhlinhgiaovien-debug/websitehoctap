@@ -1,55 +1,336 @@
-{% extends "layout.html" %}
-{% block title %}Làm bài trắc nghiệm{% endblock %}
-{% block content %}
-<h2> Làm bài trắc nghiệm</h2>
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Làm bài trắc nghiệm</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
 
-<p id="progress" style="font-weight: bold; margin-bottom: 20px;"></p>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f0f0f0;
+      min-height: 100vh;
+    }
 
-<form method="POST" action="/submit/{{ de_id }}">
+    .header {
+      background: linear-gradient(to right, #667eea, #764ba2);
+      color: white;
+      padding: 25px 40px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
 
-  <!-- Câu hỏi trắc nghiệm nhiều lựa chọn -->
-  {% if questions.multiple_choice %}
-    {% for q in questions.multiple_choice %}
-      {% set q_index = loop.index0 %}
-      <div style="margin-bottom: 20px;">
-        <h3>Câu {{ loop.index }}: {{ q.question }}</h3>
-        {% for opt in q.options %}
-          <label>
-            <input type="radio" name="mc_{{ q_index }}" value="{{ opt }}">
-            {{ opt }}
-          </label><br>
-        {% endfor %}
+    .header h1 {
+      font-size: 1.5rem;
+      font-weight: 600;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 30px auto;
+      padding: 0 20px;
+    }
+
+    .exam-info {
+      background: white;
+      padding: 25px;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+    }
+
+    .exam-info h2 {
+      color: #333;
+      margin-bottom: 15px;
+      font-size: 1.5rem;
+    }
+
+    .progress-bar {
+      background: #e0e0e0;
+      height: 30px;
+      border-radius: 15px;
+      overflow: hidden;
+      margin-bottom: 10px;
+      position: relative;
+    }
+
+    .progress-fill {
+      background: linear-gradient(to right, #43e97b, #38f9d7);
+      height: 100%;
+      width: 0%;
+      transition: width 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: bold;
+      font-size: 0.9rem;
+    }
+
+    #progress {
+      font-weight: 600;
+      color: #555;
+      font-size: 1rem;
+    }
+
+    .question-card {
+      background: white;
+      padding: 25px;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+      transition: all 0.3s ease;
+    }
+
+    .question-card:hover {
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+
+    .question-card h3 {
+      color: #333;
+      margin-bottom: 15px;
+      font-size: 1.1rem;
+      line-height: 1.6;
+    }
+
+    .question-card h3 .q-number {
+      color: #667eea;
+      font-weight: bold;
+    }
+
+    label {
+      display: block;
+      padding: 12px 15px;
+      margin-bottom: 10px;
+      background: #f8f9fa;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-size: 0.95rem;
+    }
+
+    label:hover {
+      background: #e3f2fd;
+      border-color: #667eea;
+    }
+
+    label.selected-answer {
+      background: #e8eaf6;
+      border-color: #667eea;
+      font-weight: 600;
+      color: #667eea;
+    }
+
+    input[type="radio"] {
+      margin-right: 10px;
+      cursor: pointer;
+      width: 18px;
+      height: 18px;
+      vertical-align: middle;
+    }
+
+    .tf-statement {
+      background: #fafafa;
+      padding: 12px;
+      margin-bottom: 10px;
+      border-left: 4px solid #667eea;
+      border-radius: 4px;
+    }
+
+    .tf-statement strong {
+      color: #667eea;
+    }
+
+    .tf-options {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+
+    .tf-options label {
+      flex: 1;
+      text-align: center;
+      margin-bottom: 0;
+    }
+
+    .submit-section {
+      background: white;
+      padding: 25px;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      text-align: center;
+      margin-top: 30px;
+      margin-bottom: 30px;
+    }
+
+    .submit-btn {
+      background: linear-gradient(to right, #667eea, #764ba2);
+      color: white;
+      padding: 15px 50px;
+      border: none;
+      border-radius: 8px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    }
+
+    .submit-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+    }
+
+    .submit-btn:active {
+      transform: translateY(0);
+    }
+
+    .back-link {
+      display: inline-block;
+      margin: 20px 0;
+      color: #667eea;
+      text-decoration: none;
+      font-weight: 600;
+      transition: color 0.2s;
+    }
+
+    .back-link:hover {
+      color: #764ba2;
+    }
+
+    .section-divider {
+      text-align: center;
+      margin: 40px 0 30px;
+      position: relative;
+    }
+
+    .section-divider::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 50%;
+      height: 2px;
+      background: linear-gradient(to right, transparent, #e0e0e0, transparent);
+    }
+
+    .section-divider span {
+      background: #f0f0f0;
+      padding: 10px 20px;
+      color: #666;
+      font-weight: 600;
+      position: relative;
+      font-size: 1.1rem;
+    }
+
+    @media (max-width: 768px) {
+      .header {
+        padding: 20px;
+      }
+
+      .container {
+        padding: 0 15px;
+      }
+
+      .question-card, .exam-info, .submit-section {
+        padding: 20px 15px;
+      }
+
+      .submit-btn {
+        width: 100%;
+        padding: 15px;
+      }
+
+      .tf-options {
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <h1>KIỂM TRA TRẮC NGHIỆM</h1>
+</div>
+
+<div class="container">
+  <a href="/" class="back-link">← Quay lại trang chủ</a>
+
+  <div class="exam-info">
+    <h2>Làm bài trắc nghiệm</h2>
+    <div class="progress-bar">
+      <div class="progress-fill" id="progressBar">0%</div>
+    </div>
+    <p id="progress"></p>
+  </div>
+
+  <form method="POST" action="/submit/{{ de_id }}">
+
+    <!-- Câu hỏi trắc nghiệm nhiều lựa chọn -->
+    {% if questions.multiple_choice %}
+      {% for q in questions.multiple_choice %}
+        {% set q_index = loop.index0 %}
+        <div class="question-card">
+          <h3><span class="q-number">Câu {{ loop.index }}:</span> {{ q.question }}</h3>
+          {% for opt in q.options %}
+            <label>
+              <input type="radio" name="mc_{{ q_index }}" value="{{ opt }}">
+              {{ opt }}
+            </label>
+          {% endfor %}
+        </div>
+      {% endfor %}
+    {% else %}
+      <div class="question-card">
+        <p>Không có câu hỏi trắc nghiệm nhiều lựa chọn.</p>
       </div>
-    {% endfor %}
-  {% else %}
-    <p>Không có câu hỏi trắc nghiệm nhiều lựa chọn.</p>
-  {% endif %}
+    {% endif %}
 
-  <!-- Câu hỏi đúng/sai -->
-  {% if questions.true_false %}
-    {% for tf in questions.true_false %}
-      {% set i = loop.index0 %}
-      {% set base_index = i + questions.multiple_choice|length %}
-      <div style="margin-bottom: 20px;">
-        <h3>Câu {{ base_index + 1 }}: {{ tf.question }}</h3>
-        {% for s in tf.statements %}
-          {% set j = loop.index0 %}
-          <p><strong>Ý {{ j + 1 }}:</strong> {{ s }}</p>
-          <label>
-            <input type="radio" name="tf_{{ i }}_{{ j }}" value="true"> Đúng
-          </label>
-          <label>
-            <input type="radio" name="tf_{{ i }}_{{ j }}" value="false"> Sai
-          </label>
-        {% endfor %}
+    <!-- Câu hỏi đúng/sai -->
+    {% if questions.true_false %}
+      <div class="section-divider">
+        <span>Câu hỏi Đúng/Sai</span>
       </div>
-    {% endfor %}
-  {% else %}
-    <p>Không có câu hỏi đúng/sai.</p>
-  {% endif %}
 
-  <button type="submit" onclick="return confirm('Bạn có chắc chắn muốn nộp bài không?')">Nộp bài</button>
-</form>
+      {% for tf in questions.true_false %}
+        {% set i = loop.index0 %}
+        {% set base_index = i + questions.multiple_choice|length %}
+        <div class="question-card">
+          <h3><span class="q-number">Câu {{ base_index + 1 }}:</span> {{ tf.question }}</h3>
+          {% for s in tf.statements %}
+            {% set j = loop.index0 %}
+            <div class="tf-statement">
+              <p><strong>Ý {{ j + 1 }}:</strong> {{ s }}</p>
+            </div>
+            <div class="tf-options">
+              <label>
+                <input type="radio" name="tf_{{ i }}_{{ j }}" value="true"> Đúng
+              </label>
+              <label>
+                <input type="radio" name="tf_{{ i }}_{{ j }}" value="false"> Sai
+              </label>
+            </div>
+          {% endfor %}
+        </div>
+      {% endfor %}
+    {% else %}
+      <div class="question-card">
+        <p>Không có câu hỏi đúng/sai.</p>
+      </div>
+    {% endif %}
+
+    <div class="submit-section">
+      <button type="submit" class="submit-btn" onclick="return confirm('Bạn có chắc chắn muốn nộp bài không?')">
+        📝 Nộp bài
+      </button>
+    </div>
+  </form>
+</div>
 
 <script>
   document.addEventListener("DOMContentLoaded", function () {
@@ -69,7 +350,13 @@
 
       const total = totalGroups.size;
       const answered = answeredGroups.size;
+      const percentage = total > 0 ? Math.round((answered / total) * 100) : 0;
+      
       document.getElementById("progress").textContent = `Đã trả lời ${answered} / ${total} câu`;
+      
+      const progressBar = document.getElementById("progressBar");
+      progressBar.style.width = percentage + "%";
+      progressBar.textContent = percentage + "%";
     }
 
     radios.forEach(function (radio) {
@@ -106,4 +393,6 @@
     updateProgress();
   });
 </script>
-{% endblock %}
+
+</body>
+</html>

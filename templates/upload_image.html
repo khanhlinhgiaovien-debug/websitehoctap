@@ -1,187 +1,448 @@
-{% extends "layout.html" %}
-{% block title %}Gửi bài làm{% endblock %}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gửi bài làm</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-{% block content %}
-<style>
-  /* Style cho feedback section */
-  .feedback-box {
-    margin-top: 30px;
-    padding: 20px;
-    border-radius: 8px;
-    white-space: pre-wrap; /* Giữ nguyên xuống dòng */
-    line-height: 1.8;
-    font-size: 15px;
-  }
-  
-  .feedback-box.ai {
-    background-color: #e0f2f1;
-    border-left: 5px solid #009688;
-  }
-  
-  .feedback-box.score {
-    background-color: #fff3e0;
-    border-left: 5px solid #ff9800;
-  }
-  
-  .feedback-box h3 {
-    margin-top: 0;
-    margin-bottom: 15px;
-  }
-  
-  /* Style cho content bên trong */
-  .feedback-content {
-    white-space: pre-line; /* Xuống dòng theo \n */
-    word-wrap: break-word;
-  }
-  
-  /* Style cho bài làm đã gửi */
-  .submission-card {
-    border: 1px solid #ccc;
-    padding: 20px;
-    margin-bottom: 30px;
-    border-radius: 8px;
-    background: white;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  }
-  
-  .ai-comment {
-    background: #f5f5f5;
-    padding: 15px;
-    border-radius: 5px;
-    margin: 15px 0;
-    white-space: pre-line;
-    line-height: 1.7;
-  }
-  
-  .score-display {
-    background: #e8f5e9;
-    padding: 15px;
-    border-radius: 5px;
-    margin: 15px 0;
-    white-space: pre-line;
-    line-height: 1.7;
-  }
-  
-  .comment-item {
-    background: #f9f9f9;
-    padding: 12px;
-    margin: 10px 0;
-    border-left: 3px solid #2196F3;
-    border-radius: 4px;
-  }
-  
-  textarea {
-    width: 100%;
-    height: 80px;
-    padding: 10px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-family: inherit;
-    resize: vertical;
-  }
-  
-  input[type="text"], input[type="number"] {
-    width: 100%;
-    max-width: 400px;
-    padding: 8px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    margin-bottom: 10px;
-  }
-</style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
 
-<h2>📤 Gửi bài làm</h2>
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            animation: fadeIn 0.5s ease-in;
+        }
 
-<form method="POST" enctype="multipart/form-data" style="margin-bottom: 30px;">
-  <label for="group_name">Tên nhóm:</label><br>
-  <input type="text" name="group_name" placeholder="Nhập tên nhóm" required><br><br>
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
 
-  <label for="image">Chọn file (.png, .jpg, .jpeg, .pdf):</label><br>
-  <input type="file" name="image" accept=".png,.jpg,.jpeg,.pdf" required><br><br>
+        h2 {
+            color: #667eea;
+            margin-bottom: 30px;
+            font-size: 2.2em;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
 
-  <button type="submit">📤 Gửi bài</button>
-</form>
+        h3 {
+            color: #2d3748;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
 
-{% if feedback %}
-  <div class="feedback-box ai">
-    <h3>🤖 Phản hồi từ AI:</h3>
-    <div class="feedback-content">{{ feedback }}</div>
-  </div>
-{% endif %}
+        h4 {
+            color: #555;
+            margin-top: 25px;
+            margin-bottom: 15px;
+        }
 
-{% if score %}
-  <div class="feedback-box score">
-    <h3>📊 Đánh giá điểm:</h3>
-    <div class="feedback-content">{{ score }}</div>
-  </div>
-{% endif %}
+        /* Form upload */
+        .upload-form {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 40px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+        }
 
-<hr style="margin: 40px 0;">
-<h2>📚 Các bài làm đã gửi</h2>
+        .upload-form label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #2d3748;
+        }
 
-{% for img in images %}
-  <div class="submission-card">
-    <h3>👥 Nhóm: {{ img.group_name }}</h3>
+        .upload-form input[type="text"],
+        .upload-form input[type="file"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1em;
+            margin-bottom: 20px;
+            transition: border-color 0.3s;
+        }
 
-    {% if img.file_type == 'pdf' %}
-      <p>📄 <a href="{{ url_for('static', filename='uploads/' + img.filename) }}" target="_blank" style="color: #2196F3;">Xem file PDF</a></p>
-    {% else %}
-      <img src="{{ url_for('static', filename='uploads/' + img.filename) }}" style="max-width: 100%; max-height: 400px; border-radius: 5px; margin: 10px 0;">
-    {% endif %}
+        .upload-form input[type="text"]:focus,
+        .upload-form input[type="file"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
 
-    <div class="ai-comment">
-      <strong>🤖 Nhận xét của AI:</strong><br><br>
-      {{ img.ai_feedback }}
-    </div>
+        .upload-form button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 40px;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
 
-    {% if img.score_feedback %}
-      <div class="score-display">
-        <strong>📊 Đánh giá điểm (AI):</strong><br><br>
-        {{ img.score_feedback }}
-      </div>
-    {% endif %}
+        .upload-form button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.5);
+        }
 
-    <p style="font-size: 18px; margin: 20px 0;">
-      <strong>📊 Điểm trung bình hiện tại:</strong>
-      <span style="color: #4CAF50; font-size: 22px; font-weight: bold;">
-        {{ img.average_score if img.average_score else "Chưa có" }}
-      </span>
-    </p>
+        /* Feedback boxes */
+        .feedback-box {
+            margin-top: 30px;
+            padding: 25px;
+            border-radius: 12px;
+            white-space: pre-wrap;
+            line-height: 1.8;
+            font-size: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
 
-    <hr style="margin: 25px 0; border: none; border-top: 1px dashed #ccc;">
+        .feedback-box.ai {
+            background: linear-gradient(135deg, #e0f2f1 0%, #b2dfdb 100%);
+            border-left: 5px solid #009688;
+        }
 
-    <form action="{{ url_for('comment', project_id='general', image_id=img.id) }}" method="POST" style="margin-top: 20px;">
-      <label for="student_name">Tên của bạn:</label><br>
-      <input type="text" name="student_name" placeholder="Nhập tên" required><br>
+        .feedback-box.score {
+            background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
+            border-left: 5px solid #ff9800;
+        }
 
-      <label for="comment_text">Nhận xét bài làm:</label><br>
-      <textarea name="comment_text" placeholder="Viết nhận xét..." required></textarea><br>
+        .feedback-box h3 {
+            margin-top: 0;
+            margin-bottom: 15px;
+            color: #2d3748;
+        }
 
-      <label for="score">Chấm điểm (0–10):</label><br>
-      <input type="number" name="score" placeholder="Nhập điểm" min="0" max="10" step="0.1" required style="max-width: 150px;"><br>
+        .feedback-content {
+            white-space: pre-line;
+            word-wrap: break-word;
+            color: #4a5568;
+        }
 
-      <button type="submit" style="margin-top: 10px;">💬 Gửi nhận xét & điểm</button>
-    </form>
+        /* Submission cards */
+        .submission-card {
+            background: white;
+            border: 2px solid #e2e8f0;
+            padding: 30px;
+            margin-bottom: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
 
-    {% if img.comments %}
-      <h4 style="margin-top: 25px; color: #555;">💬 Bình luận & Điểm:</h4>
-      <div style="margin-left: 0;">
-        {% for cmt in img.comments %}
-          <div class="comment-item">
-            <strong style="color: #2196F3;">{{ cmt.student_name }}:</strong> {{ cmt.comment_text }}
-            {% if cmt.score is defined %}
-              <span style="float: right; background: #4CAF50; color: white; padding: 3px 10px; border-radius: 12px; font-size: 14px;">
-                Điểm: {{ cmt.score }}
-              </span>
+        .submission-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .submission-card img {
+            max-width: 100%;
+            max-height: 500px;
+            border-radius: 10px;
+            margin: 15px 0;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .ai-comment {
+            background: #f7fafc;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 15px 0;
+            white-space: pre-line;
+            line-height: 1.7;
+            border-left: 4px solid #667eea;
+        }
+
+        .score-display {
+            background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 15px 0;
+            white-space: pre-line;
+            line-height: 1.7;
+            border-left: 4px solid #4caf50;
+        }
+
+        .average-score {
+            background: linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .average-score span {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #2d3748;
+        }
+
+        /* Comment form */
+        .comment-form {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 10px;
+            margin-top: 20px;
+            border: 2px dashed #cbd5e0;
+        }
+
+        .comment-form label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #2d3748;
+        }
+
+        .comment-form input[type="text"],
+        .comment-form input[type="number"],
+        .comment-form textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 1em;
+            margin-bottom: 15px;
+            transition: border-color 0.3s;
+        }
+
+        .comment-form textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .comment-form input:focus,
+        .comment-form textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .comment-form button {
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 50px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(72, 187, 120, 0.4);
+        }
+
+        .comment-form button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(72, 187, 120, 0.5);
+        }
+
+        /* Comments list */
+        .comment-item {
+            background: white;
+            padding: 15px;
+            margin: 10px 0;
+            border-left: 3px solid #667eea;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .comment-item strong {
+            color: #667eea;
+        }
+
+        .comment-score {
+            float: right;
+            background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        /* Divider */
+        .divider {
+            margin: 40px 0;
+            border: none;
+            border-top: 2px solid #e2e8f0;
+        }
+
+        .dashed-divider {
+            margin: 25px 0;
+            border: none;
+            border-top: 2px dashed #cbd5e0;
+        }
+
+        /* Back link */
+        .back-link {
+            display: inline-block;
+            margin-top: 30px;
+            padding: 12px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 50px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .back-link:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.5);
+        }
+
+        .pdf-link {
+            color: #2196f3;
+            text-decoration: none;
+            font-weight: bold;
+            padding: 10px 20px;
+            background: #e3f2fd;
+            border-radius: 8px;
+            display: inline-block;
+            transition: all 0.3s ease;
+        }
+
+        .pdf-link:hover {
+            background: #2196f3;
+            color: white;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+
+            h2 {
+                font-size: 1.8em;
+            }
+
+            .submission-card {
+                padding: 20px;
+            }
+
+            .average-score span {
+                font-size: 2em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>📤 Gửi bài làm</h2>
+
+        <form method="POST" enctype="multipart/form-data" class="upload-form">
+            <label for="group_name">Tên nhóm:</label>
+            <input type="text" name="group_name" placeholder="Nhập tên nhóm của bạn" required>
+
+            <label for="image">Chọn file (.png, .jpg, .jpeg, .pdf):</label>
+            <input type="file" name="image" accept=".png,.jpg,.jpeg,.pdf" required>
+
+            <button type="submit">📤 Gửi bài</button>
+        </form>
+
+        {% if feedback %}
+        <div class="feedback-box ai">
+            <h3>🤖 Phản hồi từ AI:</h3>
+            <div class="feedback-content">{{ feedback }}</div>
+        </div>
+        {% endif %}
+
+        {% if score %}
+        <div class="feedback-box score">
+            <h3>📊 Đánh giá điểm:</h3>
+            <div class="feedback-content">{{ score }}</div>
+        </div>
+        {% endif %}
+
+        <hr class="divider">
+        <h2>📚 Các bài làm đã gửi</h2>
+
+        {% for img in images %}
+        <div class="submission-card">
+            <h3>👥 Nhóm: {{ img.group_name }}</h3>
+
+            {% if img.file_type == 'pdf' %}
+                <p>📄 <a href="{{ url_for('static', filename='uploads/' + img.filename) }}" target="_blank" class="pdf-link">Xem file PDF</a></p>
+            {% else %}
+                <img src="{{ url_for('static', filename='uploads/' + img.filename) }}" alt="Bài làm của {{ img.group_name }}">
             {% endif %}
-          </div>
-        {% endfor %}
-      </div>
-    {% endif %}
-  </div>
-{% endfor %}
 
-<div style="margin-top: 30px;">
-  <a href="{{ url_for('projects') }}" style="color: #2196F3; text-decoration: none; font-size: 16px;">⬅️ Quay về danh sách đề bài</a>
-</div>
-{% endblock %}
+            <div class="ai-comment">
+                <strong>🤖 Nhận xét của AI:</strong><br><br>
+                {{ img.ai_feedback }}
+            </div>
+
+            {% if img.score_feedback %}
+            <div class="score-display">
+                <strong>📊 Đánh giá điểm (AI):</strong><br><br>
+                {{ img.score_feedback }}
+            </div>
+            {% endif %}
+
+            <div class="average-score">
+                <p style="margin-bottom: 10px; font-size: 1.1em; color: #4a5568;">📊 Điểm trung bình hiện tại:</p>
+                <span>{{ img.average_score if img.average_score else "Chưa có" }}</span>
+            </div>
+
+            <hr class="dashed-divider">
+
+            <div class="comment-form">
+                <form action="{{ url_for('comment', project_id='general', image_id=img.id) }}" method="POST">
+                    <label for="student_name">Tên của bạn:</label>
+                    <input type="text" name="student_name" placeholder="Nhập tên của bạn" required>
+
+                    <label for="comment_text">Nhận xét bài làm:</label>
+                    <textarea name="comment_text" placeholder="Viết nhận xét của bạn về bài làm này..." required></textarea>
+
+                    <label for="score">Chấm điểm (0–10):</label>
+                    <input type="number" name="score" placeholder="Nhập điểm" min="0" max="10" step="0.1" required style="max-width: 200px;">
+
+                    <button type="submit">💬 Gửi nhận xét & điểm</button>
+                </form>
+            </div>
+
+            {% if img.comments %}
+            <h4>💬 Bình luận & Điểm từ các bạn:</h4>
+            <div>
+                {% for cmt in img.comments %}
+                <div class="comment-item">
+                    <strong>{{ cmt.student_name }}:</strong> {{ cmt.comment_text }}
+                    {% if cmt.score is defined %}
+                    <span class="comment-score">Điểm: {{ cmt.score }}</span>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+        {% endfor %}
+
+        <div style="text-align: center;">
+            <a href="{{ url_for('projects') }}" class="back-link">⬅️ Quay về danh sách đề bài</a>
+        </div>
+    </div>
+</body>
+</html>

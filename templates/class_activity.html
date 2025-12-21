@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sinh hoạt lớp</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .header {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            color: #666;
+            font-size: 16px;
+        }
+        .btn {
+            display: inline-block;
+            padding: 12px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 25px;
+            font-weight: 600;
+            transition: transform 0.3s, box-shadow 0.3s;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+        .btn-home {
+            background: #6c757d;
+            margin-left: 10px;
+        }
+        .activities-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 25px;
+            margin-top: 20px;
+        }
+        .activity-card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            transition: transform 0.3s;
+        }
+        .activity-card:hover {
+            transform: translateY(-5px);
+        }
+        .activity-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 15px;
+        }
+        .activity-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        .activity-date {
+            color: #999;
+            font-size: 14px;
+        }
+        .status-badge {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .status-collecting {
+            background: #fff3cd;
+            color: #856404;
+        }
+        .status-analyzed {
+            background: #d4edda;
+            color: #155724;
+        }
+        .activity-description {
+            color: #666;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+        .activity-stats {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            color: #666;
+            font-size: 14px;
+        }
+        .stat-item strong {
+            color: #667eea;
+        }
+        .activity-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .btn-small {
+            padding: 8px 16px;
+            font-size: 14px;
+        }
+        .btn-view {
+            background: #667eea;
+        }
+        .btn-result {
+            background: #28a745;
+        }
+        .btn-delete {
+            background: #dc3545;
+        }
+        .empty-state {
+            background: white;
+            padding: 60px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+        .empty-state img {
+            width: 200px;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+        .empty-state h2 {
+            color: #666;
+            margin-bottom: 10px;
+        }
+        .empty-state p {
+            color: #999;
+            margin-bottom: 30px;
+        }
+        .flash-messages {
+            margin-bottom: 20px;
+        }
+        .flash {
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+        }
+        .flash-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .flash-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📋 Sinh hoạt lớp</h1>
+            <p class="subtitle">Quản lý và phân tích báo cáo sinh hoạt của các tổ</p>
+            <div style="margin-top: 20px;">
+                <a href="/class_activity/new" class="btn">➕ Tạo phiên mới</a>
+                <a href="/" class="btn btn-home">🏠 Trang chủ</a>
+            </div>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flash-messages">
+                    {% for category, message in messages %}
+                        <div class="flash flash-{{ category }}">{{ message }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        {% if activities %}
+            <div class="activities-grid">
+                {% for activity in activities %}
+                    <div class="activity-card">
+                        <div class="activity-header">
+                            <div>
+                                <div class="activity-title">{{ activity.week_name }}</div>
+                                <div class="activity-date">{{ activity.created_at }}</div>
+                            </div>
+                            <span class="status-badge status-{{ activity.status }}">
+                                {% if activity.status == 'collecting' %}
+                                    Đang thu thập
+                                {% else %}
+                                    Đã phân tích
+                                {% endif %}
+                            </span>
+                        </div>
+
+                        {% if activity.description %}
+                            <div class="activity-description">{{ activity.description }}</div>
+                        {% endif %}
+
+                        <div class="activity-stats">
+                            {% set total_images = activity.groups.to_1|length + activity.groups.to_2|length + activity.groups.to_3|length + activity.groups.to_4|length %}
+                            {% set gv_images = activity.groups.giao_vien|length %}
+                            
+                            <div class="stat-item">
+                                <span>📸 Tổ: <strong>{{ total_images }}</strong> ảnh</span>
+                            </div>
+                            <div class="stat-item">
+                                <span>👨‍🏫 GV: <strong>{{ gv_images }}</strong> ảnh</span>
+                            </div>
+                        </div>
+
+                        <div class="activity-actions">
+                            <a href="/class_activity/{{ activity.id }}" class="btn btn-small btn-view">
+                                👁️ Xem chi tiết
+                            </a>
+                            {% if activity.status == 'analyzed' %}
+                                <a href="/class_activity/{{ activity.id }}/result" class="btn btn-small btn-result">
+                                    📊 Kết quả
+                                </a>
+                            {% endif %}
+                            <form action="/class_activity/{{ activity.id }}/delete" method="POST" style="display: inline;" onsubmit="return confirm('Bạn có chắc muốn xóa?')">
+                                <button type="submit" class="btn btn-small btn-delete">🗑️ Xóa</button>
+                            </form>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-state">
+                <h2>Chưa có phiên sinh hoạt nào</h2>
+                <p>Hãy tạo phiên sinh hoạt đầu tiên để bắt đầu!</p>
+                <a href="/class_activity/new" class="btn">➕ Tạo phiên mới</a>
+            </div>
+        {% endif %}
+    </div>
+</body>
+</html>

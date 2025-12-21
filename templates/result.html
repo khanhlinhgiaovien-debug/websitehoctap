@@ -1,60 +1,282 @@
-{% extends "layout.html" %}
-{% block title %}Kết quả bài làm{% endblock %}
-{% block content %}
-<h2> Kết quả bài làm</h2>
-<p><strong>Số câu đúng:</strong> {{ score }} / {{ total_questions }}</p>
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kết quả bài làm</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-<!-- Bảng kết quả từng câu -->
-{% if total_questions is defined and results is defined %}
-  <table border="1" cellpadding="8" style="margin-top: 20px; border-collapse: collapse; width: 100%;">
-    <thead style="background-color: #f0f0f0;">
-      <tr>
-        <th style="text-align: center;">Câu số</th>
-        <th style="text-align: center;">Trạng thái</th>
-        <th>Ghi chú</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for i in range(total_questions|int) %}
-        <tr>
-          <td style="text-align: center;">{{ i + 1 }}</td>
-          {% if results[i].status == "Sai" %}
-            <td style="color: red; text-align: center;">❌ Sai</td>
-            <td>{{ results[i].note }}</td>
-          {% else %}
-            <td style="color: green; text-align: center;">✅ Đúng</td>
-            <td>—</td>
-          {% endif %}
-        </tr>
-      {% endfor %}
-    </tbody>
-  </table>
-{% else %}
-  <p style="color: red;">⚠️ Không nhận được dữ liệu kết quả. Vui lòng kiểm tra lại hàm <code>submit</code>.</p>
-{% endif %}
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
 
-<!-- Các lỗi học sinh mắc phải -->
-{% if feedback %}
-  <div style="margin-top: 30px;">
-    <h3>❌ Tổng hợp lỗi:</h3>
-    <ul>
-      {% for f in feedback %}
-        <li>{{ f }}</li>
-      {% endfor %}
-    </ul>
-  </div>
-{% endif %}
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            animation: fadeIn 0.5s ease-in;
+        }
 
-<!-- Phản hồi từ AI -->
-{% if ai_feedback %}
-  <div style="margin-top: 30px; background: #fffbe6; padding: 20px; border-left: 5px solid #f1c40f; border-radius: 8px;">
-    <h3> Phản hồi từ AI:</h3>
-    <p>{{ ai_feedback }}</p>
-  </div>
-{% endif %}
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
 
-<!-- Quay về trang chính -->
-<div style="margin-top: 30px;">
-  <a href="/">⬅️ Quay về trang chính</a>
-</div>
-{% endblock %}
+        h2 {
+            color: #667eea;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .score-summary {
+            background: linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%);
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .score-summary strong {
+            font-size: 1.8em;
+            color: #2d3748;
+        }
+
+        .score-number {
+            font-size: 3em;
+            font-weight: bold;
+            color: #667eea;
+            margin: 10px 0;
+        }
+
+        .results-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 30px 0;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+        }
+
+        .results-table thead {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .results-table th {
+            padding: 15px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+
+        .results-table td {
+            padding: 12px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .results-table tbody tr:hover {
+            background-color: #f7fafc;
+        }
+
+        .status-correct {
+            color: #48bb78;
+            font-weight: bold;
+        }
+
+        .status-wrong {
+            color: #f56565;
+            font-weight: bold;
+        }
+
+        .error-section {
+            margin-top: 30px;
+            background: #fff5f5;
+            padding: 25px;
+            border-left: 5px solid #f56565;
+            border-radius: 10px;
+        }
+
+        .error-section h3 {
+            color: #c53030;
+            margin-bottom: 15px;
+            font-size: 1.5em;
+        }
+
+        .error-section ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .error-section li {
+            padding: 10px 0;
+            border-bottom: 1px solid #fed7d7;
+        }
+
+        .error-section li:last-child {
+            border-bottom: none;
+        }
+
+        .ai-feedback {
+            margin-top: 30px;
+            background: linear-gradient(135deg, #ffeaa7 0%, #fdcb6e 100%);
+            padding: 30px;
+            border-left: 5px solid #f39c12;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(243, 156, 18, 0.2);
+        }
+
+        .ai-feedback h3 {
+            color: #8b5a00;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+        }
+
+        .ai-feedback p {
+            color: #2d3748;
+            line-height: 1.8;
+            font-size: 1.1em;
+            white-space: pre-wrap;
+        }
+
+        .warning-box {
+            background: #fff5f5;
+            border: 2px solid #fc8181;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            color: #742a2a;
+        }
+
+        .back-button {
+            display: inline-block;
+            margin-top: 30px;
+            padding: 15px 35px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 50px;
+            font-weight: bold;
+            font-size: 1.1em;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .back-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.5);
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+
+            h2 {
+                font-size: 2em;
+            }
+
+            .score-number {
+                font-size: 2em;
+            }
+
+            .results-table {
+                font-size: 0.9em;
+            }
+
+            .results-table th,
+            .results-table td {
+                padding: 10px 5px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>📊 Kết quả bài làm</h2>
+        
+        <div class="score-summary">
+            <strong>Số câu đúng:</strong>
+            <div class="score-number">{{ score }} / {{ total_questions }}</div>
+            {% set percent = (score / total_questions * 100) | round(1) if total_questions > 0 else 0 %}
+            <p style="font-size: 1.3em; color: #4a5568;">Tỷ lệ đúng: {{ percent }}%</p>
+        </div>
+
+        <!-- Bảng kết quả từng câu -->
+        {% if total_questions is defined and results is defined %}
+        <table class="results-table">
+            <thead>
+                <tr>
+                    <th style="width: 15%;">Câu số</th>
+                    <th style="width: 20%;">Trạng thái</th>
+                    <th>Ghi chú</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for i in range(total_questions|int) %}
+                <tr>
+                    <td style="text-align: center; font-weight: bold;">{{ i + 1 }}</td>
+                    {% if results[i].status == "Sai" %}
+                    <td style="text-align: center;" class="status-wrong">❌ Sai</td>
+                    <td>{{ results[i].note }}</td>
+                    {% else %}
+                    <td style="text-align: center;" class="status-correct">✅ Đúng</td>
+                    <td style="color: #a0aec0;">—</td>
+                    {% endif %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="warning-box">
+            <strong>⚠️ Cảnh báo:</strong> Không nhận được dữ liệu kết quả. Vui lòng kiểm tra lại hàm <code>submit</code>.
+        </div>
+        {% endif %}
+
+        <!-- Các lỗi học sinh mắc phải -->
+        {% if feedback %}
+        <div class="error-section">
+            <h3>❌ Tổng hợp lỗi</h3>
+            <ul>
+                {% for f in feedback %}
+                <li>🔸 {{ f }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+
+        <!-- Phản hồi từ AI -->
+        {% if ai_feedback %}
+        <div class="ai-feedback">
+            <h3>🤖 Phản hồi từ AI</h3>
+            <p>{{ ai_feedback }}</p>
+        </div>
+        {% endif %}
+
+        <!-- Quay về trang chính -->
+        <div style="text-align: center;">
+            <a href="/" class="back-button">⬅️ Quay về trang chính</a>
+        </div>
+    </div>
+</body>
+</html>

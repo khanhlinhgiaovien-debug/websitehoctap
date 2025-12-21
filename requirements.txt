@@ -3,3 +3,4 @@ Pillow
 PyMuPDF
 google-generativeai
 gunicorn
+dotenv

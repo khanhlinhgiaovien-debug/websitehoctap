@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tư vấn sức khỏe học sinh</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            color: #667eea;
+            font-size: 2.2em;
+        }
+
+        .header-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 10px 25px;
+            border-radius: 25px;
+            text-decoration: none;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            display: inline-block;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+
+        .btn-secondary:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .expert-info {
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+
+        .question-form {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .question-form h2 {
+            color: #667eea;
+            margin-bottom: 25px;
+            font-size: 1.8em;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            color: #2d3748;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 1em;
+            font-family: inherit;
+            transition: border-color 0.3s;
+        }
+
+        .form-group textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .radio-group {
+            display: flex;
+            gap: 20px;
+            margin-top: 10px;
+        }
+
+        .radio-option {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 20px;
+            background: #f7fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .radio-option:hover {
+            border-color: #667eea;
+            background: #edf2f7;
+        }
+
+        .radio-option input[type="radio"]:checked + label {
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        .radio-option input[type="radio"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        .questions-list {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            max-height: 800px;
+            overflow-y: auto;
+        }
+
+        .questions-list h2 {
+            color: #667eea;
+            margin-bottom: 25px;
+            font-size: 1.8em;
+            position: sticky;
+            top: 0;
+            background: white;
+            padding-bottom: 15px;
+            z-index: 10;
+        }
+
+        .question-card {
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .question-card.answered {
+            border-left-color: #48bb78;
+        }
+
+        .question-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .student-name {
+            font-weight: bold;
+            color: #2d3748;
+            font-size: 1.1em;
+        }
+
+        .question-time {
+            color: #718096;
+            font-size: 0.9em;
+        }
+
+        .question-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.85em;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+
+        .badge-ai {
+            background: #bee3f8;
+            color: #2c5282;
+        }
+
+        .badge-expert {
+            background: #feebc8;
+            color: #7c2d12;
+        }
+
+        .badge-answered {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+
+        .question-text {
+            color: #2d3748;
+            line-height: 1.6;
+            margin-bottom: 15px;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+        }
+
+        .ai-response {
+            background: linear-gradient(135deg, #e6fffa 0%, #b2f5ea 100%);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            border-left: 4px solid #38b2ac;
+        }
+
+        .ai-response strong {
+            color: #234e52;
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        .ai-response p {
+            color: #2d3748;
+            white-space: pre-wrap;
+            line-height: 1.6;
+        }
+
+        .expert-response {
+            background: linear-gradient(135deg, #fef5e7 0%, #fad7a0 100%);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            border-left: 4px solid #f39c12;
+        }
+
+        .expert-response-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .expert-name {
+            font-weight: bold;
+            color: #7c2d12;
+        }
+
+        .expert-specialty {
+            font-size: 0.85em;
+            color: #975a16;
+            font-style: italic;
+        }
+
+        .expert-answer-form {
+            margin-top: 15px;
+            padding: 15px;
+            background: #fffbeb;
+            border-radius: 10px;
+            border: 2px dashed #fbbf24;
+        }
+
+        .expert-answer-form textarea {
+            width: 100%;
+            min-height: 100px;
+            padding: 12px;
+            border: 2px solid #fcd34d;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            resize: vertical;
+        }
+
+        .alert {
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+
+        .alert-success {
+            background: #f0fff4;
+            color: #22543d;
+            border-left: 4px solid #48bb78;
+        }
+
+        .alert-error {
+            background: #fff5f5;
+            color: #c53030;
+            border-left: 4px solid #f56565;
+        }
+
+        .alert-info {
+            background: #ebf8ff;
+            color: #2c5282;
+            border-left: 4px solid #4299e1;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #a0aec0;
+        }
+
+        .empty-state svg {
+            width: 100px;
+            height: 100px;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        @media (max-width: 968px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .header {
+                flex-direction: column;
+                gap: 20px;
+                text-align: center;
+            }
+
+            .header-buttons {
+                flex-direction: column;
+                width: 100%;
+            }
+
+            .btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏥 Tư vấn sức khỏe học sinh</h1>
+            <div class="header-buttons">
+                {% if is_expert %}
+                    <div class="expert-info">
+                        <span>👨‍⚕️ {{ expert_name }}</span>
+                    </div>
+                    <a href="{{ url_for('expert_logout') }}" class="btn btn-secondary">Đăng xuất</a>
+                {% else %}
+                    <a href="{{ url_for('expert_login') }}" class="btn btn-secondary">Đăng nhập chuyên gia</a>
+                {% endif %}
+                <a href="/" class="btn btn-secondary">🏠 Trang chủ</a>
+            </div>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div class="content-grid">
+            <div class="question-form">
+                <h2>📝 Đặt câu hỏi</h2>
+                <form method="POST">
+                    <div class="form-group">
+                        <label for="student_name">Tên của bạn:</label>
+                        <input type="text" id="student_name" name="student_name" placeholder="Nhập tên của bạn" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="question">Vấn đề cần tư vấn:</label>
+                        <textarea id="question" name="question" placeholder="Mô tả chi tiết vấn đề của bạn..." required></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Bạn muốn được tư vấn bởi:</label>
+                        <div class="radio-group">
+                            <div class="radio-option">
+                                <input type="radio" id="ai" name="consult_type" value="ai" checked>
+                                <label for="ai">🤖 AI tư vấn (Nhanh)</label>
+                            </div>
+                            <div class="radio-option">
+                                <input type="radio" id="expert" name="consult_type" value="expert">
+                                <label for="expert">👨‍⚕️ Chuyên gia</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary" style="width: 100%; padding: 15px;">
+                        📤 Gửi câu hỏi
+                    </button>
+                </form>
+            </div>
+
+            <div class="questions-list">
+                <h2>💬 Câu hỏi & Tư vấn</h2>
+
+                {% if questions %}
+                    {% for q in questions %}
+                        <div class="question-card {% if q.status == 'answered' %}answered{% endif %}">
+                            <div class="question-header">
+                                <span class="student-name">{{ q.student_name }}</span>
+                                <div>
+                                    <span class="question-badge {% if q.consult_type == 'ai' %}badge-ai{% else %}badge-expert{% endif %}">
+                                        {% if q.consult_type == 'ai' %}🤖 AI{% else %}👨‍⚕️ Chuyên gia{% endif %}
+                                    </span>
+                                    {% if q.status == 'answered' %}
+                                        <span class="question-badge badge-answered">✅ Đã trả lời</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <div class="question-time">🕒 {{ q.timestamp }}</div>
+
+                            <div class="question-text">
+                                {{ q.question }}
+                            </div>
+
+                            {% if q.ai_response %}
+                                <div class="ai-response">
+                                    <strong>🤖 Phản hồi từ AI:</strong>
+                                    <p>{{ q.ai_response }}</p>
+                                </div>
+                            {% endif %}
+
+                            {% if q.expert_responses %}
+                                {% for er in q.expert_responses %}
+                                    <div class="expert-response">
+                                        <div class="expert-response-header">
+                                            <div>
+                                                <div class="expert-name">👨‍⚕️ {{ er.expert_name }}</div>
+                                                <div class="expert-specialty">{{ er.specialty }}</div>
+                                            </div>
+                                            <div class="question-time">{{ er.timestamp }}</div>
+                                        </div>
+                                        <p style="white-space: pre-wrap; line-height: 1.6; color: #2d3748; margin-top: 10px;">{{ er.answer }}</p>
+                                    </div>
+                                {% endfor %}
+                            {% endif %}
+
+                            {% if is_expert and q.consult_type == 'expert' %}
+                                <div class="expert-answer-form">
+                                    <form action="{{ url_for('expert_answer', question_id=q.id) }}" method="POST">
+                                        <label style="font-weight: bold; color: #975a16; margin-bottom: 8px; display: block;">
+                                            💬 Trả lời với tư cách chuyên gia:
+                                        </label>
+                                        <textarea name="answer" placeholder="Nhập câu trả lời của bạn..." required></textarea>
+                                        <button type="submit" class="btn btn-primary">📨 Gửi câu trả lời</button>
+                                    </form>
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="empty-state">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                        </svg>
+                        <p style="font-size: 1.2em;">Chưa có câu hỏi nào</p>
+                        <p>Hãy là người đầu tiên đặt câu hỏi!</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,29 @@
+[
+  {
+    "id": "2731e226-b63c-444a-941d-b4b1a86d1012",
+    "student_name": "test 2",
+    "question": "nayy bị cảm",
+    "consult_type": "expert",
+    "timestamp": "21/12/2025 22:08",
+    "ai_response": null,
+    "expert_responses": [
+      {
+        "expert_name": "BS. Nguyễn Văn A",
+        "specialty": "Sức khỏe tâm lý",
+        "answer": "alo 12345566",
+        "timestamp": "21/12/2025 22:08"
+      }
+    ],
+    "status": "answered"
+  },
+  {
+    "id": "0ae5e0f7-9af6-4dd3-b58a-a7e88f5e36ed",
+    "student_name": "test1",
+    "question": "chào bạn nay tôi thấy lạnh trong người",
+    "consult_type": "ai",
+    "timestamp": "21/12/2025 21:44",
+    "ai_response": "Chào bạn! Mình hiểu là bạn đang cảm thấy lạnh trong người đúng không? Cảm giác này có thể do nhiều nguyên nhân, và điều quan trọng là mình cần lắng nghe cơ thể mình nhé.\n\nDưới đây là một vài lời khuyên để bạn có thể cảm thấy ấm áp và khỏe mạnh hơn:\n\n1.  Giữ ấm cơ thể:\n*   Mặc đủ ấm: Đảm bảo bạn đang mặc đủ quần áo, đặc biệt là khi thời tiết lạnh hoặc ở trong môi trường có điều hòa. Bạn có thể mặc thêm áo khoác, áo len, hoặc mang tất.\n*   Ở nơi ấm áp: Tránh ngồi ở những nơi có gió lùa hoặc quá lạnh.\n\n2.  Chăm sóc dinh dưỡng:\n*   Ăn các món nóng: Các món ăn nóng như cháo, phở, súp, hoặc một bát canh nóng sẽ giúp làm ấm cơ thể từ bên trong và cung cấp năng lượng cần thiết.\n*   Ăn đủ bữa: Đừng bỏ bữa, đặc biệt là bữa sáng nhé! Một bữa sáng đầy đủ sẽ cung cấp năng lượng cho cơ thể hoạt động và giúp giữ nhiệt.\n*   Uống đủ nước ấm: Uống nước ấm, trà gừng ấm hoặc sữa nóng có thể giúp bạn cảm thấy dễ chịu hơn rất nhiều. Việc uống đủ nước (1.5-2 lít/ngày) cũng rất quan trọng cho sức khỏe tổng thể.\n\n3.  Vận động nhẹ nhàng:\n*   Nếu bạn không cảm thấy quá mệt mỏi, việc vận động nhẹ nhàng một chút như đi bộ trong nhà hoặc tập vài động tác thể dục đơn giản có thể giúp cơ thể sản sinh nhiệt và ấm lên.\n\n4.  Đảm bảo giấc ngủ đủ:\n*   Cơ thể mệt mỏi do thiếu ngủ cũng có thể khiến bạn dễ cảm thấy lạnh hơn. Hãy cố gắng ngủ đủ 8-9 tiếng mỗi đêm và đi ngủ trước 23h nhé.\n\nKhi nào cần lưu ý hơn và đi gặp bác sĩ?\n\nNếu cảm giác lạnh trong người kéo dài, kèm theo các triệu chứng khác như:\n*   Sốt, ho, sổ mũi\n*   Đau đầu, chóng mặt\n*   Mệt mỏi, buồn chán kéo dài\n*   Hoặc bạn cảm thấy không khỏe hơn,\n\nThì bạn nên nói chuyện với bố mẹ, người lớn đáng tin cậy để họ có thể đưa bạn đi khám bác sĩ nhé. Bác sĩ sẽ kiểm tra kỹ hơn để tìm ra nguyên nhân chính xác và đưa ra lời khuyên phù hợp nhất cho bạn.\n\nMong là bạn sẽ sớm ấm áp trở lại và luôn khỏe mạnh!",
+    "expert_responses": [],
+    "status": "answered"
+  }
+]

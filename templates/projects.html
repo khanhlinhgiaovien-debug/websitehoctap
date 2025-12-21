@@ -1,16 +1,172 @@
-{% extends "layout.html" %}
-{% block title %}Danh sách đề bài{% endblock %}
-{% block content %}
-<h2> Danh sách đề bài sản phẩm</h2>
-<ul>
-  {% for project in projects %}
-    <li style="margin-bottom: 20px;">
-      <a href="{{ url_for('project', project_id=project.id) }}">
-        <strong>{{ project.title }}</strong>
-      </a><br>
-      <em>{{ project.description }}</em>
-    </li>
-  {% endfor %}
-</ul>
-<a href="/">⬅️ Quay về trang chính</a>
-{% endblock %}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Danh sách đề bài sản phẩm</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        h2 {
+            color: #667eea;
+            text-align: center;
+            margin-bottom: 40px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .projects-list {
+            list-style: none;
+        }
+
+        .project-item {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+            border-left: 5px solid #667eea;
+        }
+
+        .project-item:hover {
+            transform: translateX(10px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+            border-left-color: #764ba2;
+        }
+
+        .project-link {
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
+
+        .project-title {
+            color: #2d3748;
+            font-size: 1.5em;
+            font-weight: bold;
+            margin-bottom: 10px;
+            transition: color 0.3s ease;
+        }
+
+        .project-item:hover .project-title {
+            color: #667eea;
+        }
+
+        .project-description {
+            color: #4a5568;
+            font-size: 1.1em;
+            line-height: 1.6;
+            font-style: italic;
+        }
+
+        .back-button {
+            display: inline-block;
+            margin-top: 30px;
+            padding: 15px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 50px;
+            font-weight: bold;
+            font-size: 1.1em;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .back-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.5);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #718096;
+        }
+
+        .empty-state svg {
+            width: 120px;
+            height: 120px;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 25px;
+            }
+
+            h2 {
+                font-size: 2em;
+            }
+
+            .project-item {
+                padding: 20px;
+            }
+
+            .project-title {
+                font-size: 1.3em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>📚 Danh sách đề bài sản phẩm</h2>
+        
+        {% if projects %}
+        <ul class="projects-list">
+            {% for project in projects %}
+            <li class="project-item">
+                <a href="{{ url_for('project', project_id=project.id) }}" class="project-link">
+                    <div class="project-title">{{ project.title }}</div>
+                    <div class="project-description">{{ project.description }}</div>
+                </a>
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <div class="empty-state">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            <p style="font-size: 1.3em;">Chưa có đề bài nào</p>
+        </div>
+        {% endif %}
+        
+        <a href="/" class="back-button">⬅️ Quay về trang chính</a>
+    </div>
+</body>
+</html>

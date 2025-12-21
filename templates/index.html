@@ -1,87 +1,497 @@
-{% extends "layout.html" %}
-{% block title %}Trang chính{% endblock %}
-{% block content %}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hệ Thống Học Tập Trực Tuyến</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
 
-<style>
-  body {
-    background-image: url('/static/images/nen.jpg');
-    background-size: cover;
-    background-repeat: no-repeat;
-    background-position: center center;
-  }
-  .card-link {
-    display: block;
-    padding: 20px;
-    text-align: center;
-    text-decoration: none;
-    border-radius: 10px;
-    background: linear-gradient(135deg, #f0f4ff, #dbeafe);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-    transition: transform 0.2s ease;
-    color: #333;
-  }
-  .card-link:hover {
-    transform: scale(1.05);
-    background: linear-gradient(135deg, #e0f2fe, #c7d2fe);
-  }
-  .card-icon {
-    font-size: 2rem;
-    margin-bottom: 10px;
-  }
-</style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f0f0f0;
+    }
 
-<div class="container mt-4">
-  <h2 class="text-center mb-4">Chọn chức năng</h2>
-  <div class="row g-4 justify-content-center">
+    .header {
+      background: linear-gradient(to right, #667eea, #764ba2);
+      color: white;
+      padding: 25px 40px;
+    }
 
-    <div class="col-md-4">
-      <a href="/exam/de1" class="card-link">
-        <div class="card-icon"></div>
-        Làm bài trắc nghiệm môn toán (Đề 1)
-      </a>
+    .header h1 {
+      font-size: 1.5rem;
+      font-weight: 600;
+    }
+
+    .breadcrumb {
+      background: #e8e8e8;
+      padding: 12px 40px;
+      font-size: 0.9rem;
+      color: #666;
+    }
+
+    .layout {
+      display: flex;
+      min-height: calc(100vh - 110px);
+    }
+
+    .sidebar {
+      width: 250px;
+      min-width: 250px;
+      background: white;
+      border-right: 1px solid #ddd;
+    }
+
+    .sidebar-title {
+      background: linear-gradient(to right, #667eea, #764ba2);
+      color: white;
+      padding: 15px 20px;
+      font-weight: 600;
+    }
+
+    .menu {
+      list-style: none;
+    }
+
+    .menu > li {
+      padding: 14px 20px;
+      cursor: pointer;
+      border-bottom: 1px solid #f0f0f0;
+    }
+
+    .menu > li:hover {
+      background: #f5f5f5;
+    }
+
+    .menu > li.active {
+      background: #e8eaf6;
+      color: #667eea;
+      font-weight: 600;
+      border-left: 4px solid #667eea;
+    }
+
+    .submenu {
+      list-style: none;
+      background: #fafafa;
+      display: none;
+    }
+
+    .submenu.show {
+      display: block;
+    }
+
+    .submenu li {
+      padding: 12px 20px 12px 40px;
+      font-size: 0.9rem;
+    }
+
+    .submenu li:hover {
+      background: #e0e0e0;
+    }
+
+    .submenu a {
+      text-decoration: none;
+      color: #555;
+      display: block;
+    }
+
+    .content {
+      flex: 1;
+      padding: 30px 40px;
+      background: #fafafa;
+      overflow-y: auto;
+    }
+
+    .search-area {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 30px;
+    }
+
+    .search-input {
+      flex: 1;
+      padding: 12px 20px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 1rem;
+    }
+
+    .search-btn {
+      padding: 12px 30px;
+      background: #667eea;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .search-btn:hover {
+      background: #5568d3;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 25px;
+    }
+
+    .card {
+      background: white;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      transition: transform 0.2s;
+      text-decoration: none;
+      color: inherit;
+      display: block;
+    }
+
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+    }
+
+    .card-img {
+      height: 180px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .book {
+      width: 40px;
+      height: 50px;
+      border-radius: 3px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+
+    .card-body {
+      padding: 20px;
+    }
+
+    .card-title {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: #333;
+    }
+
+    .card-text {
+      font-size: 0.85rem;
+      color: #666;
+      margin-bottom: 12px;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 4px 12px;
+      background: #e3f2fd;
+      color: #1976d2;
+      border-radius: 12px;
+      font-size: 0.8rem;
+    }
+
+    .card.expandable {
+      cursor: pointer;
+    }
+
+    .card.expandable .card-body {
+      padding-bottom: 10px;
+    }
+
+    .exam-list {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.4s ease;
+      padding: 0 20px;
+    }
+
+    .exam-list.show {
+      max-height: 300px;
+      padding: 10px 20px 20px;
+    }
+
+    .exam-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 15px;
+      margin-bottom: 8px;
+      background: #f8f9fa;
+      border-radius: 6px;
+      text-decoration: none;
+      color: inherit;
+      transition: all 0.2s;
+    }
+
+    .exam-item:hover {
+      background: #e3f2fd;
+      transform: translateX(5px);
+    }
+
+    .exam-item:last-child {
+      margin-bottom: 0;
+    }
+
+    .exam-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .exam-number {
+      width: 35px;
+      height: 35px;
+      background: linear-gradient(135deg, #43e97b, #38f9d7);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: bold;
+      font-size: 1em;
+    }
+
+    .exam-text {
+      font-size: 0.9rem;
+      color: #333;
+      font-weight: 500;
+    }
+
+    .expand-arrow {
+      text-align: center;
+      color: #667eea;
+      font-size: 1.2em;
+      margin-top: 10px;
+      transition: transform 0.3s ease;
+    }
+
+    .expand-arrow.open {
+      transform: rotate(180deg);
+    }
+
+    @media (max-width: 1200px) {
+      .grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 768px) {
+      .layout {
+        flex-direction: column;
+      }
+      
+      .sidebar {
+        width: 100%;
+      }
+      
+      .grid {
+        grid-template-columns: 1fr;
+      }
+
+      .header {
+        padding: 20px;
+      }
+
+      .breadcrumb {
+        padding: 10px 20px;
+      }
+
+      .content {
+        padding: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <h1>HỆ THỐNG HỌC TẬP TRỰC TUYẾN</h1>
+</div>
+
+<div class="breadcrumb">
+  Trang chủ
+</div>
+
+<div class="layout">
+  <div class="sidebar">
+    <div class="sidebar-title">Danh mục</div>
+    <ul class="menu">
+      <li class="active" onclick="toggle(this)">
+        Bài tập Toán học
+        <ul class="submenu show">
+          <li><a href="/exam/de1">Đề thi Toán số 1</a></li>
+          <li><a href="/exam/de2">Đề thi Toán số 2</a></li>
+          <li><a href="/exam/de3">Đề thi Toán số 3</a></li>
+        </ul>
+      </li>
+      <li><a href="/upload_image" style="text-decoration:none; color:inherit; display:block;">Nộp sản phẩm</a></li>
+      <li><a href="/projects" style="text-decoration:none; color:inherit; display:block;">Câu lạc bộ</a></li>
+      <li><a href="/enter_nickname" style="text-decoration:none; color:inherit; display:block;">Game giải trí</a></li>
+      <li><a href="/vanbai" style="text-decoration:none; color:inherit; display:block;">Phân tích Văn</a></li>
+    </ul>
+  </div>
+
+  <div class="content">
+    <div class="search-area">
+      <input type="text" class="search-input" placeholder="Từ khóa">
+      <button class="search-btn">TÌM KIẾM</button>
     </div>
 
-    <div class="col-md-4">
-      <a href="/exam/de2" class="card-link">
-        <div class="card-icon"></div>
-        Làm bài trắc nghiệm môn toán (Đề 2)
-      </a>
-    </div>
+    <div class="grid">
+      <!-- Card Toán học có dropdown -->
+      <div class="card expandable" onclick="toggleExams()">
+        <div class="card-img" style="background: linear-gradient(to right, #43e97b, #38f9d7);">
+          <div class="book" style="background: #ff6b6b;"></div>
+          <div class="book" style="background: #4ecdc4;"></div>
+          <div class="book" style="background: #ffd93d;"></div>
+        </div>
+        <div class="card-body">
+          <div class="card-title">KIỂM TRA TOÁN HỌC</div>
+          <div class="card-text">Chọn đề thi để bắt đầu làm bài</div>
+          <span class="badge">3 Đề thi</span>
+          <div class="expand-arrow" id="examArrow">▼</div>
+        </div>
+        <div class="exam-list" id="examList">
+          <a href="/exam/de1" class="exam-item" onclick="event.stopPropagation()">
+            <div class="exam-info">
+              <div class="exam-number">1</div>
+              <div class="exam-text">Đề thi Toán số 1</div>
+            </div>
+            <span class="badge">Mới</span>
+          </a>
+          <a href="/exam/de2" class="exam-item" onclick="event.stopPropagation()">
+            <div class="exam-info">
+              <div class="exam-number">2</div>
+              <div class="exam-text">Đề thi Toán số 2</div>
+            </div>
+            <span class="badge">Phổ biến</span>
+          </a>
+          <a href="/exam/de3" class="exam-item" onclick="event.stopPropagation()">
+            <div class="exam-info">
+              <div class="exam-number">3</div>
+              <div class="exam-text">Đề thi Toán số 3</div>
+            </div>
+            <span class="badge">Nâng cao</span>
+          </a>
+        </div>
+      </div>
 
-    <div class="col-md-4">
-      <a href="/exam/de3" class="card-link">
-        <div class="card-icon"></div>
-        Làm bài trắc nghiệm môn toán (Đề 3)
+      <a href="/upload_image" class="card">
+        <div class="card-img" style="background: linear-gradient(to right, #ff9a9e, #fecfef);">
+          <div class="book" style="background: #ff6b6b;"></div>
+          <div class="book" style="background: #4ecdc4;"></div>
+          <div class="book" style="background: #ffd93d;"></div>
+        </div>
+        <div class="card-body">
+          <div class="card-title">NỘP SẢN PHẨM</div>
+          <div class="card-text">BÀI TẬP VÀ DỰ ÁN TRẢI NGHIỆM</div>
+          <span class="badge">Đang mở</span>
+        </div>
       </a>
-    </div>
 
-    <div class="col-md-4">
-      <a href="/upload_image" class="card-link">
-        <div class="card-icon"></div>
-        Nộp sản phẩm hoạt động trải nghiệm và Toán học
+      <a href="/projects" class="card">
+        <div class="card-img" style="background: linear-gradient(to right, #30cfd0, #330867);">
+          <div class="book" style="background: #ff6b6b;"></div>
+          <div class="book" style="background: #4ecdc4;"></div>
+          <div class="book" style="background: #ffd93d;"></div>
+        </div>
+        <div class="card-body">
+          <div class="card-title">CÂU LẠC BỘ</div>
+          <div class="card-text">HỌC THUẬT VÀ PHÁT TRIỂN KỸ NĂNG</div>
+          <span class="badge">Hoạt động</span>
+        </div>
       </a>
-    </div>
 
-    <div class="col-md-4">
-      <a href="/projects" class="card-link">
-        <div class="card-icon"></div>
-        Bài làm theo chương Môn Toán
+      <a href="/enter_nickname" class="card">
+        <div class="card-img" style="background: linear-gradient(to right, #a8edea, #fed6e3);">
+          <div class="book" style="background: #ff6b6b;"></div>
+          <div class="book" style="background: #4ecdc4;"></div>
+          <div class="book" style="background: #ffd93d;"></div>
+        </div>
+        <div class="card-body">
+          <div class="card-title">GAME GIẢI TRÍ</div>
+          <div class="card-text">HỌC QUA CHƠI - RÈN LUYỆN TRI THỨC</div>
+          <span class="badge">Vui vẻ</span>
+        </div>
       </a>
-    </div>
-    <div class="col-md-4">
-      <a href="/enter_nickname" class="card-link">
-        <div class="card-icon"></div>
-        Game giải trí
-      </a>
-    </div>
-    <div class="col-md-4">
-      <a href="/vanbai" class="card-link">
-        <div class="card-icon"></div>
-        Phân tích bài Văn
-      </a>
-    </div>
 
+      <a href="/chatbot" class="card">
+        <div class="card-img" style="background: linear-gradient(to right, #f093fb, #f5576c);">
+          <div class="book" style="background: #ff6b6b;"></div>
+          <div class="book" style="background: #4ecdc4;"></div>
+          <div class="book" style="background: #ffd93d;"></div>
+        </div>
+        <div class="card-body">
+          <div class="card-title">TRỢ LÍ HỌC TẬP AI</div>
+          <div class="card-text">ChAT BOT HỖ TRỢ TƯ VẤN HỌC TẬP</div>
+          <span class="badge">AI</span>
+        </div>
+      </a>
+
+      <a href="/vanbai" class="card">
+        <div class="card-img" style="background: linear-gradient(to right, #f093fb, #f5576c);">
+          <div class="book" style="background: #ff6b6b;"></div>
+          <div class="book" style="background: #4ecdc4;"></div>
+          <div class="book" style="background: #ffd93d;"></div>
+        </div>
+        <div class="card-body">
+          <div class="card-title">PHÂN TÍCH VĂN</div>
+          <div class="card-text">CÔNG CỤ HỖ TRỢ PHÂN TÍCH VĂN HỌC</div>
+          <span class="badge">AI</span>
+        </div>
+      </a>
+
+      <a href="/class_activity" class="card">
+        <div class="card-img" style="background: linear-gradient(to right, #a8edea, #fed6e3);">
+          <div class="book" style="background: #ff6b6b;"></div>
+          <div class="book" style="background: #4ecdc4;"></div>
+          <div class="book" style="background: #ffd93d;"></div>
+        </div>
+        <div class="card-body">
+          <div class="card-title">SINH HOẠT LỚP</div>
+          <div class="card-text">GỬI/ NỘP BẢNG SỐ LIỆU THỐNG KÊ TẠI ĐÂY</div>
+          <span class="badge">SHL</span>
+        </div>
+      </a>
+      <a href="/health_support" class="card">
+        <div class="card-img" style="background: linear-gradient(to right, #f093fb, #f5576c);">
+          <div class="book" style="background: #ff6b6b;"></div>
+          <div class="book" style="background: #4ecdc4;"></div>
+          <div class="book" style="background: #ffd93d;"></div>
+        </div>
+        <div class="card-body">
+          <div class="card-title">TƯ VẤN SỨC KHỎE</div>
+          <div class="card-text">HỖ TRỢ SỨC KHỎE HỌC SINH VỚI AI & CHUYÊN GIA</div>
+          <span class="badge">HEALTH</span>
+        </div>
+      </a>
+    </div>
   </div>
 </div>
 
-{% endblock %}
+<script>
+function toggle(el) {
+  const sub = el.querySelector('.submenu');
+  if (sub) {
+    sub.classList.toggle('show');
+  }
+}
+
+function toggleExams() {
+  const list = document.getElementById('examList');
+  const arrow = document.getElementById('examArrow');
+  
+  list.classList.toggle('show');
+  arrow.classList.toggle('open');
+}
+</script>
+
+</body>
+</html>

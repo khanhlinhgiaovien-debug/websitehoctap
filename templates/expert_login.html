@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng nhập chuyên gia</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .login-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 50px;
+            max-width: 450px;
+            width: 100%;
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .login-header h2 {
+            color: #667eea;
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+
+        .login-header p {
+            color: #718096;
+            font-size: 1.1em;
+        }
+
+        .icon-circle {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0 auto 20px;
+            font-size: 2.5em;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            color: #2d3748;
+            font-weight: bold;
+            margin-bottom: 8px;
+            font-size: 1em;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .login-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.5);
+        }
+
+        .back-link {
+            display: block;
+            text-align: center;
+            margin-top: 20px;
+            color: #667eea;
+            text-decoration: none;
+            font-weight: bold;
+            transition: color 0.3s;
+        }
+
+        .back-link:hover {
+            color: #764ba2;
+        }
+
+        .alert {
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+
+        .alert-error {
+            background: #fff5f5;
+            color: #c53030;
+            border-left: 4px solid #f56565;
+        }
+
+        .alert-success {
+            background: #f0fff4;
+            color: #22543d;
+            border-left: 4px solid #48bb78;
+        }
+
+        .info-box {
+            background: #ebf8ff;
+            border-left: 4px solid #3182ce;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+
+        .info-box p {
+            color: #2c5282;
+            margin: 5px 0;
+            font-size: 0.9em;
+        }
+
+        @media (max-width: 768px) {
+            .login-container {
+                padding: 30px;
+            }
+
+            .login-header h2 {
+                font-size: 1.6em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-header">
+            <div class="icon-circle">👨‍⚕️</div>
+            <h2>Đăng nhập chuyên gia</h2>
+            <p>Hệ thống tư vấn sức khỏe học sinh</p>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <form method="POST">
+            <div class="form-group">
+                <label for="username">Tên đăng nhập:</label>
+                <input type="text" id="username" name="username" placeholder="Nhập tên đăng nhập" required>
+            </div>
+
+            <div class="form-group">
+                <label for="password">Mật khẩu:</label>
+                <input type="password" id="password" name="password" placeholder="Nhập mật khẩu" required>
+            </div>
+
+            <button type="submit" class="login-btn">🔐 Đăng nhập</button>
+        </form>
+
+        <a href="{{ url_for('health_support') }}" class="back-link">← Quay lại trang tư vấn</a>
+
+        <div class="info-box">
+            <p><strong>📌 Dành cho giáo viên/chuyên gia</strong></p>
+            <p>Liên hệ quản trị viên để được cấp tài khoản</p>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,17 @@
+[
+  {
+    "id": "1728608c-4690-4f5c-ab89-236403028f92",
+    "week_name": "tuần 11",
+    "description": "shl",
+    "created_at": "21/12/2025 22:07",
+    "status": "collecting",
+    "groups": {
+      "to_1": [],
+      "to_2": [],
+      "to_3": [],
+      "to_4": [],
+      "giao_vien": []
+    },
+    "ai_analysis": null
+  }
+]
