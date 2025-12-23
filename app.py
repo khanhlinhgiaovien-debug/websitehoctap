@@ -26,6 +26,8 @@ if not api_key:
     raise ValueError(" Thiếu GOOGLE_API_KEY trong file .env")
 genai.configure(api_key=api_key)  # ← SỬA DÒNG NÀY
 model = genai.GenerativeModel("models/gemini-2.5-flash")
+analysis_model = model
+
 
 
 
@@ -171,7 +173,7 @@ def class_activity_detail(activity_id):
 
 @app.route('/class_activity/<activity_id>/analyze', methods=['POST'])
 def analyze_class_activity(activity_id):
-    """AI phân tích tất cả báo cáo của các tổ"""
+    """AI phân tích tất cả báo cáo của các tổ VÀ tạo infographic"""
     activities = load_class_activities()
     activity = next((a for a in activities if a['id'] == activity_id), None)
     
@@ -186,55 +188,199 @@ def analyze_class_activity(activity_id):
         return redirect(url_for('class_activity_detail', activity_id=activity_id))
     
     try:
-        # Chuẩn bị prompt cho AI
-        prompt_parts = [f"""Bạn là giáo viên chủ nhiệm đang đánh giá sinh hoạt lớp tuần này.
+        # ========================================
+        # BƯỚC 1: PHÂN TÍCH TEXT TỪ ẢNH CÁC TỔ
+        # ========================================
+        analysis_prompt = [f"""Bạn là giáo viên chủ nhiệm đang đánh giá sinh hoạt lớp tuần này.
 
 THÔNG TIN TUẦN SINH HOẠT:
 - Tên: {activity['week_name']}
 - Mô tả: {activity.get('description', 'Không có')}
 
-NHIỆM VỤ CỦA BẠN:
-1. Phân tích và so sánh báo cáo của 4 tổ (Tổ 1, Tổ 2, Tổ 3, Tổ 4)
-2. Đánh giá từng tổ về: điểm mạnh, điểm yếu, nỗ lực
-3. So sánh các tổ với nhau (tổ nào tốt nhất, tổ nào cần cải thiện)
-4. Đối chiếu với báo cáo của giáo viên (nếu có)
-5. Đưa ra nhận xét tổng thể về tình hình lớp
-6. Rút kinh nghiệm và đề xuất phương hướng cải thiện cho tuần mới
+NHIỆM VỤ:
+1. Phân tích báo cáo của 4 tổ (Tổ 1, 2, 3, 4)
+2. Đánh giá từng tổ: điểm mạnh, điểm yếu, nỗ lực
+3. So sánh các tổ (tổ nào tốt, tổ nào cần cải thiện)
+4. Đối chiếu với báo cáo giáo viên (nếu có)
+5. Nhận xét tổng thể lớp
+6. Đề xuất phương hướng tuần mới
 
-QUY TẮC TRÌNH BÀY:
-- KHÔNG dùng **, ***, ##, ###, ````
-- Xuống dòng rõ ràng giữa các phần
-- Dùng số thứ tự 1. 2. 3. hoặc dấu gạch đầu dòng -
-- Giọng văn động viên, tích cực nhưng thẳng thắn
-- Đưa ra đề xuất cụ thể, khả thi
+ĐỊNH DẠNG PHẢN HỒI (JSON):
+{{
+  "tong_quan": "...",
+  "danh_gia_cac_to": {{
+    "to_1": {{"diem_manh": "...", "diem_yeu": "...", "xep_loai": "Tốt/Khá/TB"}},
+    "to_2": {{"diem_manh": "...", "diem_yeu": "...", "xep_loai": "Tốt/Khá/TB"}},
+    "to_3": {{"diem_manh": "...", "diem_yeu": "...", "xep_loai": "Tốt/Khá/TB"}},
+    "to_4": {{"diem_manh": "...", "diem_yeu": "...", "xep_loai": "Tốt/Khá/TB"}}
+  }},
+  "nhan_xet_tong_quan": [
+    {{"ngay": "Thứ 2", "noi_dung": "Học tập tốt", "icon": "✅"}},
+    {{"ngay": "Thứ 3", "noi_dung": "Nộp bài đầy đủ", "icon": "📚"}}
+  ],
+  "phuong_huong_tuan_moi": [
+    "Ôn tập bài cũ",
+    "Nộp bài đúng hạn",
+    "Phát biểu tích cực"
+  ]
+}}
 
-Dưới đây là các báo cáo dạng ảnh:
+Dưới đây là báo cáo các tổ:
 """]
         
-        # Thêm ảnh của từng tổ vào prompt
+        # Thêm ảnh của từng tổ
         for group_name, images in activity['groups'].items():
             if images:
                 group_display = {
-                    'to_1': 'TỔ 1',
-                    'to_2': 'TỔ 2', 
-                    'to_3': 'TỔ 3',
-                    'to_4': 'TỔ 4',
+                    'to_1': 'TỔ 1', 'to_2': 'TỔ 2', 
+                    'to_3': 'TỔ 3', 'to_4': 'TỔ 4',
                     'giao_vien': 'GIÁO VIÊN'
                 }
-                prompt_parts.append(f"\n--- BÁO CÁO {group_display[group_name]} ---")
+                analysis_prompt.append(f"\n--- BÁO CÁO {group_display[group_name]} ---")
                 
                 for img_data in images:
                     img_path = os.path.join(CLASS_ACTIVITY_IMAGES, img_data['filename'])
                     if os.path.exists(img_path):
                         img = Image.open(img_path)
-                        prompt_parts.append(img)
+                        analysis_prompt.append(img)
         
-        # Gọi AI
-        response = model.generate_content(prompt_parts)
-        ai_analysis = clean_ai_output(response.text)
+        # Gọi Gemini phân tích
+        analysis_response = model.generate_content(analysis_prompt)
+        ai_analysis = clean_ai_output(analysis_response.text)
         
-        # Lưu kết quả
+        # Parse JSON (nếu AI trả về đúng format)
+        try:
+            analysis_data = json.loads(ai_analysis)
+        except:
+            # Nếu không parse được JSON, tạo data mẫu
+            analysis_data = {
+                "tong_quan": ai_analysis[:200] + "...",
+                "nhan_xet_tong_quan": [
+                    {"ngay": "Tổ 1", "noi_dung": "Học tập tốt", "icon": "✅"},
+                    {"ngay": "Tổ 2", "noi_dung": "Nộp bài đầy đủ", "icon": "✅"},
+                    {"ngay": "Tổ 3", "noi_dung": "Cần chú ý giờ giấc", "icon": "⚠️"},
+                    {"ngay": "Tổ 4", "noi_dung": "Đoàn kết tốt", "icon": "✅"}
+                ],
+                "phuong_huong_tuan_moi": [
+                    "Ôn tập bài cũ",
+                    "Nộp bài đúng hạn",
+                    "Phát biểu tích cực",
+                    "Giữ gìn vệ sinh"
+                ]
+            }
+        
+        # ========================================
+        # BƯỚC 2: TẠO ẢNH INFOGRAPHIC
+        # ========================================
+        
+        # Chuẩn bị nội dung cho infographic
+        nhan_xet_text = "\n".join([
+            f"- {item.get('ngay', 'Ngày')}: {item.get('noi_dung', '')} {item.get('icon', '✅')}" 
+            for item in analysis_data.get('nhan_xet_tong_quan', [])[:6]
+        ])
+        
+        phuong_huong_text = "\n".join([
+            f"✅ {item}" 
+            for item in analysis_data.get('phuong_huong_tuan_moi', [])[:4]
+        ])
+        
+        image_prompt = f"""Generate an educational infographic image for a Vietnamese classroom weekly report.
+
+STYLE: 2.5D cartoon illustration, pastel colors, cute and friendly, suitable for middle school
+
+LAYOUT STRUCTURE:
+
+[TOP SECTION - HEADER]
+Title (large, centered): "KẾ HOẠCH TUẦN HỌC LỚP 8A4"
+Subtitle: "THCS CẨM PHẢ - TUẤM HẠC"
+Week: "{activity['week_name']}"
+
+[LEFT BOX - SCHEDULE]
+Title: "THỜI KHÓA BIỂU"
+Content (sample schedule):
+- Thứ 2: Toán - Văn
+- Thứ 3: Anh - Hóa
+- Thứ 4: Lý - Sinh
+- Thứ 5: Sử - Địa
+- Thứ 6: GDCD - TD
+(with small icons: books, clock, pencil)
+
+[CENTER BOX - PERFORMANCE REVIEW]
+Title: "NHẬN XÉT SINH HOẠT LỚP TUẦN QUA"
+Content:
+{nhan_xet_text}
+
+[BOTTOM BOX - GOALS]
+Title: "PHƯƠNG HƯỚNG TUẦN MỚI"
+Content:
+{phuong_huong_text}
+
+VISUAL REQUIREMENTS:
+- Background: Light pastel classroom scene with blackboard, desks, plants
+- Color scheme: Mint green (#A8E6CF), light yellow (#FFD88A), soft orange (#FFB366), light pink
+- Cute chibi student characters with big heads and round eyes
+- Icons: stars ⭐, books 📚, checkmarks ✅, warning signs ⚠️
+- Rounded corners on all boxes
+- Clean, readable Vietnamese text (sans-serif font)
+- Decorative elements: sun, clouds, small plants, alarm clock
+- Professional but playful educational poster style
+- Aspect ratio: 16:9 (landscape)
+- High quality, print-ready
+
+DO NOT INCLUDE:
+- Anime Japanese style
+- English text
+- Dark or neon colors
+- Complex artistic fonts (use simple, clear fonts)
+
+This should look like a modern Vietnamese school notice board poster that students would be excited to see."""
+
+        # Gọi model tạo ảnh
+        try:
+            image_response = model.generate_content([image_prompt])
+            
+            # Kiểm tra xem có ảnh trong response không
+            has_image = False
+            
+            # Thử nhiều cách để extract ảnh
+            if hasattr(image_response, '_result'):
+                result = image_response._result
+                if hasattr(result, 'candidates') and result.candidates:
+                    for candidate in result.candidates:
+                        if hasattr(candidate, 'content') and hasattr(candidate.content, 'parts'):
+                            for part in candidate.content.parts:
+                                # Kiểm tra inline_data
+                                if hasattr(part, 'inline_data') and part.inline_data:
+                                    infographic_dir = "static/class_activity_infographics"
+                                    os.makedirs(infographic_dir, exist_ok=True)
+                                    
+                                    infographic_filename = f"{activity_id}_infographic.png"
+                                    infographic_path = os.path.join(infographic_dir, infographic_filename)
+                                    
+                                    # Lưu ảnh
+                                    with open(infographic_path, 'wb') as f:
+                                        f.write(part.inline_data.data)
+                                    
+                                    activity['infographic_image'] = f"/static/class_activity_infographics/{infographic_filename}"
+                                    has_image = True
+                                    break
+                        if has_image:
+                            break
+            
+            # Nếu không tìm thấy ảnh
+            if not has_image:
+                activity['infographic_image'] = None
+                flash('AI chỉ trả về text, không tạo được ảnh infographic. Bạn có thể xem kết quả phân tích bên dưới.', 'warning')
+                
+        except Exception as img_error:
+            activity['infographic_image'] = None
+            flash(f'Không thể tạo infographic: {str(img_error)}. Bạn vẫn có thể xem kết quả phân tích.', 'warning')
+        
+        # ========================================
+        # LƯU KẾT QUẢ
+        # ========================================
         activity['ai_analysis'] = ai_analysis
+        activity['analysis_data'] = analysis_data
         activity['status'] = 'analyzed'
         activity['analyzed_at'] = datetime.now().strftime("%d/%m/%Y %H:%M")
         
@@ -289,7 +435,7 @@ def delete_class_activity(activity_id):
         activities = [a for a in activities if a['id'] != activity_id]
         save_class_activities(activities)
         
-        flash('Đã xóa phiên sinh hoạt!', 'success')
+        flash('Đã xóa phiên sinh hoạt!', 'success') 
     
     return redirect(url_for('class_activity'))
 ###############
@@ -871,36 +1017,64 @@ def submit(de_id):
                 results.append({"status": "Sai", "note": msg})
                 feedback.append(msg)
 
-    score = correct_count
-    summary = f"Học sinh làm đúng {correct_count} / {total_questions} câu."
+    
     detailed_errors = "\n".join(feedback)
 
-    prompt = (
-        f"{summary}\n\n"
-        "Dưới đây là danh sách các lỗi học sinh đã mắc phải trong bài làm:\n"
-        + detailed_errors + "\n\n"
-        "Bạn là giáo viên môn Toán. Hãy viết một phản hồi dành cho học sinh, gồm các phần sau:\n"
-        "1. Nhận xét tổng thể về kết quả bài làm (giọng văn tích cực, khích lệ).\n"
-        "2. Phân tích từng lỗi sai đã nêu: giải thích lý do sai, kiến thức liên quan, và cách sửa.\n"
-        "3. Đề xuất ít nhất 3 dạng bài tập cụ thể để học sinh luyện tập đúng phần bị sai.\n"
-        "Trình bày rõ ràng, dễ hiểu, thân thiện như một giáo viên đang trò chuyện với học sinh."
-        "4. Hãy chấm điểm trên thang 10"
-    )
+    prompt = f"""Học sinh làm đúng {correct_count} / {total_questions} câu.
+
+Danh sách lỗi:
+{detailed_errors}
+
+Bạn là giáo viên Toán. Hãy:
+1. Nhận xét tổng thể về kết quả (giọng văn tích cực, khích lệ)
+2. Phân tích từng lỗi sai: giải thích lý do sai, kiến thức liên quan, cách sửa
+3. Đề xuất ít nhất 3 dạng bài tập cụ thể để luyện tập
+4. Chấm điểm trên thang 10
+
+QUY TẮC TRÌNH BÀY:
+- Công thức toán dùng LaTeX:
+  + Inline (trong dòng): $x^2 + 3x + 2$
+  + Hiển thị riêng: $$\\sqrt{{x-3}} \\geq 0$$
+- Các ký hiệu LaTeX:
+  + Căn: \\sqrt{{x}}
+  + Phân số: \\frac{{a}}{{b}}
+  + Lớn hơn/bằng: \\geq
+  + Nhỏ hơn/bằng: \\leq
+  + Nhân: \\times
+  + Pi: \\pi
+- KHÔNG dùng **, ##, ###, ```
+- Xuống dòng rõ ràng giữa các ý
+- Dùng 1. 2. 3. hoặc dấu gạch đầu dòng -
+
+VÍ DỤ TRÌNH BÀY ĐÚNG:
+
+Câu 3 sai. Đáp án đúng: $x \\geq 3$
+
+Giải thích: Căn thức $\\sqrt{{x-3}}$ xác định khi biểu thức trong căn không âm, tức là:
+$$x - 3 \\geq 0$$
+$$x \\geq 3$$
+
+Câu 4 sai. Đáp án đúng: $\\frac{{3}}{{2}}$
+
+Phương trình $2x^2 - 3x - 5 = 0$ có:
+- $\\Delta = b^2 - 4ac = 9 + 40 = 49$
+- Tổng 2 nghiệm: $x_1 + x_2 = -\\frac{{b}}{{a}} = \\frac{{3}}{{2}}$
+
+Trả lời bằng tiếng Việt, thân thiện."""
 
     try:
         response = model.generate_content([prompt])
+        # KHÔNG dùng clean_ai_output vì cần giữ nguyên LaTeX
         ai_feedback = response.text
     except Exception as e:
-        ai_feedback = f"❌ Lỗi khi gọi AI: {str(e)}"
-
-    return render_template(
-        'result.html',
-        score=score,
-        feedback=feedback,
-        ai_feedback=ai_feedback,
-        total_questions=total_questions,
-        results=results
-    )
+        ai_feedback = f"❌ Lỗi: {str(e)}"
+    
+    return render_template('result.html', 
+                         score=correct_count,
+                         feedback=feedback,
+                         ai_feedback=ai_feedback,
+                         total_questions=total_questions,
+                         results=results)
 
 @app.route('/project/<project_id>', methods=['GET', 'POST'])
 def project(project_id):

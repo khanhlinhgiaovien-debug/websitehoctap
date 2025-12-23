@@ -4,6 +4,23 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kết quả bài làm</title>
+    
+    <!-- Thêm MathJax để render công thức toán học -->
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script>
+        MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']],
+                processEscapes: true
+            },
+            svg: {
+                fontCache: 'global'
+            }
+        };
+    </script>
+    
     <style>
         * {
             margin: 0;
@@ -159,6 +176,12 @@
             white-space: pre-wrap;
         }
 
+        /* Style cho công thức toán học */
+        .ai-feedback .MathJax,
+        .ai-feedback mjx-container {
+            font-size: 1.1em !important;
+        }
+
         .warning-box {
             background: #fff5f5;
             border: 2px solid #fc8181;
@@ -269,7 +292,8 @@
         {% if ai_feedback %}
         <div class="ai-feedback">
             <h3>🤖 Phản hồi từ AI</h3>
-            <p>{{ ai_feedback }}</p>
+            <!-- Thêm |safe để cho phép render HTML và MathJax -->
+            <p>{{ ai_feedback|safe }}</p>
         </div>
         {% endif %}
 
