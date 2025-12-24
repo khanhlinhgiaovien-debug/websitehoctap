@@ -158,7 +158,117 @@
         }
       ]
     },
-    "ai_analysis": "Tuyệt vời! Với vai trò là giáo viên chủ nhiệm, tôi xin đánh giá tổng quan tuần sinh hoạt lớp 11 dựa trên các báo cáo và đưa ra phương hướng cho tuần mới.\n\n---\n\nI. PHÂN TÍCH VÀ ĐÁNH GIÁ CỤ THỂ CÁC TỔ (Tuần 11)\n\nChúng ta sẽ dựa trên điểm cộng (Việc làm tốt, điểm tốt) và điểm trừ (Việc không nên, bị ghi sổ đầu bài, nói chuyện, không học bài,...) từ các báo cáo để đánh giá mức độ nỗ lực và thực hiện nội quy của từng tổ. Điểm khởi đầu mặc định là 100 điểm cho mỗi học sinh, và chúng ta sẽ tính tổng điểm cộng/trừ ròng cho mỗi tổ.\n\n*   Phân tích điểm số (Điểm cộng/trừ ròng của tổ):\n*   Tổ 1:\n*   Điểm cộng: 5 (Mai Phạm Huyền Anh) + 10 (Lê Gia Hoàng) + 5 (Hồ Đại Hải) = 20 điểm\n*   Điểm trừ: 10 (Mai Phạm Huyền Anh - nói chuyện) + 5 (Mai Phạm Huyền Anh - không học bài) + 5 (Lê Ngọc Hân - việc không nên) + 10 (Nguyễn Hoàng Ngọc Hà - nói chuyện) = 30 điểm\n*   Điểm ròng của Tổ 1: 20 - 30 = -10 điểm\n*   Tổ 2:\n*   Điểm cộng: 5 (Dương Ngọc Khánh Chi) + 5 (Nguyễn Gia Hân) + 10 (Dương Thành Hưng) + 10 (Trần Đức Minh) = 30 điểm\n*   Điểm trừ: 10 (Dương Ngọc Khánh Chi - nói chuyện) + 5 (Dương Ngọc Khánh Chi - không học bài) + 5 (Nguyễn Gia Hân - việc không nên) + 5 (Mai Khánh Linh - việc không nên) + 5 (Vũ Ngọc Trúc Ly - việc không nên) = 30 điểm\n*   Điểm ròng của Tổ 2: 30 - 30 = 0 điểm\n*   Tổ 3:\n*   Điểm cộng: 5 (Dương Hải Đạt) + 5 (Nguyễn Ngọc Long) + 10 (Đỗ Hà Diễm My) + 5 (Nguyễn Tuấn Kiệt) = 25 điểm\n*   Điểm trừ: 10 (Dương Hải Đạt - nói chuyện) + 5 (Dương Hải Đạt - không học bài) + 5 (Bùi Phương Thảo My - việc không nên) + 5 (Nguyễn Kim Ngân - việc không nên) + 5 (Cao Song Ngọc - việc không nên) + 10 (Phan Tuệ Nhi - nói chuyện) = 40 điểm\n*   Điểm ròng của Tổ 3: 25 - 40 = -15 điểm\n*   Tổ 4: (Lưu ý: Báo cáo tổ 4 có vẻ trùng lặp một phần dữ liệu với tổ 1, nhưng tôi sẽ phân tích dựa trên dữ liệu được cung cấp).\n*   Điểm cộng: 5 (Mai Phạm Huyền Anh) + 10 (Lê Gia Hoàng) + 5 (Hồ Đại Hải) = 20 điểm\n*   Điểm trừ: 10 (Mai Phạm Huyền Anh - nói chuyện) + 5 (Mai Phạm Huyền Anh - không học bài) + 5 (Lê Ngọc Hân - việc không nên) + 10 (Nguyễn Hoàng Ngọc Hà - nói chuyện) = 30 điểm\n*   Điểm ròng của Tổ 4: 20 - 30 = -10 điểm\n\nII. ĐÁNH GIÁ TỪNG TỔ:\n\n1.  Tổ 1:\n*   Điểm mạnh: Có nhiều thành viên tích cực đóng góp điểm cộng (Mai Phạm Huyền Anh, Lê Gia Hoàng, Hồ Đại Hải), cho thấy sự cố gắng trong học tập và các hoạt động khác.\n*   Điểm yếu: Vẫn còn tình trạng nói chuyện riêng trong giờ học (Mai Phạm Huyền Anh, Nguyễn Hoàng Ngọc Hà) và một số bạn chưa chuẩn bị bài kỹ lưỡng (Mai Phạm Huyền Anh). Một trường hợp \"việc không nên\" cũng được ghi nhận.\n*   Nỗ lực: Tổ đã có sự nỗ lực khi các điểm cộng gần bằng điểm trừ, nhưng vẫn cần cải thiện để giảm thiểu các lỗi phổ biến.\n\n2.  Tổ 2:\n*   Điểm mạnh: Đây là tổ có sự thể hiện tốt nhất trong tuần, với tổng điểm cộng và điểm trừ cân bằng (điểm ròng 0). Tổ có nhiều cá nhân xuất sắc, làm việc tốt (Dương Thành Hưng, Trần Đức Minh), đồng thời các thành viên cũng đã cố gắng khắc phục lỗi.\n*   Điểm yếu: Dù là tổ tốt nhất, vẫn còn tồn tại các vấn đề nhỏ như nói chuyện riêng, chưa chuẩn bị bài (Dương Ngọc Khánh Chi) và một vài trường hợp \"việc không nên\" khác (Nguyễn Gia Hân, Mai Khánh Linh, Vũ Ngọc Trúc Ly).\n*   Nỗ lực: Nỗ lực của Tổ 2 rất đáng khen ngợi. Các bạn đã duy trì được kỷ luật và tinh thần học tập tốt, là tấm gương cho cả lớp.\n\n3.  Tổ 3:\n*   Điểm mạnh: Tổ vẫn có những thành viên tích cực, đóng góp điểm cộng (Dương Hải Đạt, Nguyễn Ngọc Long, Đỗ Hà Diễm My, Nguyễn Tuấn Kiệt), cho thấy tinh thần xây dựng.\n*   Điểm yếu: Đây là tổ có nhiều điểm trừ nhất trong tuần. Các vấn đề nói chuyện riêng trong giờ học (Dương Hải Đạt, Phan Tuệ Nhi), chưa chuẩn bị bài (Dương Hải Đạt) và các hành vi \"việc không nên\" (Bùi Phương Thảo My, Nguyễn Kim Ngân, Cao Song Ngọc) còn diễn ra phổ biến.\n*   Nỗ lực: Dù có điểm cộng, tổ 3 cần nỗ lực nhiều hơn nữa để giảm thiểu các lỗi đã mắc phải và nâng cao ý thức chung của cả tổ.\n\n4.  Tổ 4:\n*   Điểm mạnh: Tương tự Tổ 1, Tổ 4 có những thành viên tích cực, góp phần vào điểm cộng của tổ (Mai Phạm Huyền Anh, Lê Gia Hoàng, Hồ Đại Hải).\n*   Điểm yếu: Vẫn còn các lỗi phổ biến như nói chuyện riêng trong giờ (Mai Phạm Huyền Anh, Nguyễn Hoàng Ngọc Hà) và chưa chuẩn bị bài (Mai Phạm Huyền Anh). Một trường hợp \"việc không nên\" (Lê Ngọc Hân) cũng cần được lưu ý.\n*   Nỗ lực: Tổ có nỗ lực từ các thành viên tích cực, nhưng cần tăng cường sự đoàn kết và trách nhiệm của các tổ trưởng trong việc quản lý và nhắc nhở chung.\n\nIII. SO SÁNH CÁC TỔ VỚI NHAU:\n\n*   Tổ tốt nhất: Tổ 2 xuất sắc nhất tuần với điểm ròng là 0, cho thấy sự cân bằng tuyệt vời giữa các hoạt động tích cực và việc giữ gìn kỷ luật.\n*   Các tổ đạt mức khá: Tổ 1 và Tổ 4 cùng xếp vị trí thứ hai với điểm ròng -10. Cả hai tổ đều có điểm cộng đáng kể nhưng vẫn còn một số lỗi cần khắc phục.\n*   Tổ cần cải thiện nhất: Tổ 3 cần nỗ lực nhiều nhất trong tuần tới, với điểm ròng là -15, cho thấy còn nhiều tồn đọng về kỷ luật và học tập.\n\nIV. ĐỐI CHIẾU VỚI BÁO CÁO CỦA GIÁO VIÊN:\n\nBáo cáo của giáo viên (tức \"Những điều Tổ trưởng cần biết\" và \"Các tiêu chí thi đua\") là các quy định chung mà lớp phải tuân thủ.\n*   Các lỗi được ghi nhận trong báo cáo của các tổ (nói chuyện, không học bài, việc không nên, trang phục) đều nằm trong danh mục trừ điểm mà giáo viên đã nêu.\n*   Phần \"Ghi chép hàng ngày\" trong báo cáo giáo viên lặp lại các vấn đề \"Thứ 2: Biết Sử, truyền Anh, nói chuyện trong giờ, Hóa... sai... trong phục\" giống hệt các báo cáo tổ. Điều này cho thấy đây là một vấn đề chung của toàn lớp vào ngày đầu tuần, cần được đặc biệt lưu ý và khắc phục.\n\nV. NHẬN XÉT TỔNG THỂ VỀ TÌNH HÌNH LỚP:\n\nTuần 11, lớp chúng ta đã có nhiều cố gắng trong việc phát huy tinh thần học tập và tham gia các hoạt động tích cực, thể hiện qua các điểm cộng từ \"việc làm tốt, điểm tốt\". Tuy nhiên, vẫn còn những tồn tại nhất định, đặc biệt là tình trạng nói chuyện riêng trong giờ học, chưa chuẩn bị bài đầy đủ, và một số hành vi chưa đúng mực. Vấn đề này dường như tập trung vào ngày Thứ Hai. Sự chênh lệch trong kết quả giữa các tổ cũng cho thấy vai trò của tổ trưởng và các thành viên chủ chốt trong việc duy trì nề nếp.\n\nVI. RÚT KINH NGHIỆM VÀ ĐỀ XUẤT PHƯƠNG HƯỚNG CẢI THIỆN CHO TUẦN MỚI (TUẦN 12):\n\n*   Rút kinh nghiệm:\n*   Các tổ trưởng cần phát huy hơn nữa vai trò lãnh đạo, đôn đốc và nhắc nhở các thành viên trong tổ, đặc biệt là việc duy trì trật tự và tập trung trong giờ học.\n*   Cả lớp cần đặc biệt lưu ý và khắc phục dứt điểm các lỗi thường gặp vào ngày Thứ Hai.\n*   Những tổ có thành tích tốt cần duy trì và phát huy, đồng thời chia sẻ kinh nghiệm với các tổ còn yếu.\n\n*   Phương hướng cải thiện tuần mới:\n1.  Nghiêm túc giữ trật tự: Toàn thể lớp cần giữ yên lặng tuyệt đối và tập trung lắng nghe thầy cô giảng bài, đặc biệt là trong các tiết học đầu tuần.\n2.  Chuẩn bị bài đầy đủ: Các bạn cần chủ động ôn tập bài cũ và chuẩn bị bài mới, hoàn thành bài tập về nhà đúng hạn.\n3.  Tích cực xây dựng bài: Mạnh dạn xung phong phát biểu, đặt câu hỏi để xây dựng không khí học tập sôi nổi, hiệu quả.\n4.  Duy trì vệ sinh: Giữ gìn lớp học luôn sạch sẽ, gọn gàng, vứt rác đúng nơi quy định.\n5.  Tổ trưởng: Tổ chức họp tổ để phân công nhiệm vụ cụ thể, cùng nhau đặt mục tiêu và theo dõi sát sao việc thực hiện của từng thành viên.\n\n---\n\nBây giờ, hãy cùng xem bản tóm tắt dưới dạng infographic thân thiện để cả lớp dễ dàng theo dõi nhé!\n\n---\n\n[INFOGRAPHIC]\n\n(Hình ảnh minh họa hoạt hình 2.5D, màu sắc pastel, có nhân vật học sinh dễ thương, nền lớp học với bảng, bàn ghế, sách vở, cây xanh, ánh sáng dịu. Bố cục 3 khung bo tròn, viền trắng, có icon nhỏ trang trí như sao, mặt trời, sách, bút, quả địa cầu.)\n\nTIÊU ĐỀ LỚN:\nKẾ HOẠCH TUẦN HỌC LỚP 8A4\nTRƯỜNG THCS ………………\n\n---\n\nKHUNG 1 – KẾ HOẠCH / NỘI DUNG TUẦN (TUẦN 12)\n\n*(Bảng hoặc lịch treo bảng màu sáng với các dòng theo ngày, icon minh họa nhỏ)*\n*   📚 Thứ 2: Chào cờ, Học tập & Rèn luyện\n*   ⏰ Thứ 3: Học chính khóa, Hoạt động ngoại khóa\n*   ✏️ Thứ 4: Học chính khóa, Phát triển kỹ năng\n*   📖 Thứ 5: Học chính khóa, Câu lạc bộ\n*   ✔️ Thứ 6: Học chính khóa, Sinh hoạt lớp\n\n---\n\nKHUNG 2 – NHẬN XÉT SINH HOẠT LỚP TUẦN 11\n\n*(Danh sách dạng bảng, dùng icon ✔️ màu xanh cho điểm tốt, ⚠️ màu vàng cho nhắc nhở)*\n\n| TỔ | ĐIỂM MẠNH NỔI BẬT | LƯU Ý CẦN CẢI THIỆN |\n| :-- | :------------------- | :--------------------- |\n| Tổ 1 | Có nhiều điểm cộng từ việc tốt | ⚠️ Cần giảm nói chuyện & chuẩn bị bài |\n| Tổ 2 | Nỗ lực vượt trội, duy trì kỷ luật | ✔️ Xếp hạng Tốt nhất tuần! |\n| Tổ 3 | Có sự cố gắng của thành viên | ⚠️ Còn nhiều lỗi về kỷ luật & học tập |\n| Tổ 4 | Nhiều thành viên tích cực | ⚠️ Cần cải thiện chung các lỗi phổ biến |\n\n---\n\nKHUNG 3 – PHƯƠNG HƯỚNG TUẦN MỚI (TUẦN 12)\n\n*(Gạch đầu dòng với icon ngôi sao, checklist xanh)*\n\n*   ⭐ Ôn tập bài cũ & nộp bài đúng hạn\n*   ✅ Tích cực phát biểu xây dựng bài\n*   ⭐ Nghiêm túc giữ trật tự giờ học\n*   ✅ Giữ gìn vệ sinh lớp học sạch sẽ\n*   ⭐ Tổ trưởng tăng cường quản lý, nhắc nhở các thành viên\n\n---",
-    "analyzed_at": "23/12/2025 22:16"
+    "ai_analysis": "{\n\"tong_quan\": \"Tuần 11 vừa qua, tình hình sinh hoạt lớp nhìn chung có sự tiến bộ ở một số mặt, đặc biệt là vệ sinh lớp học đã được duy trì tốt. Tuy nhiên, vẫn còn những tồn tại đáng chú ý liên quan đến kỷ luật giờ học, chuẩn bị bài vở và tuân thủ nội quy trang phục. Tổ 2 đã thể hiện sự nỗ lực và đạt kết quả tốt nhất tuần, trong khi các tổ còn lại cần cố gắng hơn nữa để cải thiện các vấn đề còn mắc phải.\",\n\"thoi_khoa_bieu\": [\n{\n\"thu\": \"Thứ 2\",\n\"tiet_1\": \"Toán\",\n\"tiet_2\": \"Văn\",\n\"tiet_3\": \"Anh\",\n\"tiet_4\": \"Hóa\",\n\"tiet_5\": \"Thể dục\",\n\"do_dong_phuc\": \"Áo trắng\"\n},\n{\n\"thu\": \"Thứ 3\",\n\"tiet_1\": \"Lý\",\n\"tiet_2\": \"Sinh\",\n\"tiet_3\": \"Sử\",\n\"tiet_4\": \"Địa\",\n\"tiet_5\": \"GDCD\",\n\"do_dong_phuc\": \"Quần tây\"\n},\n{\n\"thu\": \"Thứ 4\",\n\"tiet_1\": \"Toán\",\n\"tiet_2\": \"Văn\",\n\"tiet_3\": \"Anh\",\n\"tiet_4\": \"Vật lý\",\n\"tiet_5\": \"Tin học\",\n\"do_dong_phuc\": \"Áo trắng\"\n},\n{\n\"thu\": \"Thứ 5\",\n\"tiet_1\": \"Hóa\",\n\"tiet_2\": \"Sinh\",\n\"tiet_3\": \"Toán\",\n\"tiet_4\": \"Ngữ văn\",\n\"tiet_5\": \"Lịch sử\",\n\"do_dong_phuc\": \"Quần tây\"\n},\n{\n\"thu\": \"Thứ 6\",\n\"tiet_1\": \"Địa lý\",\n\"tiet_2\": \"GDCD\",\n\"tiet_3\": \"Mỹ thuật\",\n\"tiet_4\": \"Hoạt động\",\n\"tiet_5\": \"Sinh hoạt lớp\",\n\"do_dong_phuc\": \"Tự do\"\n}\n],\n\"danh_gia_chi_tiet\": {\n\"to_1\": {\n\"diem_manh\": \"Có nhiều thành viên tích cực đóng góp việc tốt (Lê Gia Hoàng, Hồ Đại Hải).\",\n\"diem_yeu\": \"Vẫn còn học sinh bị ghi sổ đầu bài và không chuẩn bị bài đầy đủ (Mai Phạm Huyền Anh, Nguyễn Hoàng Ngọc Hà).\",\n\"xep_loai\": \"Khá\",\n\"diem\": 7.5\n},\n\"to_2\": {\n\"diem_manh\": \"Nhiều thành viên gương mẫu, đóng góp việc tốt, tổ không có điểm trừ tổng thể, cho thấy sự nỗ lực tập thể.\",\n\"diem_yeu\": \"Vẫn còn một số trường hợp vi phạm nhỏ như bị ghi sổ đầu bài (Dương Ngọc Khánh Chi) và có việc không nên.\",\n\"xep_loai\": \"Tốt\",\n\"diem\": 8.5\n},\n\"to_3\": {\n\"diem_manh\": \"Có nhiều học sinh đạt thành tích tốt, tinh thần tích cực trong các hoạt động.\",\n\"diem_yeu\": \"Một số học sinh còn bị ghi sổ đầu bài (Dương Hải Đạt, Phan Tuệ Nhi) và có hành vi chưa đúng.\",\n\"xep_loai\": \"Khá\",\n\"diem\": 7.5\n},\n\"to_4\": {\n\"diem_manh\": \"Có những cá nhân nổi bật với đóng góp tích cực và việc làm tốt (Lê Gia Hoàng, Hồ Đại Hải).\",\n\"diem_yeu\": \"Vẫn còn thành viên vi phạm kỷ luật học tập và bị ghi sổ đầu bài (Mai Phạm Huyền Anh, Nguyễn Hoàng Ngọc Hà).\",\n\"xep_loai\": \"Khá\",\n\"diem\": 7.5\n}\n},\n\"nhan_xet_tuan_qua\": [\n{\n\"tieu_chi\": \"Kỷ luật giờ học\",\n\"danh_gia\": \"Vẫn còn tình trạng nói chuyện riêng và chưa tập trung trong giờ học.\",\n\"xep_loai\": \"Trung bình\",\n\"icon\": \"🗣️\"\n},\n{\n\"tieu_chi\": \"Nội quy lớp\",\n\"danh_gia\": \"Một số học sinh còn sai trang phục theo quy định.\",\n\"xep_loai\": \"Trung bình\",\n\"icon\": \"👔\"\n},\n{\n\"tieu_chi\": \"Chuẩn bị bài vở\",\n\"danh_gia\": \"Vẫn còn học sinh chưa chuẩn bị bài đầy đủ hoặc không học bài.\",\n\"xep_loai\": \"Cần cải thiện\",\n\"icon\": \"📖\"\n},\n{\n\"tieu_chi\": \"Vệ sinh lớp học\",\n\"danh_gia\": \"Lớp học được giữ gìn sạch sẽ và đảm bảo vệ sinh tốt.\",\n\"xep_loai\": \"Tốt\",\n\"icon\": \"🧹\"\n}\n],\n\"phuong_huong_tuan_moi\": [\n\"Nâng cao ý thức kỷ luật: Toàn thể lớp cần nghiêm túc tập trung, tuyệt đối không nói chuyện riêng trong giờ học, và tích cực tham gia phát biểu xây dựng bài.\",\n\"Chấp hành nghiêm chỉnh nội quy: Tất cả học sinh cần kiểm tra và đảm bảo trang phục đúng quy định trước khi đến lớp, đặc biệt vào các ngày có đồng phục.\",\n\"Chuẩn bị bài vở đầy đủ: Mỗi học sinh phải hoàn thành bài tập về nhà, đọc trước bài mới và chuẩn bị đầy đủ dụng cụ học tập cho mỗi buổi học.\",\n\"Phát huy tinh thần trách nhiệm tập thể: Tổ trưởng và các thành viên trong tổ cần chủ động theo dõi, nhắc nhở và hỗ trợ lẫn nhau để duy trì và cải thiện các mặt hoạt động.\",\n\"Duy trì vệ sinh môi trường học tập: Tiếp tục giữ gìn vệ sinh chung của lớp, không xả rác bừa bãi và sắp xếp bàn ghế gọn gàng sau mỗi buổi học.\"\n]\n}",
+    "analyzed_at": "24/12/2025 08:45",
+    "infographic_html": "/static/class_activity_infographics/1728608c-4690-4f5c-ab89-236403028f92_infographic.html",
+    "analysis_data": {
+      "tong_quan": "Tuần 11 vừa qua, tình hình sinh hoạt lớp nhìn chung có sự tiến bộ ở một số mặt, đặc biệt là vệ sinh lớp học đã được duy trì tốt. Tuy nhiên, vẫn còn những tồn tại đáng chú ý liên quan đến kỷ luật giờ học, chuẩn bị bài vở và tuân thủ nội quy trang phục. Tổ 2 đã thể hiện sự nỗ lực và đạt kết quả tốt nhất tuần, trong khi các tổ còn lại cần cố gắng hơn nữa để cải thiện các vấn đề còn mắc phải.",
+      "thoi_khoa_bieu": [
+        {
+          "thu": "Thứ 2",
+          "tiet_1": "Toán",
+          "tiet_2": "Văn",
+          "tiet_3": "Anh",
+          "tiet_4": "Hóa",
+          "tiet_5": "Thể dục",
+          "do_dong_phuc": "Áo trắng"
+        },
+        {
+          "thu": "Thứ 3",
+          "tiet_1": "Lý",
+          "tiet_2": "Sinh",
+          "tiet_3": "Sử",
+          "tiet_4": "Địa",
+          "tiet_5": "GDCD",
+          "do_dong_phuc": "Quần tây"
+        },
+        {
+          "thu": "Thứ 4",
+          "tiet_1": "Toán",
+          "tiet_2": "Văn",
+          "tiet_3": "Anh",
+          "tiet_4": "Vật lý",
+          "tiet_5": "Tin học",
+          "do_dong_phuc": "Áo trắng"
+        },
+        {
+          "thu": "Thứ 5",
+          "tiet_1": "Hóa",
+          "tiet_2": "Sinh",
+          "tiet_3": "Toán",
+          "tiet_4": "Ngữ văn",
+          "tiet_5": "Lịch sử",
+          "do_dong_phuc": "Quần tây"
+        },
+        {
+          "thu": "Thứ 6",
+          "tiet_1": "Địa lý",
+          "tiet_2": "GDCD",
+          "tiet_3": "Mỹ thuật",
+          "tiet_4": "Hoạt động",
+          "tiet_5": "Sinh hoạt lớp",
+          "do_dong_phuc": "Tự do"
+        }
+      ],
+      "danh_gia_chi_tiet": {
+        "to_1": {
+          "diem_manh": "Có nhiều thành viên tích cực đóng góp việc tốt (Lê Gia Hoàng, Hồ Đại Hải).",
+          "diem_yeu": "Vẫn còn học sinh bị ghi sổ đầu bài và không chuẩn bị bài đầy đủ (Mai Phạm Huyền Anh, Nguyễn Hoàng Ngọc Hà).",
+          "xep_loai": "Khá",
+          "diem": 7.5
+        },
+        "to_2": {
+          "diem_manh": "Nhiều thành viên gương mẫu, đóng góp việc tốt, tổ không có điểm trừ tổng thể, cho thấy sự nỗ lực tập thể.",
+          "diem_yeu": "Vẫn còn một số trường hợp vi phạm nhỏ như bị ghi sổ đầu bài (Dương Ngọc Khánh Chi) và có việc không nên.",
+          "xep_loai": "Tốt",
+          "diem": 8.5
+        },
+        "to_3": {
+          "diem_manh": "Có nhiều học sinh đạt thành tích tốt, tinh thần tích cực trong các hoạt động.",
+          "diem_yeu": "Một số học sinh còn bị ghi sổ đầu bài (Dương Hải Đạt, Phan Tuệ Nhi) và có hành vi chưa đúng.",
+          "xep_loai": "Khá",
+          "diem": 7.5
+        },
+        "to_4": {
+          "diem_manh": "Có những cá nhân nổi bật với đóng góp tích cực và việc làm tốt (Lê Gia Hoàng, Hồ Đại Hải).",
+          "diem_yeu": "Vẫn còn thành viên vi phạm kỷ luật học tập và bị ghi sổ đầu bài (Mai Phạm Huyền Anh, Nguyễn Hoàng Ngọc Hà).",
+          "xep_loai": "Khá",
+          "diem": 7.5
+        }
+      },
+      "nhan_xet_tuan_qua": [
+        {
+          "tieu_chi": "Kỷ luật giờ học",
+          "danh_gia": "Vẫn còn tình trạng nói chuyện riêng và chưa tập trung trong giờ học.",
+          "xep_loai": "Trung bình",
+          "icon": "🗣️"
+        },
+        {
+          "tieu_chi": "Nội quy lớp",
+          "danh_gia": "Một số học sinh còn sai trang phục theo quy định.",
+          "xep_loai": "Trung bình",
+          "icon": "👔"
+        },
+        {
+          "tieu_chi": "Chuẩn bị bài vở",
+          "danh_gia": "Vẫn còn học sinh chưa chuẩn bị bài đầy đủ hoặc không học bài.",
+          "xep_loai": "Cần cải thiện",
+          "icon": "📖"
+        },
+        {
+          "tieu_chi": "Vệ sinh lớp học",
+          "danh_gia": "Lớp học được giữ gìn sạch sẽ và đảm bảo vệ sinh tốt.",
+          "xep_loai": "Tốt",
+          "icon": "🧹"
+        }
+      ],
+      "phuong_huong_tuan_moi": [
+        "Nâng cao ý thức kỷ luật: Toàn thể lớp cần nghiêm túc tập trung, tuyệt đối không nói chuyện riêng trong giờ học, và tích cực tham gia phát biểu xây dựng bài.",
+        "Chấp hành nghiêm chỉnh nội quy: Tất cả học sinh cần kiểm tra và đảm bảo trang phục đúng quy định trước khi đến lớp, đặc biệt vào các ngày có đồng phục.",
+        "Chuẩn bị bài vở đầy đủ: Mỗi học sinh phải hoàn thành bài tập về nhà, đọc trước bài mới và chuẩn bị đầy đủ dụng cụ học tập cho mỗi buổi học.",
+        "Phát huy tinh thần trách nhiệm tập thể: Tổ trưởng và các thành viên trong tổ cần chủ động theo dõi, nhắc nhở và hỗ trợ lẫn nhau để duy trì và cải thiện các mặt hoạt động.",
+        "Duy trì vệ sinh môi trường học tập: Tiếp tục giữ gìn vệ sinh chung của lớp, không xả rác bừa bãi và sắp xếp bàn ghế gọn gàng sau mỗi buổi học."
+      ]
+    }
   }
 ]

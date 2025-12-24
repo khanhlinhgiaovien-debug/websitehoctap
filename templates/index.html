@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Hệ Thống Học Tập Trực Tuyến</title>
+  <title>Tri-hand</title>
   <style>
     * {
       margin: 0;
@@ -20,6 +20,18 @@
       background: linear-gradient(to right, #667eea, #764ba2);
       color: white;
       padding: 25px 40px;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .header-logo {
+      width: 50px;
+      height: 50px;
+      border-radius: 8px;
+      object-fit: contain;
+      background: white;
+      padding: 5px;
     }
 
     .header h1 {
@@ -164,13 +176,6 @@
       gap: 8px;
     }
 
-    .book {
-      width: 40px;
-      height: 50px;
-      border-radius: 3px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-    }
-
     .card-body {
       padding: 20px;
     }
@@ -312,7 +317,8 @@
 <body>
 
 <div class="header">
-  <h1>HỆ THỐNG HỌC TẬP TRỰC TUYẾN</h1>
+  <img src="/static/images/logo.jpg" alt="Logo trường" class="header-logo">
+  <h1>Tri-hand</h1>
 </div>
 
 <div class="breadcrumb">
@@ -331,7 +337,7 @@
           <li><a href="/exam/de3">Đề thi Toán số 3</a></li>
         </ul>
       </li>
-      <li><a href="/upload_image" style="text-decoration:none; color:inherit; display:block;">Nộp sản phẩm</a></li>
+      <li><a href="/upload_image" style="text-decoration:none; color:inherit; display:block;">Toán học vui</a></li>
       <li><a href="/projects" style="text-decoration:none; color:inherit; display:block;">Câu lạc bộ</a></li>
       <li><a href="/enter_nickname" style="text-decoration:none; color:inherit; display:block;">Game giải trí</a></li>
       <li><a href="/vanbai" style="text-decoration:none; color:inherit; display:block;">Phân tích Văn</a></li>
@@ -344,10 +350,7 @@
     <div class="grid">
       <!-- Card Toán học có dropdown -->
       <div class="card expandable" onclick="toggleExams()">
-        <div class="card-img" style="background: linear-gradient(to right, #43e97b, #38f9d7);">
-          <div class="book" style="background: #ff6b6b;"></div>
-          <div class="book" style="background: #4ecdc4;"></div>
-          <div class="book" style="background: #ffd93d;"></div>
+        <div class="card-img" style="background: url('/static/images/ktra.jpg') center/cover no-repeat;">
         </div>
         <div class="card-body">
           <div class="card-title">KIỂM TRA TOÁN HỌC</div>
@@ -381,10 +384,7 @@
       </div>
 
       <a href="/upload_image" class="card">
-        <div class="card-img" style="background: linear-gradient(to right, #ff9a9e, #fecfef);">
-          <div class="book" style="background: #ff6b6b;"></div>
-          <div class="book" style="background: #4ecdc4;"></div>
-          <div class="book" style="background: #ffd93d;"></div>
+        <div class="card-img" style="background: url('/static/images/nopsanpham.jpg') center/cover no-repeat;">
         </div>
         <div class="card-body">
           <div class="card-title">NỘP SẢN PHẨM</div>
@@ -394,10 +394,7 @@
       </a>
 
       <a href="/projects" class="card">
-        <div class="card-img" style="background: linear-gradient(to right, #30cfd0, #330867);">
-          <div class="book" style="background: #ff6b6b;"></div>
-          <div class="book" style="background: #4ecdc4;"></div>
-          <div class="book" style="background: #ffd93d;"></div>
+        <div class="card-img" style="background: url('/static/images/clb.jpg') center/cover no-repeat;">
         </div>
         <div class="card-body">
           <div class="card-title">CÂU LẠC BỘ</div>
@@ -407,10 +404,7 @@
       </a>
 
       <a href="/enter_nickname" class="card">
-        <div class="card-img" style="background: linear-gradient(to right, #a8edea, #fed6e3);">
-          <div class="book" style="background: #ff6b6b;"></div>
-          <div class="book" style="background: #4ecdc4;"></div>
-          <div class="book" style="background: #ffd93d;"></div>
+        <div class="card-img" style="background: url('/static/images/game.jpg') center/cover no-repeat;">
         </div>
         <div class="card-body">
           <div class="card-title">GAME GIẢI TRÍ</div>
@@ -420,10 +414,7 @@
       </a>
 
       <a href="/chatbot" class="card">
-        <div class="card-img" style="background: linear-gradient(to right, #f093fb, #f5576c);">
-          <div class="book" style="background: #ff6b6b;"></div>
-          <div class="book" style="background: #4ecdc4;"></div>
-          <div class="book" style="background: #ffd93d;"></div>
+        <div class="card-img" style="background: url('/static/images/chatbot.jpg') center/cover no-repeat;">
         </div>
         <div class="card-body">
           <div class="card-title">TRỢ LÍ HỌC TẬP AI</div>
@@ -432,24 +423,8 @@
         </div>
       </a>
 
-      <a href="/vanbai" class="card">
-        <div class="card-img" style="background: linear-gradient(to right, #f093fb, #f5576c);">
-          <div class="book" style="background: #ff6b6b;"></div>
-          <div class="book" style="background: #4ecdc4;"></div>
-          <div class="book" style="background: #ffd93d;"></div>
-        </div>
-        <div class="card-body">
-          <div class="card-title">PHÂN TÍCH VĂN</div>
-          <div class="card-text">CÔNG CỤ HỖ TRỢ PHÂN TÍCH VĂN HỌC</div>
-          <span class="badge">AI</span>
-        </div>
-      </a>
-
       <a href="/class_activity" class="card">
-        <div class="card-img" style="background: linear-gradient(to right, #a8edea, #fed6e3);">
-          <div class="book" style="background: #ff6b6b;"></div>
-          <div class="book" style="background: #4ecdc4;"></div>
-          <div class="book" style="background: #ffd93d;"></div>
+        <div class="card-img" style="background: url('/static/images/shl.jpg') center/cover no-repeat;">
         </div>
         <div class="card-body">
           <div class="card-title">SINH HOẠT LỚP</div>
@@ -457,11 +432,9 @@
           <span class="badge">SHL</span>
         </div>
       </a>
+
       <a href="/health_support" class="card">
-        <div class="card-img" style="background: linear-gradient(to right, #f093fb, #f5576c);">
-          <div class="book" style="background: #ff6b6b;"></div>
-          <div class="book" style="background: #4ecdc4;"></div>
-          <div class="book" style="background: #ffd93d;"></div>
+        <div class="card-img" style="background: url('/static/images/skk.jpg') center/cover no-repeat;">
         </div>
         <div class="card-body">
           <div class="card-title">TƯ VẤN SỨC KHỎE</div>

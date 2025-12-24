@@ -170,10 +170,10 @@ def class_activity_detail(activity_id):
         return redirect(url_for('class_activity_detail', activity_id=activity_id))
     
     return render_template('class_activity_detail.html', activity=activity)
-
+#####
 @app.route('/class_activity/<activity_id>/analyze', methods=['POST'])
 def analyze_class_activity(activity_id):
-    """AI phân tích tất cả báo cáo của các tổ VÀ tạo infographic"""
+    """AI phân tích tất cả báo cáo của các tổ VÀ tạo HTML infographic"""
     activities = load_class_activities()
     activity = next((a for a in activities if a['id'] == activity_id), None)
     
@@ -199,31 +199,42 @@ THÔNG TIN TUẦN SINH HOẠT:
 
 NHIỆM VỤ:
 1. Phân tích báo cáo của 4 tổ (Tổ 1, 2, 3, 4)
-2. Đánh giá từng tổ: điểm mạnh, điểm yếu, nỗ lực
-3. So sánh các tổ (tổ nào tốt, tổ nào cần cải thiện)
+2. Đánh giá từng tổ: điểm mạnh, điểm yếu, cho điểm (0-10)
+3. So sánh các tổ và xếp hạng
 4. Đối chiếu với báo cáo giáo viên (nếu có)
-5. Nhận xét tổng thể lớp
-6. Đề xuất phương hướng tuần mới
+5. Trích xuất THỜI KHÓA BIỂU từ ảnh (nếu có)
+6. Đánh giá các tiêu chí: Ký luật, Nội quy, Chuẩn bị bài, Vệ sinh
+7. Đề xuất phương hướng tuần mới CỤ THỂ (4-5 mục tiêu)
 
-ĐỊNH DẠNG PHẢN HỒI (JSON):
+ĐỊNH DẠNG PHẢN HỒI (JSON) - BẮT BUỘC:
 {{
-  "tong_quan": "...",
-  "danh_gia_cac_to": {{
-    "to_1": {{"diem_manh": "...", "diem_yeu": "...", "xep_loai": "Tốt/Khá/TB"}},
-    "to_2": {{"diem_manh": "...", "diem_yeu": "...", "xep_loai": "Tốt/Khá/TB"}},
-    "to_3": {{"diem_manh": "...", "diem_yeu": "...", "xep_loai": "Tốt/Khá/TB"}},
-    "to_4": {{"diem_manh": "...", "diem_yeu": "...", "xep_loai": "Tốt/Khá/TB"}}
+  "tong_quan": "Tổng quan về tuần học...",
+  "thoi_khoa_bieu": [
+    {{"thu": "Thứ 2", "tiet_1": "Toán", "tiet_2": "Văn", "tiet_3": "Anh", "tiet_4": "Hóa", "tiet_5": "Thể dục", "do_dong_phuc": "Áo trắng"}},
+    {{"thu": "Thứ 3", "tiet_1": "Lý", "tiet_2": "Sinh", "tiet_3": "Sử", "tiet_4": "Địa", "tiet_5": "GDCD", "do_dong_phuc": "Quần tây"}},
+    {{"thu": "Thứ 4", "tiet_1": "Toán", "tiet_2": "Văn", "tiet_3": "Anh", "tiet_4": "Vật lý", "tiet_5": "TD", "do_dong_phuc": "Áo trắng"}}
+  ],
+  "danh_gia_chi_tiet": {{
+    "to_1": {{"diem_manh": "Học tập tốt", "diem_yeu": "Đi trễ", "xep_loai": "Tốt", "diem": 9}},
+    "to_2": {{"diem_manh": "Đoàn kết", "diem_yeu": "Chưa tích cực", "xep_loai": "Khá", "diem": 8}},
+    "to_3": {{"diem_manh": "Sáng tạo", "diem_yeu": "Vệ sinh chưa tốt", "xep_loai": "Khá", "diem": 7.5}},
+    "to_4": {{"diem_manh": "Năng động", "diem_yeu": "Chú ý giờ giấc", "xep_loai": "TB", "diem": 7}}
   }},
-  "nhan_xet_tong_quan": [
-    {{"ngay": "Thứ 2", "noi_dung": "Học tập tốt", "icon": "✅"}},
-    {{"ngay": "Thứ 3", "noi_dung": "Nộp bài đầy đủ", "icon": "📚"}}
+  "nhan_xet_tuan_qua": [
+    {{"tieu_chi": "Ký luật giờ học", "danh_gia": "Vẫn còn chuyện riêng", "xep_loai": "Khá", "icon": "📚"}},
+    {{"tieu_chi": "Nội quy lớp", "danh_gia": "Sai trang phục", "xep_loai": "Trung bình", "icon": "👔"}},
+    {{"tieu_chi": "Chuẩn bị bài vở", "danh_gia": "Chưa đầy đủ", "xep_loai": "Cần cải thiện", "icon": "📖"}},
+    {{"tieu_chi": "Vệ sinh lớp học", "danh_gia": "Đã cải thiện", "xep_loai": "Tốt", "icon": "🧹"}}
   ],
   "phuong_huong_tuan_moi": [
-    "Ôn tập bài cũ",
-    "Nộp bài đúng hạn",
-    "Phát biểu tích cực"
+    "Ôn tập chủ động, chuẩn bị bài trước khi đến lớp",
+    "Nghiêm túc tập trung, tham gia phát biểu tích cực",
+    "Hoàn thành bài tập đầy đủ, nộp đúng hạn",
+    "Giữ gìn vệ sinh, không xả rác bừa bãi"
   ]
 }}
+
+CHỈ TRẢ VỀ JSON, KHÔNG THÊM TEXT KHÁC.
 
 Dưới đây là báo cáo các tổ:
 """]
@@ -248,133 +259,183 @@ Dưới đây là báo cáo các tổ:
         analysis_response = model.generate_content(analysis_prompt)
         ai_analysis = clean_ai_output(analysis_response.text)
         
-        # Parse JSON (nếu AI trả về đúng format)
+        # Parse JSON
         try:
-            analysis_data = json.loads(ai_analysis)
-        except:
-            # Nếu không parse được JSON, tạo data mẫu
+            # Loại bỏ markdown code blocks
+            ai_analysis_clean = ai_analysis.replace('```json', '').replace('```', '').strip()
+            analysis_data = json.loads(ai_analysis_clean)
+        except Exception as parse_error:
+            print(f"JSON Parse Error: {parse_error}")
+            print(f"AI Response: {ai_analysis}")
+            # Tạo data mẫu nếu parse thất bại
             analysis_data = {
-                "tong_quan": ai_analysis[:200] + "...",
-                "nhan_xet_tong_quan": [
-                    {"ngay": "Tổ 1", "noi_dung": "Học tập tốt", "icon": "✅"},
-                    {"ngay": "Tổ 2", "noi_dung": "Nộp bài đầy đủ", "icon": "✅"},
-                    {"ngay": "Tổ 3", "noi_dung": "Cần chú ý giờ giấc", "icon": "⚠️"},
-                    {"ngay": "Tổ 4", "noi_dung": "Đoàn kết tốt", "icon": "✅"}
+                "tong_quan": "Không thể phân tích được dữ liệu từ ảnh.",
+                "thoi_khoa_bieu": [
+                    {"thu": "Thứ 2", "tiet_1": "Toán", "tiet_2": "Văn", "tiet_3": "Anh", "tiet_4": "Hóa", "tiet_5": "TD"},
+                    {"thu": "Thứ 3", "tiet_1": "Lý", "tiet_2": "Sinh", "tiet_3": "Sử", "tiet_4": "Địa", "tiet_5": "GDCD"}
+                ],
+                "nhan_xet_tuan_qua": [
+                    {"tieu_chi": "Học tập", "danh_gia": "Tốt", "xep_loai": "Khá", "icon": "✅"}
                 ],
                 "phuong_huong_tuan_moi": [
-                    "Ôn tập bài cũ",
-                    "Nộp bài đúng hạn",
-                    "Phát biểu tích cực",
-                    "Giữ gìn vệ sinh"
+                    "Ôn tập chủ động",
+                    "Tham gia phát biểu"
                 ]
             }
         
         # ========================================
-        # BƯỚC 2: TẠO ẢNH INFOGRAPHIC
+        # BƯỚC 2: TẠO HTML INFOGRAPHIC ĐẦY ĐỦ
         # ========================================
         
-        # Chuẩn bị nội dung cho infographic
-        nhan_xet_text = "\n".join([
-            f"- {item.get('ngay', 'Ngày')}: {item.get('noi_dung', '')} {item.get('icon', '✅')}" 
-            for item in analysis_data.get('nhan_xet_tong_quan', [])[:6]
-        ])
+        # Build thời khóa biểu HTML
+        tkb_html = ""
+        for day_info in analysis_data.get('thoi_khoa_bieu', [])[:5]:
+            thu = day_info.get('thu', 'Thứ 2')
+            tkb_html += f"<tr><td colspan='3' style='background: #2196F3; color: white; font-weight: bold; text-align: center;'>{thu}</td></tr>"
+            for i in range(1, 6):
+                mon = day_info.get(f'tiet_{i}', '-')
+                tkb_html += f"<tr><td style='text-align:center; font-weight:bold;'>{i}</td><td>{mon}</td><td style='text-align:center;'>📚</td></tr>"
+            # Thêm info đồng phục nếu có
+            do_dp = day_info.get('do_dong_phuc', '')
+            if do_dp:
+                tkb_html += f"<tr><td colspan='3' style='background:#e3f2fd; text-align:center; padding:8px;'>👔 {do_dp}</td></tr>"
         
-        phuong_huong_text = "\n".join([
-            f"✅ {item}" 
-            for item in analysis_data.get('phuong_huong_tuan_moi', [])[:4]
-        ])
+        # Build nhận xét tuần qua
+        nhan_xet_html = ""
+        for item in analysis_data.get('nhan_xet_tuan_qua', [])[:6]:
+            icon = item.get('icon', '✅')
+            tieu_chi = item.get('tieu_chi', '')
+            danh_gia = item.get('danh_gia', '')
+            xep_loai = item.get('xep_loai', '')
+            
+            nhan_xet_html += f"""
+            <div class="eval-row">
+                <div class="eval-icon">{icon}</div>
+                <div class="eval-label">{tieu_chi}</div>
+                <div class="eval-content">
+                    <div>{danh_gia}</div>
+                    <span class="eval-badge">{xep_loai}</span>
+                </div>
+            </div>
+            """
         
-        image_prompt = f"""Generate an educational infographic image for a Vietnamese classroom weekly report.
+        # Build phương hướng tuần mới
+        phuong_huong_html = ""
+        for item in analysis_data.get('phuong_huong_tuan_moi', [])[:5]:
+            phuong_huong_html += f"""
+            <div class="goal-item">
+                <div class="goal-icon">✅</div>
+                <div class="goal-text">{item}</div>
+            </div>
+            """
+        
+        # HTML PROMPT ĐẦY ĐỦ
+        html_prompt = f"""Tạo file HTML HOÀN CHỈNH cho infographic kế hoạch tuần học lớp 8A4 - THCS Cẩm Phả.
 
-STYLE: 2.5D cartoon illustration, pastel colors, cute and friendly, suitable for middle school
+YÊU CẦU BẮT BUỘC:
+- File HTML hoàn chỉnh: <!DOCTYPE html>, <html lang="vi">, <head> với <meta charset="UTF-8">
+- Kích thước: 1200px width, chiều cao tự động
+- Design 2.5D hiện đại, giống hình mẫu đã gửi
+- Background: gradient pastel giống lớp học (#e8d5c4 → #d4b5a0)
+- Header: gradient xanh dương (#4facfe → #00f2fe), logo trường, mặt trời icon
+- Layout: Grid 2 cột cho phần chính
+- Font: 'Segoe UI', sans-serif - hỗ trợ tiếng Việt có dấu
+- Thêm CDN: html2canvas từ https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js
+- Nút "TẢI XUỐNG ẢNH PNG" với function downloadImage()
+- Box có shadow, border-radius, viền màu gradient
 
-LAYOUT STRUCTURE:
+CẤU TRÚC CHÍNH:
 
-[TOP SECTION - HEADER]
-Title (large, centered): "KẾ HOẠCH TUẦN HỌC LỚP 8A4"
-Subtitle: "THCS CẨM PHẢ - TUẤM HẠC"
-Week: "{activity['week_name']}"
+=== HEADER ===
+<div id="infographic" style="width:1200px; background: linear-gradient(135deg, #e8d5c4 0%, #d4b5a0 100%);">
+  <div class="header" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); padding:30px; position:relative;">
+    <div class="logo" style="position:absolute; top:20px; left:30px; background:white; width:80px; height:80px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:bold; color:#3a8fd9;">THCS<br>CẨM PHẢ</div>
+    <span style="position:absolute; top:20px; left:120px; font-size:60px;">☀️</span>
+    <h1 style="text-align:center; color:white; font-size:48px; text-shadow: 3px 3px 6px rgba(0,0,0,0.3); margin-bottom:10px;">KẾ HOẠCH TUẦN HỌC LỚP 8A4</h1>
+    <div style="text-align:center; color:white; font-size:32px;">THCS CẨM PHẢ - TUẤN HẠC</div>
+    <div style="text-align:center; color:white; font-size:24px; margin-top:10px;">{activity['week_name']}</div>
+  </div>
 
-[LEFT BOX - SCHEDULE]
-Title: "THỜI KHÓA BIỂU"
-Content (sample schedule):
-- Thứ 2: Toán - Văn
-- Thứ 3: Anh - Hóa
-- Thứ 4: Lý - Sinh
-- Thứ 5: Sử - Địa
-- Thứ 6: GDCD - TD
-(with small icons: books, clock, pencil)
+  <div class="content" style="display:grid; grid-template-columns:1fr 1fr; gap:30px; padding:30px;">
+    
+    <!-- CỘT TRÁI: THỜI KHÓA BIỂU -->
+    <div class="schedule-box" style="background:white; border-radius:15px; padding:20px; box-shadow:0 8px 20px rgba(0,0,0,0.15); border:4px solid #4facfe;">
+      <div class="title" style="background:linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color:white; padding:15px; border-radius:10px; text-align:center; font-size:20px; font-weight:bold; margin-bottom:20px;">📅 THỜI KHÓA BIỂU</div>
+      <table style="width:100%; border-collapse:collapse;">
+        <tr style="background:#ffd89b; color:white;">
+          <th style="border:2px solid #ddd; padding:10px;">Tiết</th>
+          <th style="border:2px solid #ddd; padding:10px;">Môn học</th>
+          <th style="border:2px solid #ddd; padding:10px;">Icon</th>
+        </tr>
+        {tkb_html}
+      </table>
+    </div>
 
-[CENTER BOX - PERFORMANCE REVIEW]
-Title: "NHẬN XÉT SINH HOẠT LỚP TUẦN QUA"
-Content:
-{nhan_xet_text}
+    <!-- CỘT PHẢI: NHẬN XÉT -->
+    <div class="eval-box" style="background:white; border-radius:15px; padding:20px; box-shadow:0 8px 20px rgba(0,0,0,0.15); border:4px solid #5ec793;">
+      <div class="title" style="background:linear-gradient(135deg, #5ec793 0%, #3da66d 100%); color:white; padding:15px; border-radius:10px; text-align:center; font-size:20px; font-weight:bold; margin-bottom:20px;">📊 NHẬN XÉT SINH HOẠT LỚP TUẦN QUA</div>
+      {nhan_xet_html}
+    </div>
+  </div>
 
-[BOTTOM BOX - GOALS]
-Title: "PHƯƠNG HƯỚNG TUẦN MỚI"
-Content:
-{phuong_huong_text}
+  <!-- PHƯƠNG HƯỚNG TUẦN MỚI (Full width) -->
+  <div style="padding:0 30px 30px 30px;">
+    <div class="goals-box" style="background:white; border-radius:15px; padding:20px; box-shadow:0 8px 20px rgba(0,0,0,0.15); border:4px solid #f093fb;">
+      <div class="title" style="background:linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color:white; padding:15px; border-radius:10px; text-align:center; font-size:24px; font-weight:bold; margin-bottom:20px;">🎯 PHƯƠNG HƯỚNG TUẦN MỚI</div>
+      {phuong_huong_html}
+    </div>
+  </div>
+</div>
 
-VISUAL REQUIREMENTS:
-- Background: Light pastel classroom scene with blackboard, desks, plants
-- Color scheme: Mint green (#A8E6CF), light yellow (#FFD88A), soft orange (#FFB366), light pink
-- Cute chibi student characters with big heads and round eyes
-- Icons: stars ⭐, books 📚, checkmarks ✅, warning signs ⚠️
-- Rounded corners on all boxes
-- Clean, readable Vietnamese text (sans-serif font)
-- Decorative elements: sun, clouds, small plants, alarm clock
-- Professional but playful educational poster style
-- Aspect ratio: 16:9 (landscape)
-- High quality, print-ready
+<button onclick="downloadImage()" style="margin:20px auto; display:block; padding:15px 40px; font-size:18px; background:linear-gradient(135deg, #667eea 0%, #764ba2 100%); color:white; border:none; border-radius:50px; cursor:pointer; font-weight:bold; box-shadow:0 4px 15px rgba(0,0,0,0.2);">⬇️ TẢI XUỐNG ẢNH PNG</button>
 
-DO NOT INCLUDE:
-- Anime Japanese style
-- English text
-- Dark or neon colors
-- Complex artistic fonts (use simple, clear fonts)
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script>
+async function downloadImage() {{
+    const element = document.getElementById('infographic');
+    const canvas = await html2canvas(element, {{
+        scale: 2,
+        backgroundColor: '#e8d5c4',
+        logging: false,
+        useCORS: true
+    }});
+    const link = document.createElement('a');
+    link.download = 'ke-hoach-tuan-hoc.png';
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+}}
+</script>
 
-This should look like a modern Vietnamese school notice board poster that students would be excited to see."""
+STYLING CSS:
+- .eval-row: display:flex; gap:15px; align-items:center; padding:12px; background:#f8f9fa; border-radius:10px; margin-bottom:10px;
+- .eval-icon: font-size:32px;
+- .eval-label: flex:1; font-weight:600; color:#333;
+- .eval-content: display:flex; flex-direction:column; gap:5px;
+- .eval-badge: background:linear-gradient(135deg, #ffd89b 0%, #ff9a56 100%); padding:5px 15px; border-radius:20px; color:white; font-weight:bold; align-self:flex-start;
+- .goal-item: display:flex; gap:15px; align-items:center; padding:15px; background:#f8f9fa; border-radius:10px; margin-bottom:15px; box-shadow:0 2px 5px rgba(0,0,0,0.1);
+- .goal-icon: font-size:32px;
+- .goal-text: font-size:18px; font-weight:500;
 
-        # Gọi model tạo ảnh
-        try:
-            image_response = model.generate_content([image_prompt])
-            
-            # Kiểm tra xem có ảnh trong response không
-            has_image = False
-            
-            # Thử nhiều cách để extract ảnh
-            if hasattr(image_response, '_result'):
-                result = image_response._result
-                if hasattr(result, 'candidates') and result.candidates:
-                    for candidate in result.candidates:
-                        if hasattr(candidate, 'content') and hasattr(candidate.content, 'parts'):
-                            for part in candidate.content.parts:
-                                # Kiểm tra inline_data
-                                if hasattr(part, 'inline_data') and part.inline_data:
-                                    infographic_dir = "static/class_activity_infographics"
-                                    os.makedirs(infographic_dir, exist_ok=True)
-                                    
-                                    infographic_filename = f"{activity_id}_infographic.png"
-                                    infographic_path = os.path.join(infographic_dir, infographic_filename)
-                                    
-                                    # Lưu ảnh
-                                    with open(infographic_path, 'wb') as f:
-                                        f.write(part.inline_data.data)
-                                    
-                                    activity['infographic_image'] = f"/static/class_activity_infographics/{infographic_filename}"
-                                    has_image = True
-                                    break
-                        if has_image:
-                            break
-            
-            # Nếu không tìm thấy ảnh
-            if not has_image:
-                activity['infographic_image'] = None
-                flash('AI chỉ trả về text, không tạo được ảnh infographic. Bạn có thể xem kết quả phân tích bên dưới.', 'warning')
-                
-        except Exception as img_error:
-            activity['infographic_image'] = None
-            flash(f'Không thể tạo infographic: {str(img_error)}. Bạn vẫn có thể xem kết quả phân tích.', 'warning')
+CHỈ TRẢ VỀ CODE HTML HOÀN CHỈNH, KHÔNG GIẢI THÍCH."""
+
+        # Gọi Gemini tạo HTML
+        html_response = model.generate_content([html_prompt])
+        html_content = clean_ai_output(html_response.text)
+        
+        # Loại bỏ markdown code blocks
+        html_content = html_content.replace('```html', '').replace('```', '').strip()
+        
+        # Lưu file HTML
+        infographic_dir = "static/class_activity_infographics"
+        os.makedirs(infographic_dir, exist_ok=True)
+        
+        infographic_filename = f"{activity_id}_infographic.html"
+        infographic_path = os.path.join(infographic_dir, infographic_filename)
+        
+        with open(infographic_path, 'w', encoding='utf-8') as f:
+            f.write(html_content)
+        
+        activity['infographic_html'] = f"/static/class_activity_infographics/{infographic_filename}"
         
         # ========================================
         # LƯU KẾT QUẢ
@@ -391,13 +452,15 @@ This should look like a modern Vietnamese school notice board poster that studen
         
         save_class_activities(activities)
         
-        flash('Đã phân tích thành công!', 'success')
+        flash('Đã phân tích và tạo infographic thành công!', 'success')
         
     except Exception as e:
         flash(f'Lỗi khi phân tích: {str(e)}', 'error')
+        import traceback
+        print(traceback.format_exc())
     
     return redirect(url_for('class_activity_result', activity_id=activity_id))
-
+    #################
 @app.route('/class_activity/<activity_id>/result')
 def class_activity_result(activity_id):
     """Xem kết quả phân tích"""
