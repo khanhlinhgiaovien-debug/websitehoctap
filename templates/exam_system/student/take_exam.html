@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Làm bài: {{ exam.title }}</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f7fa;
+            min-height: 100vh;
+        }
+        
+        .navbar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .navbar-brand {
+            font-size: 24px;
+            font-weight: bold;
+        }
+        
+        .timer {
+            background: rgba(255,255,255,0.2);
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-size: 18px;
+            font-weight: bold;
+        }
+        
+        .timer.warning {
+            background: #ff9800;
+            animation: pulse 1s infinite;
+        }
+        
+        .timer.danger {
+            background: #f44336;
+            animation: pulse 0.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 30px 20px;
+        }
+        
+        .exam-header {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        
+        .exam-title {
+            font-size: 28px;
+            color: #333;
+            margin-bottom: 15px;
+        }
+        
+        .exam-description {
+            color: #666;
+            font-size: 15px;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+        
+        .exam-info {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+        
+        .info-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .question-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            transition: all 0.3s;
+        }
+        
+        .question-card.answered {
+            border-left: 4px solid #4caf50;
+        }
+        
+        .question-header {
+            display: flex;
+            align-items: flex-start;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .question-number {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+        
+        .question-number.answered {
+            background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
+        }
+        
+        .question-text {
+            flex: 1;
+            color: #333;
+            font-size: 16px;
+            line-height: 1.6;
+            font-weight: 500;
+        }
+        
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-left: 55px;
+        }
+        
+        .option {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: white;
+        }
+        
+        .option:hover {
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+        
+        .option.selected {
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+        
+        .option input[type="radio"] {
+            margin-right: 12px;
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            accent-color: #667eea;
+        }
+        
+        .option label {
+            flex: 1;
+            cursor: pointer;
+            color: #444;
+            font-size: 15px;
+        }
+        
+        .essay-textarea {
+            width: 100%;
+            min-height: 200px;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 15px;
+            font-family: inherit;
+            resize: vertical;
+            margin-left: 55px;
+            transition: border-color 0.3s;
+        }
+        
+        .essay-textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .essay-textarea.filled {
+            border-color: #4caf50;
+        }
+        
+        .char-count {
+            margin-left: 55px;
+            margin-top: 8px;
+            font-size: 13px;
+            color: #999;
+        }
+        
+        .submit-section {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            text-align: center;
+        }
+        
+        .btn-submit {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 50px;
+            border: none;
+            border-radius: 30px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+        }
+        
+        .btn-submit:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .warning {
+            color: #f57c00;
+            font-size: 14px;
+            margin-bottom: 15px;
+        }
+        
+        .progress-bar {
+            background: #e0e0e0;
+            height: 8px;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 20px;
+        }
+        
+        .progress-fill {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            height: 100%;
+            width: 0%;
+            transition: width 0.3s;
+        }
+        
+        .question-navigation {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        
+        .nav-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 15px;
+        }
+        
+        .nav-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .nav-btn {
+            width: 40px;
+            height: 40px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            background: white;
+            color: #666;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .nav-btn:hover {
+            border-color: #667eea;
+            color: #667eea;
+        }
+        
+        .nav-btn.answered {
+            background: #4caf50;
+            color: white;
+            border-color: #4caf50;
+        }
+        
+        @media (max-width: 768px) {
+            .navbar {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .exam-info {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .options {
+                margin-left: 0;
+            }
+            
+            .essay-textarea {
+                margin-left: 0;
+            }
+            
+            .char-count {
+                margin-left: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-brand">🎓 {{ exam.title }}</div>
+        {% if exam.time_limit > 0 %}
+            <div class="timer" id="timer">⏱️ <span id="time-display">{{ exam.time_limit }}:00</span></div>
+        {% endif %}
+    </nav>
+    
+    <div class="container">
+        <div class="exam-header">
+            <h1 class="exam-title">{{ exam.title }}</h1>
+            <p class="exam-description">{{ exam.description }}</p>
+            
+            <div class="exam-info">
+                <div class="info-item">
+                    <span>📚</span>
+                    <span><strong>Môn học:</strong> {{ exam.subject }}</span>
+                </div>
+                <div class="info-item">
+                    <span>🎯</span>
+                    <span><strong>Lớp:</strong> {{ exam.grade }}</span>
+                </div>
+                <div class="info-item">
+                    <span>📝</span>
+                    <span><strong>Loại đề:</strong> 
+                        {% if exam.type == 'multiple_choice' %}Trắc nghiệm{% else %}Tự luận{% endif %}
+                    </span>
+                </div>
+                {% if exam.type == 'multiple_choice' %}
+                    <div class="info-item">
+                        <span>❓</span>
+                        <span><strong>Số câu hỏi:</strong> {{ exam.questions|length }}</span>
+                    </div>
+                {% else %}
+                    <div class="info-item">
+                        <span>❓</span>
+                        <span><strong>Số câu hỏi:</strong> {{ exam.essay_questions|length }}</span>
+                    </div>
+                {% endif %}
+                {% if exam.time_limit > 0 %}
+                    <div class="info-item">
+                        <span>⏱️</span>
+                        <span><strong>Thời gian:</strong> {{ exam.time_limit }} phút</span>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Question Navigation -->
+        <div class="question-navigation">
+            <div class="nav-title">📋 Danh sách câu hỏi (Click để nhảy đến câu)</div>
+            <div class="nav-buttons" id="nav-buttons">
+                {% if exam.type == 'multiple_choice' %}
+                    {% for question in exam.questions %}
+                        <button type="button" class="nav-btn" onclick="scrollToQuestion({{ loop.index }})" id="nav-{{ loop.index }}">
+                            {{ loop.index }}
+                        </button>
+                    {% endfor %}
+                {% else %}
+                    {% for question in exam.essay_questions %}
+                        <button type="button" class="nav-btn" onclick="scrollToQuestion({{ loop.index }})" id="nav-{{ loop.index }}">
+                            {{ loop.index }}
+                        </button>
+                    {% endfor %}
+                {% endif %}
+            </div>
+        </div>
+        
+        <form method="POST" id="exam-form">
+            <input type="hidden" name="time_taken" id="time_taken" value="0">
+            
+            {% if exam.type == 'multiple_choice' %}
+                <!-- Trắc nghiệm -->
+                {% for question in exam.questions %}
+                    <div class="question-card" id="question-{{ loop.index }}">
+                        <div class="question-header">
+                            <div class="question-number" id="qnum-{{ loop.index }}">{{ loop.index }}</div>
+                            <div class="question-text">{{ question.question }}</div>
+                        </div>
+                        
+                        <div class="options">
+                            {% for option in question.options %}
+                                <div class="option" onclick="selectOption(this)">
+                                    <input type="radio" 
+                                           id="q{{ question.id }}_{{ loop.index }}" 
+                                           name="q_{{ question.id }}" 
+                                           value="{{ option[0] }}"
+                                           onchange="updateProgress({{ loop.parent.loop.index }})">
+                                    <label for="q{{ question.id }}_{{ loop.index }}">{{ option }}</label>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% endfor %}
+                
+            {% else %}
+                <!-- Tự luận -->
+                {% for question in exam.essay_questions %}
+                    <div class="question-card" id="question-{{ loop.index }}">
+                        <div class="question-header">
+                            <div class="question-number" id="qnum-{{ loop.index }}">{{ loop.index }}</div>
+                            <div class="question-text">
+                                {{ question.question }}
+                                <div style="margin-top: 10px; color: #999; font-size: 14px; font-weight: normal;">
+                                    💯 Điểm tối đa: {{ question.points }}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <textarea class="essay-textarea" 
+                                  id="essay-{{ loop.index }}"
+                                  name="essay_{{ question.id }}" 
+                                  placeholder="Nhập câu trả lời của bạn..."
+                                  oninput="updateEssayProgress({{ loop.index }})"></textarea>
+                        <div class="char-count" id="char-count-{{ loop.index }}">0 ký tự</div>
+                    </div>
+                {% endfor %}
+            {% endif %}
+            
+            <div class="submit-section">
+                <p class="warning">⚠️ Vui lòng kiểm tra kỹ bài làm trước khi nộp. Bạn không thể sửa sau khi đã nộp bài.</p>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progress"></div>
+                </div>
+                <p style="margin-top: 10px; color: #666; font-size: 14px;">
+                    Đã hoàn thành: <span id="progress-text">0</span> / 
+                    {% if exam.type == 'multiple_choice' %}{{ exam.questions|length }}{% else %}{{ exam.essay_questions|length }}{% endif %} câu
+                </p>
+                <button type="submit" class="btn-submit" onclick="return confirmSubmit()">
+                    Nộp bài
+                </button>
+            </div>
+        </form>
+    </div>
+    
+    <script>
+        const examType = '{{ exam.type }}';
+        const totalQuestions = {% if exam.type == 'multiple_choice' %}{{ exam.questions|length }}{% else %}{{ exam.essay_questions|length }}{% endif %};
+        let startTime = Date.now();
+        
+        // Timer
+        {% if exam.time_limit > 0 %}
+        let timeLeft = {{ exam.time_limit }} * 60; // Convert to seconds
+        
+        function updateTimer() {
+            if (timeLeft <= 0) {
+                alert('⏰ Hết giờ! Bài làm của bạn sẽ được tự động nộp.');
+                document.getElementById('exam-form').submit();
+                return;
+            }
+            
+            let minutes = Math.floor(timeLeft / 60);
+            let seconds = timeLeft % 60;
+            let timerElement = document.getElementById('timer');
+            document.getElementById('time-display').textContent = 
+                `${minutes}:${seconds.toString().padStart(2, '0')}`;
+            
+            // Warning colors
+            if (timeLeft <= 60) {
+                timerElement.className = 'timer danger';
+            } else if (timeLeft <= 300) {
+                timerElement.className = 'timer warning';
+            }
+            
+            timeLeft--;
+        }
+        
+        setInterval(updateTimer, 1000);
+        {% endif %}
+        
+        // Track time taken
+        document.getElementById('exam-form').addEventListener('submit', function() {
+            let timeTaken = Math.floor((Date.now() - startTime) / 1000 / 60);
+            document.getElementById('time_taken').value = timeTaken;
+        });
+        
+        // Select option visual feedback
+        function selectOption(optionElement) {
+            let optionsContainer = optionElement.parentElement;
+            optionsContainer.querySelectorAll('.option').forEach(opt => {
+                opt.classList.remove('selected');
+            });
+            optionElement.classList.add('selected');
+        }
+        
+        // Progress tracking for multiple choice
+        function updateProgress(questionNumber) {
+            if (examType === 'multiple_choice') {
+                let answered = document.querySelectorAll('input[type="radio"]:checked').length;
+                let percentage = (answered / totalQuestions) * 100;
+                document.getElementById('progress').style.width = percentage + '%';
+                document.getElementById('progress-text').textContent = answered;
+                
+                // Update question card and navigation
+                let questionCard = document.getElementById('question-' + questionNumber);
+                let questionNum = document.getElementById('qnum-' + questionNumber);
+                let navBtn = document.getElementById('nav-' + questionNumber);
+                
+                questionCard.classList.add('answered');
+                questionNum.classList.add('answered');
+                navBtn.classList.add('answered');
+            }
+        }
+        
+        // Progress tracking for essay
+        function updateEssayProgress(questionNumber) {
+            if (examType === 'essay') {
+                let answered = 0;
+                for (let i = 1; i <= totalQuestions; i++) {
+                    let textarea = document.getElementById('essay-' + i);
+                    let charCount = document.getElementById('char-count-' + i);
+                    let questionCard = document.getElementById('question-' + i);
+                    let questionNum = document.getElementById('qnum-' + i);
+                    let navBtn = document.getElementById('nav-' + i);
+                    
+                    if (textarea) {
+                        let length = textarea.value.trim().length;
+                        charCount.textContent = length + ' ký tự';
+                        
+                        if (length > 0) {
+                            answered++;
+                            textarea.classList.add('filled');
+                            questionCard.classList.add('answered');
+                            questionNum.classList.add('answered');
+                            navBtn.classList.add('answered');
+                        } else {
+                            textarea.classList.remove('filled');
+                            questionCard.classList.remove('answered');
+                            questionNum.classList.remove('answered');
+                            navBtn.classList.remove('answered');
+                        }
+                    }
+                }
+                
+                let percentage = (answered / totalQuestions) * 100;
+                document.getElementById('progress').style.width = percentage + '%';
+                document.getElementById('progress-text').textContent = answered;
+            }
+        }
+        
+        // Scroll to question
+        function scrollToQuestion(questionNumber) {
+            let questionCard = document.getElementById('question-' + questionNumber);
+            if (questionCard) {
+                questionCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                questionCard.style.animation = 'pulse 0.5s';
+                setTimeout(() => {
+                    questionCard.style.animation = '';
+                }, 500);
+            }
+        }
+        
+        // Confirm submit
+        function confirmSubmit() {
+            let answered = 0;
+            
+            if (examType === 'multiple_choice') {
+                answered = document.querySelectorAll('input[type="radio"]:checked').length;
+            } else {
+                document.querySelectorAll('.essay-textarea').forEach(textarea => {
+                    if (textarea.value.trim().length > 0) answered++;
+                });
+            }
+            
+            if (answered < totalQuestions) {
+                return confirm(`⚠️ Bạn mới trả lời ${answered}/${totalQuestions} câu.\n\nBạn có chắc chắn muốn nộp bài?`);
+            }
+            
+            return confirm('✅ Bạn đã hoàn thành tất cả câu hỏi.\n\nXác nhận nộp bài?');
+        }
+        
+        // Initialize
+        if (examType === 'multiple_choice') {
+            document.querySelectorAll('input[type="radio"]').forEach(radio => {
+                if (radio.checked) {
+                    radio.parentElement.classList.add('selected');
+                }
+            });
+        }
+        
+        // Prevent accidental page leave
+        window.addEventListener('beforeunload', function (e) {
+            e.preventDefault();
+            e.returnValue = '';
+        });
+        
+        // Remove warning on form submit
+        document.getElementById('exam-form').addEventListener('submit', function() {
+            window.removeEventListener('beforeunload', arguments.callee);
+        });
+    </script>
+</body>
+</html>

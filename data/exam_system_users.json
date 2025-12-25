@@ -1,0 +1,57 @@
+{
+  "students": [
+    {
+      "id": "student_001",
+      "username": "nguyenvana",
+      "password": "pbkdf2:sha256:600000$abcdef$1234567890abcdef...",
+      "full_name": "Nguyễn Văn A",
+      "class": "8A4",
+      "email": "nguyenvana@example.com",
+      "created_at": "25/12/2025 10:00"
+    },
+    {
+      "id": "student_002",
+      "username": "tranthib",
+      "password": "pbkdf2:sha256:600000$ghijkl$abcdef1234567890...",
+      "full_name": "Trần Thị B",
+      "class": "8A4",
+      "email": "tranthib@example.com",
+      "created_at": "25/12/2025 10:30"
+    },
+    {
+      "id": "2ea73b1f-5707-4f58-afa5-571559b0990a",
+      "username": "test",
+      "password": "scrypt:32768:8:1$2BuQDLyzy6HqvQej$4b964f6514f3ce495b68c0271c216788a24b6832e535878aac91d0bcbbbd5f782b885bc9c2d572b3463012c542b45a06162279e69b59cc602654e8a290943f4c",
+      "full_name": "test",
+      "class": "9",
+      "email": "adhs@gmail.com",
+      "created_at": "25/12/2025 14:54"
+    }
+  ],
+  "teachers": [
+    {
+      "id": "teacher_001",
+      "username": "gv_toan",
+      "password": "toan123",
+      "full_name": "Nguyễn Thị Mai",
+      "subject": "Toán",
+      "email": "ntmai@school.edu.vn"
+    },
+    {
+      "id": "teacher_002",
+      "username": "gv_van",
+      "password": "pbkdf2:sha256:600000$stuvwx$1122334455667788...",
+      "full_name": "Lê Văn Nam",
+      "subject": "Ngữ Văn",
+      "email": "lvnam@school.edu.vn"
+    },
+    {
+      "id": "teacher_003",
+      "username": "gvvan",
+      "password": "1234567",
+      "full_name": "Lê Văn Nam",
+      "subject": "Ngữ Văn",
+      "email": "lvnm@school.edu.vn"
+    }
+  ]
+}

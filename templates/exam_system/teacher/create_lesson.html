@@ -1,0 +1,195 @@
+{% extends "exam_system/base.html" %}
+
+{% block title %}Tạo Bài Giảng{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <h2 class="text-primary">
+                <i class="fas fa-plus-circle"></i> Tạo Bài Giảng Mới
+            </h2>
+            <p class="text-muted">Tạo nội dung bài giảng cho học sinh</p>
+            <hr>
+        </div>
+    </div>
+
+    <!-- Form tạo bài giảng -->
+    <div class="row">
+        <div class="col-md-10 offset-md-1">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-edit"></i> Thông Tin Bài Giảng
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" enctype="multipart/form-data">
+                        <!-- Tiêu đề -->
+                        <div class="form-group">
+                            <label for="title">
+                                <i class="fas fa-heading"></i> Tiêu Đề Bài Giảng <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="title" 
+                                   name="title" 
+                                   placeholder="VD: Phương trình bậc nhất một ẩn"
+                                   required>
+                        </div>
+
+                        <!-- Mô tả -->
+                        <div class="form-group">
+                            <label for="description">
+                                <i class="fas fa-align-left"></i> Mô Tả Ngắn
+                            </label>
+                            <textarea class="form-control" 
+                                      id="description" 
+                                      name="description" 
+                                      rows="2"
+                                      placeholder="Mô tả ngắn gọn về nội dung bài giảng..."></textarea>
+                        </div>
+
+                        <div class="row">
+                            <!-- Môn học -->
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="subject">
+                                        <i class="fas fa-book"></i> Môn Học <span class="text-danger">*</span>
+                                    </label>
+                                    <select class="form-control" id="subject" name="subject" required>
+                                        <option value="">-- Chọn môn học --</option>
+                                        <option value="Toán">Toán</option>
+                                        <option value="Văn">Văn</option>
+                                        <option value="Tiếng Anh">Tiếng Anh</option>
+                                        <option value="Vật Lý">Vật Lý</option>
+                                        <option value="Hóa Học">Hóa Học</option>
+                                        <option value="Sinh Học">Sinh Học</option>
+                                        <option value="Lịch Sử">Lịch Sử</option>
+                                        <option value="Địa Lý">Địa Lý</option>
+                                        <option value="GDCD">GDCD</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Khối -->
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="grade">
+                                        <i class="fas fa-layer-group"></i> Khối <span class="text-danger">*</span>
+                                    </label>
+                                    <select class="form-control" id="grade" name="grade" required>
+                                        <option value="">-- Chọn khối --</option>
+                                        <option value="6">Lớp 6</option>
+                                        <option value="7">Lớp 7</option>
+                                        <option value="8">Lớp 8</option>
+                                        <option value="9">Lớp 9</option>
+                                        <option value="10">Lớp 10</option>
+                                        <option value="11">Lớp 11</option>
+                                        <option value="12">Lớp 12</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Nội dung bài giảng -->
+                        <div class="form-group">
+                            <label for="content">
+                                <i class="fas fa-file-alt"></i> Nội Dung Bài Giảng <span class="text-danger">*</span>
+                            </label>
+                            <textarea class="form-control" 
+                                      id="content" 
+                                      name="content" 
+                                      rows="15"
+                                      placeholder="Nhập nội dung chi tiết của bài giảng...
+
+VD:
+I. MỤC TIÊU BÀI HỌC
+- Kiến thức: ...
+- Kỹ năng: ...
+
+II. NỘI DUNG
+1. Định nghĩa
+2. Tính chất
+3. Ví dụ minh họa
+
+III. BÀI TẬP VẬN DỤNG
+..."
+                                      required></textarea>
+                            <small class="form-text text-muted">
+                                <i class="fas fa-info-circle"></i> Bạn có thể sử dụng markdown để định dạng nội dung
+                            </small>
+                        </div>
+
+                        <!-- File đính kèm -->
+                        <div class="form-group">
+                            <label for="attachments">
+                                <i class="fas fa-paperclip"></i> File Đính Kèm (PDF, Word, PPT, Images)
+                            </label>
+                            <div class="custom-file">
+                                <input type="file" 
+                                       class="custom-file-input" 
+                                       id="attachments" 
+                                       name="attachments"
+                                       multiple
+                                       accept=".pdf,.doc,.docx,.ppt,.pptx,.jpg,.jpeg,.png,.gif">
+                                <label class="custom-file-label" for="attachments">Chọn file...</label>
+                            </div>
+                            <small class="form-text text-muted">
+                                <i class="fas fa-info-circle"></i> Có thể chọn nhiều file. Hỗ trợ: PDF, Word, PowerPoint, Hình ảnh
+                            </small>
+                        </div>
+
+                        <!-- Buttons -->
+                        <div class="form-group mt-4">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-save"></i> Tạo Bài Giảng
+                            </button>
+                            <a href="{{ url_for('teacher_dashboard') }}" class="btn btn-secondary btn-lg">
+                                <i class="fas fa-times"></i> Hủy
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Hướng dẫn -->
+            <div class="card mt-4 shadow-sm">
+                <div class="card-header bg-info text-white">
+                    <h6 class="mb-0">
+                        <i class="fas fa-lightbulb"></i> Gợi Ý Soạn Bài Giảng
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <ul class="mb-0">
+                        <li>Tiêu đề nên ngắn gọn, súc tích, thể hiện nội dung chính</li>
+                        <li>Cấu trúc bài giảng rõ ràng: Mục tiêu → Nội dung → Bài tập</li>
+                        <li>Sử dụng ví dụ minh họa sinh động, gần gũi với học sinh</li>
+                        <li>Đính kèm tài liệu tham khảo, hình ảnh minh họa để học sinh dễ hiểu</li>
+                        <li>Có thể thêm video giảng dạy (link YouTube) trong nội dung</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Hiển thị tên file khi chọn
+document.querySelector('.custom-file-input').addEventListener('change', function(e) {
+    var files = e.target.files;
+    var label = document.querySelector('.custom-file-label');
+    
+    if (files.length > 0) {
+        if (files.length === 1) {
+            label.textContent = files[0].name;
+        } else {
+            label.textContent = files.length + ' files đã chọn';
+        }
+    } else {
+        label.textContent = 'Chọn file...';
+    }
+});
+</script>
+{% endblock %}

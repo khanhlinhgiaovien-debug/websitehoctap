@@ -1,0 +1,341 @@
+{% extends "exam_system/base.html" %}
+
+{% block title %}Preview Câu Hỏi{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <h2 class="text-success">
+                <i class="fas fa-eye"></i> Preview Câu Hỏi Trắc Nghiệm
+            </h2>
+            <p class="text-muted">Kiểm tra và chỉnh sửa trước khi lưu đề thi</p>
+            <hr>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-10 offset-md-1">
+            <!-- Alert thành công -->
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="fas fa-check-circle"></i> 
+                <strong>Parse thành công!</strong> Đã phân tích được <strong>{{ questions|length }}</strong> câu hỏi từ file Word.
+                <button type="button" class="close" data-dismiss="alert">
+                    <span>&times;</span>
+                </button>
+            </div>
+
+            <!-- Form xác nhận -->
+            <form method="POST" action="{{ url_for('teacher_create_multiple_choice') }}">
+                <input type="hidden" name="confirm" value="yes">
+                <input type="hidden" name="questions_json" id="questions_json" value='{{ questions | tojson }}'>
+
+                <!-- Thông tin đề thi -->
+                <div class="card shadow mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-info-circle"></i> Thông Tin Đề Thi
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <!-- Tiêu đề -->
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <label for="title">
+                                        <i class="fas fa-heading"></i> Tiêu Đề Đề Thi <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="text" 
+                                           class="form-control" 
+                                           id="title" 
+                                           name="title" 
+                                           placeholder="VD: Kiểm Tra 15 Phút - Toán 9"
+                                           required>
+                                </div>
+                            </div>
+
+                            <!-- Mô tả -->
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <label for="description">
+                                        <i class="fas fa-align-left"></i> Mô Tả
+                                    </label>
+                                    <textarea class="form-control" 
+                                              id="description" 
+                                              name="description" 
+                                              rows="2"
+                                              placeholder="Mô tả ngắn về đề thi..."></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <!-- Môn học -->
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="subject">
+                                        <i class="fas fa-book"></i> Môn Học <span class="text-danger">*</span>
+                                    </label>
+                                    <select class="form-control" id="subject" name="subject" required>
+                                        <option value="">-- Chọn môn học --</option>
+                                        <option value="Toán">Toán</option>
+                                        <option value="Văn">Văn</option>
+                                        <option value="Tiếng Anh">Tiếng Anh</option>
+                                        <option value="Vật Lý">Vật Lý</option>
+                                        <option value="Hóa Học">Hóa Học</option>
+                                        <option value="Sinh Học">Sinh Học</option>
+                                        <option value="Lịch Sử">Lịch Sử</option>
+                                        <option value="Địa Lý">Địa Lý</option>
+                                        <option value="GDCD">GDCD</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Khối -->
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="grade">
+                                        <i class="fas fa-layer-group"></i> Khối <span class="text-danger">*</span>
+                                    </label>
+                                    <select class="form-control" id="grade" name="grade" required>
+                                        <option value="">-- Chọn khối --</option>
+                                        <option value="6">Lớp 6</option>
+                                        <option value="7">Lớp 7</option>
+                                        <option value="8">Lớp 8</option>
+                                        <option value="9">Lớp 9</option>
+                                        <option value="10">Lớp 10</option>
+                                        <option value="11">Lớp 11</option>
+                                        <option value="12">Lớp 12</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Thời gian -->
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="time_limit">
+                                        <i class="fas fa-clock"></i> Thời Gian (phút)
+                                    </label>
+                                    <input type="number" 
+                                           class="form-control" 
+                                           id="time_limit" 
+                                           name="time_limit" 
+                                           value="45"
+                                           min="0"
+                                           placeholder="0 = không giới hạn">
+                                    <small class="form-text text-muted">0 = không giới hạn</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Danh sách câu hỏi -->
+                <div class="card shadow mb-4">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-list-ol"></i> Danh Sách Câu Hỏi ({{ questions|length }} câu)
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        {% for q in questions %}
+                        <div class="question-preview mb-4 p-3 border rounded {% if loop.index % 2 == 0 %}bg-light{% endif %}">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <h6 class="text-primary mb-0">
+                                    <span class="badge badge-primary">{{ loop.index }}</span>
+                                    <strong>Câu {{ q.id }}:</strong>
+                                </h6>
+                                <button type="button" 
+                                        class="btn btn-sm btn-warning" 
+                                        onclick="editQuestion({{ loop.index0 }})"
+                                        title="Chỉnh sửa">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                            </div>
+
+                            <p class="mb-3">{{ q.question }}</p>
+
+                            <div class="options">
+                                {% for option in q.options %}
+                                <div class="option-item p-2 rounded mb-1 
+                                    {% if option.startswith(q.correct_answer) %}
+                                        bg-success text-white
+                                    {% else %}
+                                        bg-light
+                                    {% endif %}">
+                                    {% if option.startswith(q.correct_answer) %}
+                                        <i class="fas fa-check-circle"></i>
+                                    {% endif %}
+                                    {{ option }}
+                                </div>
+                                {% endfor %}
+                            </div>
+
+                            {% if q.explanation %}
+                            <div class="mt-2 p-2 bg-info text-white rounded">
+                                <small>
+                                    <i class="fas fa-lightbulb"></i> 
+                                    <strong>Giải thích:</strong> {{ q.explanation }}
+                                </small>
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Thống kê -->
+                <div class="card shadow-sm mb-4">
+                    <div class="card-body">
+                        <div class="row text-center">
+                            <div class="col-md-4">
+                                <h3 class="text-primary">{{ questions|length }}</h3>
+                                <p class="text-muted">Tổng số câu</p>
+                            </div>
+                            <div class="col-md-4">
+                                <h3 class="text-success">10</h3>
+                                <p class="text-muted">Thang điểm</p>
+                            </div>
+                            <div class="col-md-4">
+                                <h3 class="text-info">
+                                    {{ (10 / questions|length) | round(2) }}
+                                </h3>
+                                <p class="text-muted">Điểm/câu</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Buttons -->
+                <div class="text-center mb-4">
+                    <button type="submit" class="btn btn-success btn-lg">
+                        <i class="fas fa-check"></i> Xác Nhận & Lưu Đề Thi
+                    </button>
+                    <a href="{{ url_for('teacher_create_multiple_choice') }}" class="btn btn-secondary btn-lg">
+                        <i class="fas fa-arrow-left"></i> Quay Lại
+                    </a>
+                    <button type="button" class="btn btn-warning btn-lg" onclick="editAll()">
+                        <i class="fas fa-edit"></i> Chỉnh Sửa Tất Cả
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Edit Question -->
+<div class="modal fade" id="editModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-warning">
+                <h5 class="modal-title">
+                    <i class="fas fa-edit"></i> Chỉnh Sửa Câu Hỏi
+                </h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Câu hỏi</label>
+                    <textarea class="form-control" id="edit_question" rows="3"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Đáp án A</label>
+                    <input type="text" class="form-control" id="edit_option_a">
+                </div>
+                <div class="form-group">
+                    <label>Đáp án B</label>
+                    <input type="text" class="form-control" id="edit_option_b">
+                </div>
+                <div class="form-group">
+                    <label>Đáp án C</label>
+                    <input type="text" class="form-control" id="edit_option_c">
+                </div>
+                <div class="form-group">
+                    <label>Đáp án D</label>
+                    <input type="text" class="form-control" id="edit_option_d">
+                </div>
+                <div class="form-group">
+                    <label>Đáp án đúng</label>
+                    <select class="form-control" id="edit_correct">
+                        <option value="A">A</option>
+                        <option value="B">B</option>
+                        <option value="C">C</option>
+                        <option value="D">D</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Giải thích</label>
+                    <textarea class="form-control" id="edit_explanation" rows="2"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-primary" onclick="saveEdit()">Lưu Thay Đổi</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let questions = {{ questions | tojson }};
+let currentEditIndex = -1;
+
+function editQuestion(index) {
+    currentEditIndex = index;
+    const q = questions[index];
+    
+    document.getElementById('edit_question').value = q.question;
+    document.getElementById('edit_option_a').value = q.options[0];
+    document.getElementById('edit_option_b').value = q.options[1];
+    document.getElementById('edit_option_c').value = q.options[2];
+    document.getElementById('edit_option_d').value = q.options[3];
+    document.getElementById('edit_correct').value = q.correct_answer;
+    document.getElementById('edit_explanation').value = q.explanation || '';
+    
+    $('#editModal').modal('show');
+}
+
+function saveEdit() {
+    if (currentEditIndex === -1) return;
+    
+    questions[currentEditIndex].question = document.getElementById('edit_question').value;
+    questions[currentEditIndex].options[0] = document.getElementById('edit_option_a').value;
+    questions[currentEditIndex].options[1] = document.getElementById('edit_option_b').value;
+    questions[currentEditIndex].options[2] = document.getElementById('edit_option_c').value;
+    questions[currentEditIndex].options[3] = document.getElementById('edit_option_d').value;
+    questions[currentEditIndex].correct_answer = document.getElementById('edit_correct').value;
+    questions[currentEditIndex].explanation = document.getElementById('edit_explanation').value;
+    
+    // Update hidden field
+    document.getElementById('questions_json').value = JSON.stringify(questions);
+    
+    // Reload page to show changes
+    location.reload();
+}
+
+function editAll() {
+    alert('Chức năng chỉnh sửa hàng loạt đang phát triển. Vui lòng chỉnh sửa từng câu.');
+}
+</script>
+
+<style>
+.question-preview {
+    transition: all 0.3s ease;
+}
+
+.question-preview:hover {
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.option-item {
+    transition: all 0.2s ease;
+}
+
+.option-item:hover {
+    transform: translateX(5px);
+}
+</style>
+{% endblock %}

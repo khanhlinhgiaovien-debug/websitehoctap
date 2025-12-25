@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chi tiết bài làm - {{ student.full_name }}</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: #667eea;
+            font-size: 28px;
+            margin-bottom: 20px;
+        }
+
+        .student-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        .info-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .info-item strong {
+            color: #667eea;
+            min-width: 120px;
+        }
+
+        .score-card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .score-display {
+            font-size: 72px;
+            font-weight: bold;
+            margin: 20px 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .score-label {
+            font-size: 18px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .ai-feedback {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+            margin-top: 20px;
+        }
+
+        .ai-feedback h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .ai-feedback p {
+            color: #666;
+            line-height: 1.6;
+            white-space: pre-wrap;
+        }
+
+        .questions-section {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 30px;
+        }
+
+        .questions-section h2 {
+            color: #667eea;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #eee;
+        }
+
+        .question-item {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border-left: 4px solid #ddd;
+        }
+
+        .question-item.correct {
+            border-left-color: #28a745;
+            background: #d4edda;
+        }
+
+        .question-item.incorrect {
+            border-left-color: #dc3545;
+            background: #f8d7da;
+        }
+
+        .question-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .question-number {
+            font-weight: bold;
+            color: #667eea;
+            font-size: 16px;
+        }
+
+        .question-status {
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .status-correct {
+            background: #28a745;
+            color: white;
+        }
+
+        .status-incorrect {
+            background: #dc3545;
+            color: white;
+        }
+
+        .question-text {
+            font-size: 16px;
+            color: #333;
+            margin-bottom: 15px;
+            line-height: 1.6;
+        }
+
+        .answer-box {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+
+        .answer-label {
+            font-weight: 600;
+            color: #666;
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+
+        .answer-text {
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .correct-answer {
+            color: #28a745;
+            font-weight: bold;
+        }
+
+        .incorrect-answer {
+            color: #dc3545;
+            font-weight: bold;
+        }
+
+        .explanation {
+            background: #fff3cd;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 10px;
+            border-left: 4px solid #ffc107;
+        }
+
+        .explanation strong {
+            color: #856404;
+        }
+
+        .essay-answer {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            min-height: 100px;
+            white-space: pre-wrap;
+            line-height: 1.6;
+            color: #333;
+        }
+
+        .essay-score {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #e7f3ff;
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+
+        .essay-score strong {
+            color: #667eea;
+        }
+
+        .essay-feedback {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 10px;
+            white-space: pre-wrap;
+            line-height: 1.6;
+            color: #666;
+        }
+
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s;
+            margin: 5px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #218838;
+        }
+
+        .action-buttons {
+            text-align: center;
+            margin-top: 30px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .stat-box {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .stat-box h3 {
+            font-size: 32px;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+
+        .stat-box p {
+            color: #666;
+            font-size: 14px;
+        }
+
+        @media print {
+            body {
+                background: white;
+            }
+            .btn, .action-buttons {
+                display: none;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 22px;
+            }
+
+            .student-info {
+                grid-template-columns: 1fr;
+            }
+
+            .score-display {
+                font-size: 48px;
+            }
+
+            .question-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📝 Chi tiết bài làm</h1>
+            <div class="student-info">
+                <div class="info-item">
+                    <strong>👤 Học sinh:</strong>
+                    <span>{{ student.full_name }}</span>
+                </div>
+                <div class="info-item">
+                    <strong>🏫 Lớp:</strong>
+                    <span>{{ student.class }}</span>
+                </div>
+                <div class="info-item">
+                    <strong>📧 Email:</strong>
+                    <span>{{ student.email or 'Chưa có' }}</span>
+                </div>
+                <div class="info-item">
+                    <strong>📝 Đề thi:</strong>
+                    <span>{{ exam.title }}</span>
+                </div>
+                <div class="info-item">
+                    <strong>⏰ Nộp lúc:</strong>
+                    <span>{{ submission.submitted_at }}</span>
+                </div>
+                <div class="info-item">
+                    <strong>⏱️ Thời gian:</strong>
+                    <span>{{ submission.time_taken }} phút</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="score-card">
+            <div class="score-label">Điểm số</div>
+            <div class="score-display">{{ "%.2f"|format(submission.score) }}/10</div>
+            
+            {% if exam.type == 'multiple_choice' %}
+            <div class="stats-grid">
+                <div class="stat-box">
+                    <h3>{{ submission.detailed_results|selectattr('is_correct', 'equalto', true)|list|length }}</h3>
+                    <p>Câu đúng</p>
+                </div>
+                <div class="stat-box">
+                    <h3>{{ submission.detailed_results|length }}</h3>
+                    <p>Tổng câu</p>
+                </div>
+                <div class="stat-box">
+                    <h3>{{ ((submission.detailed_results|selectattr('is_correct', 'equalto', true)|list|length / submission.detailed_results|length) * 100)|int }}%</h3>
+                    <p>Tỷ lệ đúng</p>
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="ai-feedback">
+                <h3>🤖 Nhận xét từ AI</h3>
+                <p>{{ submission.ai_feedback }}</p>
+            </div>
+        </div>
+
+        <div class="questions-section">
+            <h2>📋 Chi tiết từng câu</h2>
+
+            {% if exam.type == 'multiple_choice' %}
+                {% for result in submission.detailed_results %}
+                <div class="question-item {{ 'correct' if result.is_correct else 'incorrect' }}">
+                    <div class="question-header">
+                        <span class="question-number">Câu {{ result.question_id }}</span>
+                        <span class="question-status {{ 'status-correct' if result.is_correct else 'status-incorrect' }}">
+                            {{ '✓ Đúng' if result.is_correct else '✗ Sai' }}
+                        </span>
+                    </div>
+                    
+                    <div class="question-text">{{ result.question }}</div>
+                    
+                    <div class="answer-box">
+                        <div class="answer-label">Câu trả lời của học sinh:</div>
+                        <div class="answer-text {{ 'correct-answer' if result.is_correct else 'incorrect-answer' }}">
+                            {{ result.student_answer or 'Không trả lời' }}
+                        </div>
+                    </div>
+
+                    {% if not result.is_correct %}
+                    <div class="answer-box">
+                        <div class="answer-label">Đáp án đúng:</div>
+                        <div class="answer-text correct-answer">
+                            {{ result.correct_answer }}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if result.explanation %}
+                    <div class="explanation">
+                        <strong>💡 Giải thích:</strong>
+                        <p>{{ result.explanation }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+
+            {% elif exam.type == 'essay' %}
+                {% for result in submission.detailed_results %}
+                <div class="question-item">
+                    <div class="question-header">
+                        <span class="question-number">Câu {{ result.question_id }}</span>
+                        <span class="question-status" style="background: #667eea; color: white;">
+                            {{ "%.1f"|format(result.score) }}/{{ result.points }} điểm
+                        </span>
+                    </div>
+                    
+                    <div class="question-text">{{ result.question }}</div>
+                    
+                    <div class="answer-box">
+                        <div class="answer-label">Câu trả lời của học sinh:</div>
+                        <div class="essay-answer">{{ result.student_answer or 'Không có câu trả lời' }}</div>
+                    </div>
+
+                    <div class="essay-score">
+                        <strong>Điểm:</strong>
+                        <span style="font-size: 18px; color: #667eea; font-weight: bold;">
+                            {{ "%.1f"|format(result.score) }}/{{ result.points }}
+                        </span>
+                    </div>
+
+                    {% if result.feedback %}
+                    <div class="essay-feedback">
+                        <strong>📝 Nhận xét của AI:</strong>
+                        <p>{{ result.feedback }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            {% endif %}
+        </div>
+
+        <div class="action-buttons">
+            <button onclick="window.print()" class="btn btn-success">
+                🖨️ In bài làm
+            </button>
+            <a href="{{ url_for('teacher_view_submissions', exam_id=exam.id) }}" class="btn btn-primary">
+                ← Quay lại danh sách
+            </a>
+            <a href="{{ url_for('teacher_dashboard') }}" class="btn btn-secondary">
+                🏠 Dashboard
+            </a>
+        </div>
+    </div>
+
+    <script>
+        // Smooth scroll to top
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+
+        // Add animation when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            const scoreDisplay = document.querySelector('.score-display');
+            if (scoreDisplay) {
+                let score = parseFloat(scoreDisplay.textContent);
+                let current = 0;
+                const increment = score / 50;
+                const timer = setInterval(() => {
+                    current += increment;
+                    if (current >= score) {
+                        current = score;
+                        clearInterval(timer);
+                    }
+                    scoreDisplay.textContent = current.toFixed(2) + '/10';
+                }, 20);
+            }
+        });
+    </script>
+</body>
+</html>

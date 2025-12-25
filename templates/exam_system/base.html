@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Hệ Thống Kiểm Tra{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background-color: #ffffff;
+            color: #000000;
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .navbar {
+            background-color: #f8f9fa !important;
+            border-bottom: 2px solid #e0e0e0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .navbar-brand {
+            color: #000000 !important;
+            font-weight: 600;
+            font-size: 1.3rem;
+        }
+        .nav-link {
+            color: #000000 !important;
+        }
+        .nav-link:hover {
+            color: #0066cc !important;
+        }
+        .content-wrapper {
+            padding: 40px 0;
+            min-height: calc(100vh - 200px);
+        }
+        .card {
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            margin-bottom: 20px;
+            background-color: #ffffff;
+        }
+        .card-header {
+            background-color: #f8f9fa;
+            color: #000000;
+            border-bottom: 1px solid #e0e0e0;
+            border-radius: 8px 8px 0 0 !important;
+            padding: 20px;
+            font-weight: 600;
+        }
+        .card-body {
+            padding: 25px;
+            color: #000000;
+        }
+        .btn-primary {
+            background-color: #0066cc;
+            border: none;
+            color: #ffffff;
+        }
+        .btn-primary:hover {
+            background-color: #0052a3;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0,102,204,0.3);
+        }
+        .btn-success {
+            background-color: #28a745;
+            border: none;
+        }
+        .btn-success:hover {
+            background-color: #218838;
+        }
+        .btn-danger {
+            background-color: #dc3545;
+            border: none;
+        }
+        .btn-danger:hover {
+            background-color: #c82333;
+        }
+        .btn-warning {
+            background-color: #ffc107;
+            border: none;
+            color: #000000;
+        }
+        .btn-warning:hover {
+            background-color: #e0a800;
+        }
+        .btn-info {
+            background-color: #17a2b8;
+            border: none;
+        }
+        .btn-info:hover {
+            background-color: #138496;
+        }
+        .alert {
+            border-radius: 6px;
+            border: 1px solid;
+        }
+        .alert-success {
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+            color: #155724;
+        }
+        .alert-danger {
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+            color: #721c24;
+        }
+        .alert-info {
+            background-color: #d1ecf1;
+            border-color: #bee5eb;
+            color: #0c5460;
+        }
+        .badge {
+            font-weight: 500;
+        }
+        .footer {
+            background-color: #f8f9fa;
+            border-top: 2px solid #e0e0e0;
+            padding: 20px 0;
+            margin-top: 50px;
+            text-align: center;
+            color: #6c757d;
+        }
+        .form-control {
+            border: 1px solid #ced4da;
+            color: #000000;
+        }
+        .form-control:focus {
+            border-color: #0066cc;
+            box-shadow: 0 0 0 0.2rem rgba(0,102,204,0.25);
+        }
+        .form-label {
+            color: #000000;
+            font-weight: 500;
+        }
+        table {
+            color: #000000;
+        }
+        .table {
+            background-color: #ffffff;
+        }
+        .table-striped tbody tr:nth-of-type(odd) {
+            background-color: #f8f9fa;
+        }
+        .table thead th {
+            background-color: #e9ecef;
+            color: #000000;
+            border-color: #dee2e6;
+        }
+        a {
+            color: #0066cc;
+        }
+        a:hover {
+            color: #0052a3;
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-light">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-graduation-cap me-2"></i>
+                Hệ Thống Có Gì Phải Lo
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    {% if session.get('exam_user_type') %}
+                        <li class="nav-item">
+                            <span class="nav-link">
+                                <i class="fas fa-user me-1"></i>
+                                {{ session.get('exam_user_name') }}
+                                {% if session.get('exam_user_type') == 'teacher' %}
+                                    <span class="badge bg-success">Giáo viên</span>
+                                {% else %}
+                                    <span class="badge bg-primary">Học sinh</span>
+                                {% endif %}
+                            </span>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('exam_logout') }}">
+                                <i class="fas fa-sign-out-alt me-1"></i>Đăng xuất
+                            </a>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('exam_student_login') }}">
+                                <i class="fas fa-user me-1"></i>Học sinh
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('exam_teacher_login') }}">
+                                <i class="fas fa-chalkboard-teacher me-1"></i>Giáo viên
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Flash Messages -->
+    <div class="container mt-3">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
+                        <i class="fas fa-{{ 'exclamation-circle' if category == 'error' else 'check-circle' if category == 'success' else 'info-circle' }} me-2"></i>
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    </div>
+
+    <!-- Main Content -->
+    <div class="content-wrapper">
+        <div class="container">
+            {% block content %}{% endblock %}
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+        <div class="container">
+            <p class="mb-0">
+                &copy; 2025 Hệ Thống Kiểm Tra - Có Gì Phải Lo
+            </p>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

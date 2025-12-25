@@ -38,7 +38,619 @@ CLASS_ACTIVITY_IMAGES = os.path.join('static', 'class_activity_uploads')
 os.makedirs(os.path.dirname(CLASS_ACTIVITY_FILE), exist_ok=True)
 os.makedirs(CLASS_ACTIVITY_IMAGES, exist_ok=True)
 # Định nghĩa các extension được phép
+#############
 
+# ==========================================
+# HỆ THỐNG KIỂM TRA CÓ GÌ PHẢI LO
+# ==========================================
+
+import hashlib
+from werkzeug.security import generate_password_hash, check_password_hash
+import mammoth  # Để đọc file .docx
+
+# File paths
+EXAM_USERS_FILE = os.path.join('data', 'exam_system_users.json')
+EXAM_LESSONS_FILE = os.path.join('data', 'exam_system_lessons.json')
+EXAM_EXAMS_FILE = os.path.join('data', 'exam_system_exams.json')
+EXAM_SUBMISSIONS_FILE = os.path.join('data', 'exam_system_submissions.json')
+
+# Helper functions
+def load_exam_users():
+    try:
+        with open(EXAM_USERS_FILE, 'r', encoding='utf-8') as f:
+            return json.load(f)
+    except FileNotFoundError:
+        return {"students": [], "teachers": []}
+
+def save_exam_users(data):
+    with open(EXAM_USERS_FILE, 'w', encoding='utf-8') as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+
+def load_exam_lessons():
+    try:
+        with open(EXAM_LESSONS_FILE, 'r', encoding='utf-8') as f:
+            return json.load(f)
+    except FileNotFoundError:
+        return []
+
+def save_exam_lessons(data):
+    with open(EXAM_LESSONS_FILE, 'w', encoding='utf-8') as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+
+def load_exam_exams():
+    try:
+        with open(EXAM_EXAMS_FILE, 'r', encoding='utf-8') as f:
+            return json.load(f)
+    except FileNotFoundError:
+        return []
+
+def save_exam_exams(data):
+    with open(EXAM_EXAMS_FILE, 'w', encoding='utf-8') as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+
+def load_exam_submissions():
+    try:
+        with open(EXAM_SUBMISSIONS_FILE, 'r', encoding='utf-8') as f:
+            return json.load(f)
+    except FileNotFoundError:
+        return []
+
+def save_exam_submissions(data):
+    with open(EXAM_SUBMISSIONS_FILE, 'w', encoding='utf-8') as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+
+# ---------------- AUTHENTICATION ----------------
+@app.route('/exam_system/student_register', methods=['GET', 'POST'])
+def exam_student_register():
+    if request.method == 'POST':
+        username = request.form.get('username', '').strip()
+        password = request.form.get('password', '').strip()
+        full_name = request.form.get('full_name', '').strip()
+        class_name = request.form.get('class_name', '').strip()
+        email = request.form.get('email', '').strip()
+        
+        if not all([username, password, full_name, class_name]):
+            flash('Vui lòng nhập đầy đủ thông tin!', 'error')
+            return redirect(url_for('exam_student_register'))
+        
+        users = load_exam_users()
+        if any(s['username'] == username for s in users['students']):
+            flash('Tên đăng nhập đã tồn tại!', 'error')
+            return redirect(url_for('exam_student_register'))
+        
+        new_student = {
+            'id': str(uuid.uuid4()),
+            'username': username,
+            'password': generate_password_hash(password),
+            'full_name': full_name,
+            'class': class_name,
+            'email': email,
+            'created_at': datetime.now().strftime("%d/%m/%Y %H:%M")
+        }
+        users['students'].append(new_student)
+        save_exam_users(users)
+        
+        flash('Đăng ký thành công! Hãy đăng nhập.', 'success')
+        return redirect(url_for('exam_student_login'))
+    
+    return render_template('exam_system/auth/student_register.html')
+
+@app.route('/exam_system/student_login', methods=['GET', 'POST'])
+def exam_student_login():
+    if request.method == 'POST':
+        username = request.form.get('username', '').strip()
+        password = request.form.get('password', '').strip()
+        
+        users = load_exam_users()
+        student = next((s for s in users['students'] if s['username'] == username), None)
+        
+        if student and check_password_hash(student['password'], password):
+            session['exam_user_type'] = 'student'
+            session['exam_user_id'] = student['id']
+            session['exam_user_name'] = student['full_name']
+            flash('Đăng nhập thành công!', 'success')
+            return redirect(url_for('student_dashboard'))
+        else:
+            flash('Sai tên đăng nhập hoặc mật khẩu!', 'error')
+    
+    return render_template('exam_system/auth/student_login.html')
+
+@app.route('/exam_system/teacher_login', methods=['GET', 'POST'])
+def exam_teacher_login():
+    if request.method == 'POST':
+        username = request.form.get('username', '').strip()
+        password = request.form.get('password', '').strip()
+        
+        users = load_exam_users()
+        teacher = next((t for t in users['teachers'] if t['username'] == username), None)
+        
+        if teacher:
+            # Kiểm tra xem password có phải hash không
+            teacher_password = teacher['password']
+            
+            # Nếu password bắt đầu bằng 'pbkdf2:', 'scrypt:', 'bcrypt:' thì là hash
+            if teacher_password.startswith(('pbkdf2:', 'scrypt:', 'bcrypt:')):
+                # So sánh dạng hash
+                if check_password_hash(teacher_password, password):
+                    session['exam_user_type'] = 'teacher'
+                    session['exam_user_id'] = teacher['id']
+                    session['exam_user_name'] = teacher['full_name']
+                    session['exam_subject'] = teacher.get('subject', 'Chung')
+                    flash('Đăng nhập thành công!', 'success')
+                    return redirect(url_for('teacher_dashboard'))
+            else:
+                # So sánh plain text
+                if teacher_password == password:
+                    session['exam_user_type'] = 'teacher'
+                    session['exam_user_id'] = teacher['id']
+                    session['exam_user_name'] = teacher['full_name']
+                    session['exam_subject'] = teacher.get('subject', 'Chung')
+                    flash('Đăng nhập thành công!', 'success')
+                    return redirect(url_for('teacher_dashboard'))
+        
+        flash('Sai tên đăng nhập hoặc mật khẩu!', 'error')
+    
+    return render_template('exam_system/auth/teacher_login.html')
+
+@app.route('/exam_system/logout')
+def exam_logout():
+    session.pop('exam_user_type', None)
+    session.pop('exam_user_id', None)
+    session.pop('exam_user_name', None)
+    session.pop('exam_subject', None)
+    flash('Đã đăng xuất!', 'info')
+    return redirect(url_for('exam_student_login'))
+
+# ---------------- TEACHER ROUTES ----------------
+@app.route('/exam_system/teacher/dashboard')
+def teacher_dashboard():
+    if session.get('exam_user_type') != 'teacher':
+        flash('Vui lòng đăng nhập với tư cách giáo viên!', 'error')
+        return redirect(url_for('exam_teacher_login'))
+    
+    teacher_id = session.get('exam_user_id')
+    lessons = [l for l in load_exam_lessons() if l['teacher_id'] == teacher_id]
+    exams = [e for e in load_exam_exams() if e['teacher_id'] == teacher_id]
+    
+    return render_template('exam_system/teacher/dashboard.html', lessons=lessons, exams=exams)
+
+@app.route('/exam_system/teacher/create_lesson', methods=['GET', 'POST'])
+def teacher_create_lesson():
+    if session.get('exam_user_type') != 'teacher':
+        return redirect(url_for('exam_teacher_login'))
+    
+    if request.method == 'POST':
+        title = request.form.get('title', '').strip()
+        description = request.form.get('description', '').strip()
+        content = request.form.get('content', '').strip()
+        subject = request.form.get('subject', '').strip()
+        grade = request.form.get('grade', '').strip()
+        
+        attachments = []
+        files = request.files.getlist('attachments')
+        for f in files:
+            if f and f.filename:
+                filename = f"{uuid.uuid4()}_{secure_filename(f.filename)}"
+                f.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+                attachments.append(filename)
+        
+        new_lesson = {
+            'id': str(uuid.uuid4()),
+            'title': title,
+            'description': description,
+            'content': content,
+            'attachments': attachments,
+            'teacher_id': session.get('exam_user_id'),
+            'created_at': datetime.now().strftime("%d/%m/%Y %H:%M"),
+            'subject': subject,
+            'grade': grade
+        }
+        
+        lessons = load_exam_lessons()
+        lessons.insert(0, new_lesson)
+        save_exam_lessons(lessons)
+        
+        flash('Đã tạo bài giảng!', 'success')
+        return redirect(url_for('teacher_dashboard'))
+    
+    return render_template('exam_system/teacher/create_lesson.html')
+
+@app.route('/exam_system/teacher/create_exam', methods=['GET', 'POST'])
+def teacher_create_exam():
+    if session.get('exam_user_type') != 'teacher':
+        return redirect(url_for('exam_teacher_login'))
+    
+    if request.method == 'POST':
+        exam_type = request.form.get('exam_type')
+        if exam_type == 'multiple_choice':
+            return redirect(url_for('teacher_create_multiple_choice'))
+        elif exam_type == 'essay':
+            return redirect(url_for('teacher_create_essay'))
+    
+    return render_template('exam_system/teacher/create_exam.html')
+
+@app.route('/exam_system/teacher/create_multiple_choice', methods=['GET', 'POST'])
+def teacher_create_multiple_choice():
+    if session.get('exam_user_type') != 'teacher':
+        return redirect(url_for('exam_teacher_login'))
+    
+    if request.method == 'POST':
+        if 'word_file' in request.files:
+            word_file = request.files['word_file']
+            if word_file and word_file.filename.endswith('.docx'):
+                # Đọc nội dung Word
+                word_content = mammoth.extract_raw_text(word_file).value
+                
+                # Dùng AI parse thành JSON
+                prompt = f"""Đây là nội dung đề trắc nghiệm từ file Word:
+
+{word_content}
+
+Hãy chuyển đổi thành JSON với format:
+{{
+  "questions": [
+    {{
+      "id": 1,
+      "question": "Câu hỏi",
+      "options": ["A. Đáp án 1", "B. Đáp án 2", "C. Đáp án 3", "D. Đáp án 4"],
+      "correct_answer": "A",
+      "explanation": "Giải thích"
+    }}
+  ]
+}}
+
+CHỈ TRẢ VỀ JSON, KHÔNG THÊM TEXT KHÁC."""
+                
+                try:
+                    response = model.generate_content([prompt])
+                    ai_json = response.text.replace('```json', '').replace('```', '').strip()
+                    questions_data = json.loads(ai_json)
+                    
+                    # Lưu vào session để preview
+                    session['preview_questions'] = questions_data
+                    
+                    return render_template('exam_system/teacher/preview_questions.html', 
+                                         questions=questions_data['questions'])
+                except Exception as e:
+                    flash(f'Lỗi khi parse file: {str(e)}', 'error')
+        
+        # Nếu confirm từ preview
+        if request.form.get('confirm') == 'yes':
+            title = request.form.get('title', '').strip()
+            description = request.form.get('description', '').strip()
+            time_limit = request.form.get('time_limit', '0')
+            subject = request.form.get('subject', '').strip()
+            grade = request.form.get('grade', '').strip()
+            
+            questions_json = request.form.get('questions_json')
+            questions = json.loads(questions_json)
+            
+            new_exam = {
+                'id': str(uuid.uuid4()),
+                'title': title,
+                'description': description,
+                'type': 'multiple_choice',
+                'teacher_id': session.get('exam_user_id'),
+                'created_at': datetime.now().strftime("%d/%m/%Y %H:%M"),
+                'time_limit': int(time_limit),
+                'subject': subject,
+                'grade': grade,
+                'status': 'active',
+                'questions': questions
+            }
+            
+            exams = load_exam_exams()
+            exams.insert(0, new_exam)
+            save_exam_exams(exams)
+            
+            flash('Đã tạo đề trắc nghiệm!', 'success')
+            return redirect(url_for('teacher_dashboard'))
+    
+    return render_template('exam_system/teacher/create_multiple_choice.html')
+
+@app.route('/exam_system/teacher/create_essay', methods=['GET', 'POST'])
+def teacher_create_essay():
+    if session.get('exam_user_type') != 'teacher':
+        return redirect(url_for('exam_teacher_login'))
+    
+    if request.method == 'POST':
+        title = request.form.get('title', '').strip()
+        description = request.form.get('description', '').strip()
+        time_limit = request.form.get('time_limit', '0')
+        subject = request.form.get('subject', '').strip()
+        grade = request.form.get('grade', '').strip()
+        
+        # Lấy các câu hỏi tự luận
+        questions = []
+        i = 0
+        while True:
+            q_text = request.form.get(f'question_{i}')
+            if not q_text:
+                break
+            points = request.form.get(f'points_{i}', '10')
+            suggested = request.form.get(f'suggested_{i}', '')
+            
+            questions.append({
+                'id': i + 1,
+                'question': q_text,
+                'points': int(points),
+                'suggested_answer': suggested
+            })
+            i += 1
+        
+        new_exam = {
+            'id': str(uuid.uuid4()),
+            'title': title,
+            'description': description,
+            'type': 'essay',
+            'teacher_id': session.get('exam_user_id'),
+            'created_at': datetime.now().strftime("%d/%m/%Y %H:%M"),
+            'time_limit': int(time_limit),
+            'subject': subject,
+            'grade': grade,
+            'status': 'active',
+            'essay_questions': questions
+        }
+        
+        exams = load_exam_exams()
+        exams.insert(0, new_exam)
+        save_exam_exams(exams)
+        
+        flash('Đã tạo đề tự luận!', 'success')
+        return redirect(url_for('teacher_dashboard'))
+    
+    return render_template('exam_system/teacher/create_essay.html')
+
+@app.route('/exam_system/teacher/view_submissions/<exam_id>')
+def teacher_view_submissions(exam_id):
+    if session.get('exam_user_type') != 'teacher':
+        return redirect(url_for('exam_teacher_login'))
+    
+    exam = next((e for e in load_exam_exams() if e['id'] == exam_id), None)
+    if not exam:
+        flash('Không tìm thấy đề!', 'error')
+        return redirect(url_for('teacher_dashboard'))
+    
+    submissions = [s for s in load_exam_submissions() if s['exam_id'] == exam_id]
+    users = load_exam_users()
+    
+    # Ghép thông tin học sinh
+    for sub in submissions:
+        student = next((s for s in users['students'] if s['id'] == sub['student_id']), None)
+        sub['student_name'] = student['full_name'] if student else 'Unknown'
+        sub['student_class'] = student.get('class', '') if student else ''
+    
+    return render_template('exam_system/teacher/view_submissions.html', 
+                         exam=exam, submissions=submissions)
+
+@app.route('/exam_system/teacher/view_submission/<submission_id>')
+def teacher_view_submission(submission_id):
+    if session.get('exam_user_type') != 'teacher':
+        return redirect(url_for('exam_teacher_login'))
+    
+    submission = next((s for s in load_exam_submissions() if s['id'] == submission_id), None)
+    if not submission:
+        flash('Không tìm thấy bài làm!', 'error')
+        return redirect(url_for('teacher_dashboard'))
+    
+    exam = next((e for e in load_exam_exams() if e['id'] == submission['exam_id']), None)
+    users = load_exam_users()
+    student = next((s for s in users['students'] if s['id'] == submission['student_id']), None)
+    
+    return render_template('exam_system/teacher/view_submission_detail.html',
+                         submission=submission, exam=exam, student=student)
+
+@app.route('/exam_system/teacher/delete_exam/<exam_id>', methods=['POST'])
+def teacher_delete_exam(exam_id):
+    if session.get('exam_user_type') != 'teacher':
+        return redirect(url_for('exam_teacher_login'))
+    
+    exams = load_exam_exams()
+    exams = [e for e in exams if e['id'] != exam_id]
+    save_exam_exams(exams)
+    
+    flash('Đã xóa đề kiểm tra!', 'success')
+    return redirect(url_for('teacher_dashboard'))
+
+# ---------------- STUDENT ROUTES ----------------
+@app.route('/exam_system/student/dashboard')
+def student_dashboard():
+    if session.get('exam_user_type') != 'student':
+        flash('Vui lòng đăng nhập với tư cách học sinh!', 'error')
+        return redirect(url_for('exam_student_login'))
+    
+    lessons = load_exam_lessons()
+    exams = [e for e in load_exam_exams() if e['status'] == 'active']
+    
+    return render_template('exam_system/student/dashboard.html', 
+                         lessons=lessons, exams=exams)
+
+@app.route('/exam_system/student/view_lesson/<lesson_id>')
+def student_view_lesson(lesson_id):
+    if session.get('exam_user_type') != 'student':
+        return redirect(url_for('exam_student_login'))
+    
+    lesson = next((l for l in load_exam_lessons() if l['id'] == lesson_id), None)
+    if not lesson:
+        flash('Không tìm thấy bài giảng!', 'error')
+        return redirect(url_for('student_dashboard'))
+    
+    return render_template('exam_system/student/view_lesson.html', lesson=lesson)
+
+@app.route('/exam_system/student/take_exam/<exam_id>', methods=['GET', 'POST'])
+def student_take_exam(exam_id):
+    if session.get('exam_user_type') != 'student':
+        return redirect(url_for('exam_student_login'))
+    
+    exam = next((e for e in load_exam_exams() if e['id'] == exam_id), None)
+    if not exam:
+        flash('Không tìm thấy đề!', 'error')
+        return redirect(url_for('student_dashboard'))
+    
+    if request.method == 'POST':
+        student_id = session.get('exam_user_id')
+        time_taken = request.form.get('time_taken', '0')
+        
+        submission_id = str(uuid.uuid4())
+        
+        if exam['type'] == 'multiple_choice':
+            answers = {}
+            for q in exam['questions']:
+                ans = request.form.get(f"q_{q['id']}")
+                answers[str(q['id'])] = ans
+            
+            # Chấm điểm trắc nghiệm
+            correct_count = 0
+            detailed_results = []
+            for q in exam['questions']:
+                student_ans = answers.get(str(q['id']))
+                is_correct = (student_ans == q['correct_answer'])
+                if is_correct:
+                    correct_count += 1
+                
+                detailed_results.append({
+                    'question_id': q['id'],
+                    'question': q['question'],
+                    'is_correct': is_correct,
+                    'student_answer': student_ans,
+                    'correct_answer': q['correct_answer'],
+                    'explanation': q.get('explanation', '')
+                })
+            
+            score = round((correct_count / len(exam['questions'])) * 10, 2)
+            
+            # AI feedback
+            prompt = f"""Học sinh làm đúng {correct_count}/{len(exam['questions'])} câu trắc nghiệm.
+
+Hãy đưa ra:
+1. Nhận xét chung về kết quả
+2. Phân tích điểm mạnh/yếu
+3. Lời khuyên cải thiện
+
+Trả lời ngắn gọn, khuyến khích."""
+            
+            try:
+                response = model.generate_content([prompt])
+                ai_feedback = clean_ai_output(response.text)
+            except:
+                ai_feedback = "Không có nhận xét từ AI."
+            
+            submission = {
+                'id': submission_id,
+                'exam_id': exam_id,
+                'student_id': student_id,
+                'submitted_at': datetime.now().strftime("%d/%m/%Y %H:%M"),
+                'time_taken': int(time_taken),
+                'answers': answers,
+                'score': score,
+                'ai_feedback': ai_feedback,
+                'detailed_results': detailed_results
+            }
+        
+        elif exam['type'] == 'essay':
+            essay_answers = {}
+            for q in exam['essay_questions']:
+                ans = request.form.get(f"essay_{q['id']}", '').strip()
+                essay_answers[str(q['id'])] = ans
+            
+            # Chấm điểm tự luận bằng AI
+            total_points = 0
+            detailed_results = []
+            
+            for q in exam['essay_questions']:
+                student_ans = essay_answers.get(str(q['id']), '')
+                
+                prompt = f"""Đây là câu hỏi tự luận:
+
+Câu hỏi: {q['question']}
+Điểm tối đa: {q['points']}
+Đáp án gợi ý: {q.get('suggested_answer', 'Không có')}
+
+Câu trả lời của học sinh:
+{student_ans}
+
+Hãy chấm điểm (0-{q['points']}) và nhận xét ngắn gọn.
+Format: ĐIỂM: X/{q['points']}
+NHẬN XÉT: ..."""
+                
+                try:
+                    response = model.generate_content([prompt])
+                    feedback = clean_ai_output(response.text)
+                    
+                    # Trích xuất điểm
+                    import re
+                    match = re.search(r'ĐIỂM:\s*(\d+\.?\d*)', feedback)
+                    q_score = float(match.group(1)) if match else 0
+                except:
+                    feedback = "Không chấm được."
+                    q_score = 0
+                
+                total_points += q_score
+                detailed_results.append({
+                    'question_id': q['id'],
+                    'question': q['question'],
+                    'student_answer': student_ans,
+                    'points': q['points'],
+                    'score': q_score,
+                    'feedback': feedback
+                })
+            
+            max_points = sum(q['points'] for q in exam['essay_questions'])
+            score = round((total_points / max_points) * 10, 2)
+            
+            submission = {
+                'id': submission_id,
+                'exam_id': exam_id,
+                'student_id': student_id,
+                'submitted_at': datetime.now().strftime("%d/%m/%Y %H:%M"),
+                'time_taken': int(time_taken),
+                'essay_answers': essay_answers,
+                'score': score,
+                'ai_feedback': f"Tổng điểm: {total_points}/{max_points}",
+                'detailed_results': detailed_results
+            }
+        
+        submissions = load_exam_submissions()
+        submissions.insert(0, submission)
+        save_exam_submissions(submissions)
+        
+        flash('Đã nộp bài!', 'success')
+        return redirect(url_for('student_view_result', submission_id=submission_id))
+    
+    return render_template('exam_system/student/take_exam.html', exam=exam)
+
+@app.route('/exam_system/student/view_result/<submission_id>')
+def student_view_result(submission_id):
+    if session.get('exam_user_type') != 'student':
+        return redirect(url_for('exam_student_login'))
+    
+    submission = next((s for s in load_exam_submissions() if s['id'] == submission_id), None)
+    if not submission:
+        flash('Không tìm thấy bài làm!', 'error')
+        return redirect(url_for('student_dashboard'))
+    
+    exam = next((e for e in load_exam_exams() if e['id'] == submission['exam_id']), None)
+    
+    return render_template('exam_system/student/view_result.html',
+                         submission=submission, exam=exam)
+
+@app.route('/exam_system/student/my_submissions')
+def student_my_submissions():
+    if session.get('exam_user_type') != 'student':
+        return redirect(url_for('exam_student_login'))
+    
+    student_id = session.get('exam_user_id')
+    submissions = [s for s in load_exam_submissions() if s['student_id'] == student_id]
+    
+    exams = load_exam_exams()
+    for sub in submissions:
+        exam = next((e for e in exams if e['id'] == sub['exam_id']), None)
+        sub['exam_title'] = exam['title'] if exam else 'Unknown'
+    
+    return render_template('exam_system/student/my_submissions.html', 
+                         submissions=submissions)
+
+#################
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'bmp', 'webp', 'pdf'}
 
 def allowed_file(filename):

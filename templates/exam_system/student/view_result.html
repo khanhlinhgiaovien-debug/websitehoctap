@@ -1,0 +1,237 @@
+{% extends "exam_system/base.html" %}
+
+{% block title %}Kết Quả Bài Làm{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <h2 class="text-primary">
+                <i class="fas fa-chart-line"></i> Kết Quả Bài Làm
+            </h2>
+            <hr>
+        </div>
+    </div>
+
+    <!-- Thông tin đề thi -->
+    <div class="card mb-4 shadow-sm">
+        <div class="card-header bg-info text-white">
+            <h5 class="mb-0">
+                <i class="fas fa-file-alt"></i> {{ exam.title }}
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <p><strong>Môn học:</strong> {{ exam.subject }}</p>
+                    <p><strong>Khối:</strong> {{ exam.grade }}</p>
+                    <p><strong>Loại đề:</strong> 
+                        {% if exam.type == 'multiple_choice' %}
+                            <span class="badge badge-primary">Trắc nghiệm</span>
+                        {% else %}
+                            <span class="badge badge-warning">Tự luận</span>
+                        {% endif %}
+                    </p>
+                </div>
+                <div class="col-md-6">
+                    <p><strong>Thời gian nộp:</strong> {{ submission.submitted_at }}</p>
+                    <p><strong>Thời gian làm bài:</strong> {{ submission.time_taken }} phút</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Điểm số -->
+    <div class="card mb-4 shadow-sm border-primary">
+        <div class="card-body text-center">
+            <h3 class="text-muted mb-2">ĐIỂM SỐ</h3>
+            <h1 class="display-1 font-weight-bold 
+                {% if submission.score >= 8 %}text-success
+                {% elif submission.score >= 5 %}text-warning
+                {% else %}text-danger
+                {% endif %}">
+                {{ submission.score }}
+            </h1>
+            <p class="lead">
+                {% if submission.score >= 9 %}
+                    <i class="fas fa-trophy text-warning"></i> Xuất sắc!
+                {% elif submission.score >= 8 %}
+                    <i class="fas fa-star text-success"></i> Giỏi!
+                {% elif submission.score >= 6.5 %}
+                    <i class="fas fa-thumbs-up text-info"></i> Khá!
+                {% elif submission.score >= 5 %}
+                    <i class="fas fa-check text-warning"></i> Trung bình!
+                {% else %}
+                    <i class="fas fa-redo text-danger"></i> Cần cố gắng hơn!
+                {% endif %}
+            </p>
+        </div>
+    </div>
+
+    <!-- AI Feedback -->
+    {% if submission.ai_feedback %}
+    <div class="card mb-4 shadow-sm">
+        <div class="card-header bg-success text-white">
+            <h5 class="mb-0">
+                <i class="fas fa-robot"></i> Nhận Xét Từ AI
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="alert alert-light">
+                {{ submission.ai_feedback | safe }}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Chi tiết kết quả TRẮC NGHIỆM -->
+    {% if exam.type == 'multiple_choice' %}
+    <div class="card mb-4 shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">
+                <i class="fas fa-list-ol"></i> Chi Tiết Từng Câu
+            </h5>
+        </div>
+        <div class="card-body">
+            {% if submission.detailed_results %}
+                {% for result in submission.detailed_results %}
+                <div class="mb-4 p-3 border rounded 
+                    {% if result.is_correct %}bg-light-success{% else %}bg-light-danger{% endif %}">
+                    
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <h6 class="font-weight-bold">
+                            Câu {{ result.question_id }}:
+                        </h6>
+                        {% if result.is_correct %}
+                            <span class="badge badge-success">
+                                <i class="fas fa-check"></i> Đúng
+                            </span>
+                        {% else %}
+                            <span class="badge badge-danger">
+                                <i class="fas fa-times"></i> Sai
+                            </span>
+                        {% endif %}
+                    </div>
+
+                    <p class="mb-2">{{ result.question }}</p>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p class="mb-1">
+                                <strong>Câu trả lời của bạn:</strong> 
+                                <span class="{% if result.is_correct %}text-success{% else %}text-danger{% endif %}">
+                                    {{ result.student_answer if result.student_answer else '(Không trả lời)' }}
+                                </span>
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="mb-1">
+                                <strong>Đáp án đúng:</strong> 
+                                <span class="text-success">{{ result.correct_answer }}</span>
+                            </p>
+                        </div>
+                    </div>
+
+                    {% if result.explanation %}
+                    <div class="mt-2 p-2 bg-white border-left border-primary">
+                        <small class="text-muted">
+                            <i class="fas fa-lightbulb"></i> <strong>Giải thích:</strong> 
+                            {{ result.explanation }}
+                        </small>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+
+                <!-- Thống kê -->
+                <div class="alert alert-info mt-4">
+                    <strong>Thống kê:</strong> 
+                    Bạn trả lời đúng 
+                    <strong>{{ submission.detailed_results | selectattr('is_correct') | list | length }}</strong> 
+                    / 
+                    <strong>{{ submission.detailed_results | length }}</strong> câu
+                    ({{ ((submission.detailed_results | selectattr('is_correct') | list | length) / (submission.detailed_results | length) * 100) | round(1) }}%)
+                </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Chi tiết kết quả TỰ LUẬN -->
+    {% if exam.type == 'essay' %}
+    <div class="card mb-4 shadow-sm">
+        <div class="card-header bg-warning text-dark">
+            <h5 class="mb-0">
+                <i class="fas fa-edit"></i> Chi Tiết Bài Làm Tự Luận
+            </h5>
+        </div>
+        <div class="card-body">
+            {% if submission.detailed_results %}
+                {% for result in submission.detailed_results %}
+                <div class="mb-4 p-3 border rounded">
+                    <h6 class="font-weight-bold text-primary">
+                        Câu {{ result.question_id }}: ({{ result.score }}/{{ result.points }} điểm)
+                    </h6>
+                    
+                    <p class="mb-3"><strong>Đề bài:</strong> {{ result.question }}</p>
+
+                    <div class="bg-light p-3 rounded mb-3">
+                        <p class="mb-1"><strong>Câu trả lời của bạn:</strong></p>
+                        <p class="mb-0">{{ result.student_answer if result.student_answer else '(Không trả lời)' }}</p>
+                    </div>
+
+                    {% if result.feedback %}
+                    <div class="alert alert-info">
+                        <strong><i class="fas fa-comment"></i> Nhận xét AI:</strong>
+                        <div class="mt-2">{{ result.feedback | safe }}</div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Progress bar điểm -->
+                    <div class="progress" style="height: 25px;">
+                        <div class="progress-bar 
+                            {% if (result.score / result.points) >= 0.8 %}bg-success
+                            {% elif (result.score / result.points) >= 0.5 %}bg-warning
+                            {% else %}bg-danger
+                            {% endif %}" 
+                            role="progressbar" 
+                            style="width: {{ (result.score / result.points * 100) }}%"
+                            aria-valuenow="{{ result.score }}" 
+                            aria-valuemin="0" 
+                            aria-valuemax="{{ result.points }}">
+                            {{ result.score }}/{{ result.points }}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Nút điều hướng -->
+    <div class="text-center mb-4">
+        <a href="{{ url_for('student_my_submissions') }}" class="btn btn-secondary">
+            <i class="fas fa-history"></i> Xem Lịch Sử Bài Làm
+        </a>
+        <a href="{{ url_for('student_dashboard') }}" class="btn btn-primary">
+            <i class="fas fa-home"></i> Về Trang Chủ
+        </a>
+    </div>
+</div>
+
+<style>
+.bg-light-success {
+    background-color: #d4edda;
+}
+
+.bg-light-danger {
+    background-color: #f8d7da;
+}
+
+.border-left {
+    border-left: 3px solid;
+}
+</style>
+{% endblock %}
