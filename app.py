@@ -25,8 +25,8 @@ api_key = os.environ.get("GOOGLE_API_KEY")  # ← SỬA DÒNG NÀY
 if not api_key:  
     raise ValueError(" Thiếu GOOGLE_API_KEY trong file .env")
 genai.configure(api_key=api_key)  # ← SỬA DÒNG NÀY
-model = genai.GenerativeModel("models/gemini-2.5-flash")
-analysis_model = model
+#model = genai.GenerativeModel("models/gemini-2.5-flash")
+#analysis_model = model
 
 
 
@@ -188,6 +188,9 @@ def analyze_class_activity(activity_id):
         return redirect(url_for('class_activity_detail', activity_id=activity_id))
     
     try:
+        # ✅ TẠO MODEL MỚI CHO REQUEST NÀY
+        model = genai.GenerativeModel("models/gemini-2.5-flash")
+        
         # ========================================
         # BƯỚC 1: PHÂN TÍCH TEXT TỪ ẢNH CÁC TỔ
         # ========================================
@@ -452,12 +455,22 @@ CHỈ TRẢ VỀ CODE HTML HOÀN CHỈNH, KHÔNG GIẢI THÍCH."""
         
         save_class_activities(activities)
         
+        # ✅ DỌN DẸP BỘ NHỚ
+        del model
+        del analysis_response
+        del html_response
+        import gc
+        gc.collect()
+        
         flash('Đã phân tích và tạo infographic thành công!', 'success')
         
     except Exception as e:
         flash(f'Lỗi khi phân tích: {str(e)}', 'error')
         import traceback
         print(traceback.format_exc())
+        # ✅ DỌN DẸP NGAY CẢ KHI LỖI
+        import gc
+        gc.collect()
     
     return redirect(url_for('class_activity_result', activity_id=activity_id))
     #################
@@ -587,6 +600,9 @@ Hãy ưu tiên sử dụng thông tin từ KIẾN THỨC CƠ SỞ khi trả lờ
 """
 
         try:
+            # ✅ TẠO MODEL MỚI CHO REQUEST NÀY
+            model = genai.GenerativeModel("models/gemini-2.5-flash")
+            
             # Xử lý nếu có file đính kèm
             if uploaded_file and uploaded_file.filename != '':
                 file_ext = uploaded_file.filename.rsplit('.', 1)[1].lower()
@@ -640,8 +656,20 @@ Hãy ưu tiên sử dụng thông tin từ KIẾN THỨC CƠ SỞ khi trả lờ
             })
             session.modified = True
             
+            # ✅ DỌN DẸP BỘ NHỚ
+            del model
+            if 'response' in locals():
+                del response
+            if 'img' in locals():
+                del img
+            import gc
+            gc.collect()
+            
         except Exception as e:
             response_text = f"Lỗi: {str(e)}"
+            # ✅ DỌN DẸP NGAY CẢ KHI LỖI
+            import gc
+            gc.collect()
     
     return render_template('chatbot.html', 
                          chat_history=session.get('chat_history', []),
@@ -733,6 +761,9 @@ def health_support():
         # Nếu chọn AI tư vấn
         if consult_type == 'ai':
             try:
+                # ✅ TẠO MODEL MỚI
+                model = genai.GenerativeModel("models/gemini-2.5-flash")
+                
                 # Đọc kiến thức về sức khỏe
                 health_knowledge = ""
                 try:
@@ -768,9 +799,18 @@ Hãy tư vấn chi tiết, có lời khuyên cụ thể."""
                 new_question['ai_response'] = ai_response
                 new_question['status'] = 'answered'
                 
+                # ✅ DỌN DẸP BỘ NHỚ
+                del model
+                del response
+                import gc
+                gc.collect()
+                
             except Exception as e:
                 ai_response = f"❌ Lỗi: {str(e)}"
                 new_question['ai_response'] = ai_response
+                # ✅ DỌN DẸP NGAY CẢ KHI LỖI
+                import gc
+                gc.collect()
         
         # Lưu câu hỏi
         questions.insert(0, new_question)  # Thêm vào đầu danh sách
@@ -856,7 +896,7 @@ def expert_answer(question_id):
 
 #####
 
-def generate_feedback(text):
+def generate_feedback(text, model):
     """Tạo feedback từ text bằng AI"""
     try:
         prompt = f"Đây là nội dung bài làm của học sinh:\n\n{text}\n\nHãy phân tích, chỉ ra lỗi sai và đề xuất cải thiện. Trả lời bằng tiếng Việt."
@@ -865,7 +905,7 @@ def generate_feedback(text):
     except Exception as e:
         return f"❌ Lỗi khi tạo feedback: {str(e)}"
 
-def generate_score_feedback(text):
+def generate_score_feedback(text, model):
     """Tạo feedback chấm điểm từ text bằng AI"""
     try:
         prompt = f"""Dựa trên bài làm của học sinh sau:
@@ -1147,11 +1187,24 @@ Phương trình $2x^2 - 3x - 5 = 0$ có:
 Trả lời bằng tiếng Việt, thân thiện."""
 
     try:
+        # ✅ TẠO MODEL MỚI
+        model = genai.GenerativeModel("models/gemini-2.5-flash")
+        
         response = model.generate_content([prompt])
         # KHÔNG dùng clean_ai_output vì cần giữ nguyên LaTeX
         ai_feedback = response.text
+        
+        # ✅ DỌN DẸP BỘ NHỚ
+        del model
+        del response
+        import gc
+        gc.collect()
+        
     except Exception as e:
         ai_feedback = f"❌ Lỗi: {str(e)}"
+        # ✅ DỌN DẸP NGAY CẢ KHI LỖI
+        import gc
+        gc.collect()
     
     return render_template('result.html', 
                          score=correct_count,
@@ -1190,6 +1243,9 @@ def project(project_id):
         image.save(image_path)
 
         try:
+            # ✅ TẠO MODEL MỚI
+            model = genai.GenerativeModel("models/gemini-2.5-flash")
+            
             img = Image.open(image_path)
             prompt = (
                 f"Đây là ảnh bài làm của học sinh. "
@@ -1197,8 +1253,19 @@ def project(project_id):
             )
             response = model.generate_content([img, prompt])
             ai_feedback = response.text
+            
+            # ✅ DỌN DẸP BỘ NHỚ
+            del model
+            del response
+            del img
+            import gc
+            gc.collect()
+            
         except Exception as e:
             ai_feedback = f"❌ Lỗi khi xử lý ảnh: {str(e)}"
+            # ✅ DỌN DẸP NGAY CẢ KHI LỖI
+            import gc
+            gc.collect()
 
         new_image = {
             "id": image_id,
@@ -1273,6 +1340,7 @@ def comment(project_id, image_id):
 
     flash(f"Bình luận đã được thêm. Điểm trung bình hiện tại: {avg_score}")
     return redirect(url_for('project', project_id=project_id))
+    ###################
 @app.route('/upload_image', methods=['GET', 'POST'])
 def upload_image():
     ai_feedback = None
@@ -1303,10 +1371,22 @@ def upload_image():
                     ai_feedback = "❌ Không tìm thấy nội dung trong file PDF."
                     score_feedback = ""
                 else:
-                    ai_feedback = generate_feedback(text)
-                    score_feedback = generate_score_feedback(text)
+                    # ✅ TẠO MODEL MỚI CHO PDF
+                    model = genai.GenerativeModel("models/gemini-2.5-flash")
+                    
+                    # ✅ TRUYỀN MODEL VÀO FUNCTIONS
+                    ai_feedback = generate_feedback(text, model)
+                    score_feedback = generate_score_feedback(text, model)
+                    
+                    # ✅ DỌN DẸP SAU KHI XỬ LÝ PDF
+                    del model
+                    import gc
+                    gc.collect()
 
             elif file_ext in ['png', 'jpg', 'jpeg', 'gif', 'bmp', 'webp']:
+                # ✅ TẠO MODEL MỚI CHO ẢNH
+                model = genai.GenerativeModel("models/gemini-2.5-flash")
+                
                 img = Image.open(file_path)
 
                 # ===== PROMPT CẢI THIỆN CHO PHẢN HỒI AI =====
@@ -1321,11 +1401,11 @@ NHIỆM VỤ:
 4. Đề xuất cách cải thiện
 
 QUY TẮC TRÌNH BÀY QUAN TRỌNG:
-• TUYỆT ĐỐI KHÔNG dùng: **, ***, ##, ###, ````
-• Công thức toán viết văn bản thường, ví dụ: (3x + 6)/(4x - 8) hoặc x^2 + 2x + 1
-• Mỗi ý PHẢI xuống dòng rõ ràng
-• Dùng dấu đầu dòng đơn giản: - hoặc số thứ tự 1. 2. 3.
-• Không viết quá dài, mỗi đoạn tối đa 3-4 dòng
+- TUYỆT ĐỐI KHÔNG dùng: **, ***, ##, ###, ````
+- Công thức toán viết văn bản thường, ví dụ: (3x + 6)/(4x - 8) hoặc x^2 + 2x + 1
+- Mỗi ý PHẢI xuống dòng rõ ràng
+- Dùng dấu đầu dòng đơn giản: - hoặc số thứ tự 1. 2. 3.
+- Không viết quá dài, mỗi đoạn tối đa 3-4 dòng
 
 VÍ DỤ TRÌNH BÀY ĐÚNG:
 
@@ -1359,10 +1439,10 @@ TIÊU CHÍ CHẤM ĐIỂM:
 4. Kết quả (0-10): Đáp án cuối cùng có chính xác không
 
 QUY TẮC TRÌNH BÀY:
-• KHÔNG dùng **, ***, ##, ###, ````
-• Mỗi tiêu chí ghi trên 1 dòng riêng
-• Format: Tên tiêu chí: X/10 - Lý do ngắn gọn
-• Cuối cùng ghi điểm trung bình và nhận xét chung
+- KHÔNG dùng **, ***, ##, ###, ````
+- Mỗi tiêu chí ghi trên 1 dòng riêng
+- Format: Tên tiêu chí: X/10 - Lý do ngắn gọn
+- Cuối cùng ghi điểm trung bình và nhận xét chung
 
 VÍ DỤ TRÌNH BÀY ĐÚNG:
 
@@ -1379,6 +1459,14 @@ Bài làm khá tốt, phương pháp đúng. Cần cẩn thận hơn ở bước
 Trả lời bằng tiếng Việt."""
                 ])
                 score_feedback = clean_ai_output(score_response.text)
+                
+                # ✅ DỌN DẸP SAU KHI XỬ LÝ ẢNH
+                del model
+                del ai_response
+                del score_response
+                del img
+                import gc
+                gc.collect()
 
             else:
                 ai_feedback = "❌ Định dạng file không hỗ trợ."
@@ -1387,6 +1475,9 @@ Trả lời bằng tiếng Việt."""
         except Exception as e:
             ai_feedback = f"❌ Lỗi khi xử lý file: {str(e)}"
             score_feedback = ""
+            # ✅ DỌN DẸP NGAY CẢ KHI LỖI
+            import gc
+            gc.collect()
 
         ai_score = extract_average_from_feedback(score_feedback)
 
@@ -1422,7 +1513,6 @@ Trả lời bằng tiếng Việt."""
                            feedback=ai_feedback,
                            score=score_feedback,
                            images=images)
-
 
 # ===== HÀM HỖ TRỢ LÀM SẠCH OUTPUT CỦA AI =====
 def clean_ai_output(text):
