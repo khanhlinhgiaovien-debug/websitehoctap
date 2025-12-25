@@ -169,11 +169,15 @@
     }
 
     .card-img {
-      height: 180px;
+      height: 220px;
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 8px;
+      background-size: contain !important;
+      background-repeat: no-repeat !important;
+      background-position: center !important;
+      background-color: #f8f9fa;
     }
 
     .card-body {
@@ -218,7 +222,7 @@
     }
 
     .exam-list.show {
-      max-height: 300px;
+      max-height: 400px;
       padding: 10px 20px 20px;
     }
 
@@ -340,7 +344,6 @@
       <li><a href="/upload_image" style="text-decoration:none; color:inherit; display:block;">Toán học vui</a></li>
       <li><a href="/projects" style="text-decoration:none; color:inherit; display:block;">Câu lạc bộ</a></li>
       <li><a href="/enter_nickname" style="text-decoration:none; color:inherit; display:block;">Game giải trí</a></li>
-      <li><a href="/vanbai" style="text-decoration:none; color:inherit; display:block;">Phân tích Văn</a></li>
     </ul>
   </div>
 
@@ -380,18 +383,15 @@
             </div>
             <span class="badge">Nâng cao</span>
           </a>
+          <a href="/upload_image" class="exam-item" onclick="event.stopPropagation()">
+            <div class="exam-info">
+              <div class="exam-number">4</div>
+              <div class="exam-text">TOÁN HỌC VUI</div>
+            </div>
+            <span class="badge">Đang mở</span>
+          </a>
         </div>
       </div>
-
-      <a href="/upload_image" class="card">
-        <div class="card-img" style="background: url('/static/images/nopsanpham.jpg') center/cover no-repeat;">
-        </div>
-        <div class="card-body">
-          <div class="card-title">TOÁN HỌC VUI</div>
-          <div class="card-text">BÀI TẬP VÀ DỰ ÁN TRẢI NGHIỆM</div>
-          <span class="badge">Đang mở</span>
-        </div>
-      </a>
 
       <a href="/projects" class="card">
         <div class="card-img" style="background: url('/static/images/clb.jpg') center/cover no-repeat;">
@@ -437,7 +437,7 @@
         <div class="card-img" style="background: url('/static/images/skk.jpg') center/cover no-repeat;">
         </div>
         <div class="card-body">
-          <div class="card-title">TƯ VẤN SỨC KHỎE</div>
+          <div class="card-title">TƯ VẤN SỨC KHỎE - TÂM LÍ HỌC ĐƯỜNG</div>
           <div class="card-text">HỖ TRỢ SỨC KHỎE HỌC SINH VỚI AI & CHUYÊN GIA</div>
           <span class="badge">HEALTH</span>
         </div>

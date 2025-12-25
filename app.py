@@ -502,7 +502,8 @@ def delete_class_activity(activity_id):
     
     return redirect(url_for('class_activity'))
 ###############
-### 
+###
+#  
 # Route cho chatbot
 @app.route('/chatbot', methods=['GET', 'POST'])
 def chatbot():
@@ -531,17 +532,45 @@ KIẾN THỨC CƠ SỞ (từ data.txt):
 
 VAI TRÒ CỦA BẠN:
 - Bạn là giáo viên/gia sư AI thân thiện, kiên nhẫn và nhiệt tình
-- Giúp học sinh hiểu bài, giải đáp thắc mắc về mọi môn học
+- Hướng dẫn học sinh tự giải quyết vấn đề, phát triển tư duy độc lập
 - Phân tích bài làm, hình ảnh bài tập học sinh gửi lên
-- Giải thích từng bước một cách dễ hiểu, phù hợp với trình độ học sinh
+- KHÔNG đưa ra đáp án trực tiếp - chỉ gợi ý và hướng dẫn cách giải
+
+NGUYÊN TẮC QUAN TRỌNG:
+1. KHI HỌC SINH HỎI BÀI (chưa làm):
+   - TUYỆT ĐỐI KHÔNG đưa đáp án trực tiếp
+   - TUYỆT ĐỐI KHÔNG giải chi tiết từng bước ra kết quả
+   - CHỈ hướng dẫn phương pháp, công thức, định lý cần dùng
+   - CHỈ gợi ý hướng tư duy, cách tiếp cận bài toán
+   - Khuyến khích học sinh tự thực hiện các bước tính toán
+
+2. KHI HỌC SINH GỬI ẢNH BÀI LÀM/ĐỀ TRẮC NGHIỆM:
+   - Kiểm tra xem học sinh đã làm bài chưa (có khoanh/viết đáp án không)
+   - NẾU ĐÃ LÀM (có đánh dấu/khoanh/ghi đáp án):
+     * Chỉ ra câu nào đúng, câu nào sai
+     * Giải thích tại sao sai và cách suy nghĩ đúng
+     * Hướng dẫn cách cải thiện
+   - NẾU CHƯA LÀM (đề trắng, chưa khoanh):
+     * TUYỆT ĐỐI KHÔNG cho đáp án
+     * CHỈ hướng dẫn kiến thức, phương pháp để giải từng câu
+     * Gợi ý cách phân tích, loại trừ đáp án
+     * Khuyến khích học sinh tự làm trước
 
 CÁCH TRẢ LỜI:
 1. Luôn trả lời bằng tiếng Việt
-2. Giải thích chi tiết, dễ hiểu, có ví dụ cụ thể
-3. Với bài toán: trình bày từng bước, công thức, cách tính
-4. Với văn: phân tích ý nghĩa, thông điệp, kỹ thuật viết
-5. Với bài làm/ảnh: chỉ ra điểm tốt, lỗi sai, cách cải thiện
-6. Khuyến khích học sinh tư duy, không chỉ đưa đáp án
+2. Với câu hỏi chưa làm:
+   - "Để giải bài này, em cần biết công thức/định lý..."
+   - "Hướng tiếp cận: Bước 1... Bước 2... Em thử làm xem"
+   - "Gợi ý: Em hãy chú ý đến... và áp dụng..."
+   
+3. Với bài đã làm:
+   - "Câu 1: Em làm đúng/sai. Giải thích:..."
+   - "Câu 2: Đáp án của em là... nhưng đáp án đúng là... vì..."
+   
+4. Với văn/ngữ văn:
+   - Gợi ý cách phân tích tác phẩm, nhân vật
+   - Hướng dẫn cấu trúc bài văn
+   - KHÔNG viết sẵn đoạn văn mẫu
 
 QUY TẮC TRÌNH BÀY:
 - KHÔNG dùng **, ***, ##, ###, ````
@@ -549,6 +578,10 @@ QUY TẮC TRÌNH BÀY:
 - Xuống dòng rõ ràng giữa các ý
 - Dùng số thứ tự 1. 2. 3. hoặc dấu gạch đầu dòng -
 - Giữ văn phong thân thiện, động viên
+
+LƯU Ý:
+- Luôn khuyến khích học sinh: "Em hãy thử làm theo hướng dẫn này nhé!"
+- Nếu học sinh yêu cầu đáp án trực tiếp, giải thích: "Thầy/cô sẽ hướng dẫn em cách làm để em tự rèn luyện tư duy nhé!"
 
 Hãy ưu tiên sử dụng thông tin từ KIẾN THỨC CƠ SỞ khi trả lời các câu hỏi liên quan.
 """
@@ -567,19 +600,19 @@ Hãy ưu tiên sử dụng thông tin từ KIẾN THỨC CƠ SỞ khi trả lờ
                 if file_ext == 'pdf':
                     # Đọc text từ PDF
                     pdf_text = extract_text_from_pdf(temp_path)
-                    full_prompt = f"{system_prompt}\n\nHọc sinh gửi file PDF với nội dung:\n{pdf_text}\n\nCâu hỏi: {user_message if user_message else 'Hãy phân tích nội dung file này'}"
+                    full_prompt = f"{system_prompt}\n\nHọc sinh gửi file PDF với nội dung:\n{pdf_text}\n\nCâu hỏi: {user_message if user_message else 'Hãy phân tích nội dung file này và hướng dẫn cách làm'}"
                     response = model.generate_content([full_prompt])
                     response_text = response.text
                     
                 elif file_ext in ['png', 'jpg', 'jpeg', 'gif', 'bmp', 'webp']:
                     # Đọc ảnh
                     img = Image.open(temp_path)
-                    full_prompt = f"{system_prompt}\n\nHọc sinh gửi ảnh và hỏi: {user_message if user_message else 'Hãy phân tích nội dung ảnh này'}"
+                    full_prompt = f"{system_prompt}\n\nHọc sinh gửi ảnh bài tập/đề thi.\n\nQUAN TRỌNG: Hãy kiểm tra kỹ xem học sinh đã làm bài chưa (có đánh dấu, khoanh tròn, ghi đáp án không).\n- Nếu ĐÃ LÀM: Chấm bài, chỉ ra đúng/sai và giải thích.\n- Nếu CHƯA LÀM: CHỈ hướng dẫn phương pháp, KHÔNG cho đáp án.\n\nCâu hỏi thêm: {user_message if user_message else 'Hãy phân tích và hướng dẫn em'}"
                     response = model.generate_content([img, full_prompt])
                     response_text = response.text
                     
                 else:
-                    response_text = " Định dạng file không được hỗ trợ. Chỉ chấp nhận ảnh (.png, .jpg, .jpeg) hoặc PDF."
+                    response_text = "Định dạng file không được hỗ trợ. Chỉ chấp nhận ảnh (.png, .jpg, .jpeg) hoặc PDF."
                 
                 # Xóa file tạm
                 try:
@@ -590,7 +623,7 @@ Hãy ưu tiên sử dụng thông tin từ KIẾN THỨC CƠ SỞ khi trả lờ
             else:
                 # Chỉ có text message
                 if user_message:
-                    full_prompt = f"{system_prompt}\n\nHọc sinh hỏi: {user_message}"
+                    full_prompt = f"{system_prompt}\n\nHọc sinh hỏi: {user_message}\n\nLƯU Ý: Chỉ hướng dẫn phương pháp, không đưa đáp án trực tiếp."
                     response = model.generate_content([full_prompt])
                     response_text = response.text
                 else:
@@ -608,7 +641,7 @@ Hãy ưu tiên sử dụng thông tin từ KIẾN THỨC CƠ SỞ khi trả lờ
             session.modified = True
             
         except Exception as e:
-            response_text = f" Lỗi: {str(e)}"
+            response_text = f"Lỗi: {str(e)}"
     
     return render_template('chatbot.html', 
                          chat_history=session.get('chat_history', []),
@@ -676,6 +709,7 @@ def health_support():
         student_name = request.form.get('student_name', '').strip()
         question = request.form.get('question', '').strip()
         consult_type = request.form.get('consult_type')  # 'ai' hoặc 'expert'
+        is_anonymous = request.form.get('is_anonymous') == 'on'  # Checkbox ẩn danh
         
         if not student_name or not question:
             flash('Vui lòng nhập đầy đủ thông tin!', 'error')
@@ -692,7 +726,8 @@ def health_support():
             'timestamp': timestamp,
             'ai_response': None,
             'expert_responses': [],
-            'status': 'pending'  # pending, answered
+            'status': 'pending',  # pending, answered
+            'is_anonymous': is_anonymous  # Thêm trường ẩn danh
         }
         
         # Nếu chọn AI tư vấn
@@ -753,8 +788,27 @@ Hãy tư vấn chi tiết, có lời khuyên cụ thể."""
     # Kiểm tra xem user có phải chuyên gia không
     is_expert = session.get('expert_logged_in', False)
     
+    # Lọc câu hỏi hiển thị theo quyền
+    display_questions = []
+    for q in questions:
+        if q.get('is_anonymous', False):
+            # Nếu câu hỏi ẩn danh
+            if is_expert:
+                # Chuyên gia thấy đầy đủ
+                display_questions.append(q)
+            else:
+                # Người khác chỉ thấy câu hỏi đã được trả lời và ẩn thông tin
+                if q['status'] == 'answered' and (q.get('ai_response') or q.get('expert_responses')):
+                    hidden_q = q.copy()
+                    hidden_q['student_name'] = 'Ẩn danh'
+                    hidden_q['question'] = '[Câu hỏi riêng tư - chỉ chuyên gia xem được]'
+                    display_questions.append(hidden_q)
+        else:
+            # Câu hỏi công khai - tất cả đều thấy
+            display_questions.append(q)
+    
     return render_template('health_support.html', 
-                         questions=questions, 
+                         questions=display_questions, 
                          is_expert=is_expert,
                          expert_name=session.get('expert_name'))
 
@@ -799,6 +853,7 @@ def expert_answer(question_id):
         flash('Không tìm thấy câu hỏi!', 'error')
     
     return redirect(url_for('health_support'))
+
 #####
 
 def generate_feedback(text):
@@ -808,7 +863,7 @@ def generate_feedback(text):
         response = model.generate_content([prompt])
         return response.text
     except Exception as e:
-        return f" Lỗi khi tạo feedback: {str(e)}"
+        return f"❌ Lỗi khi tạo feedback: {str(e)}"
 
 def generate_score_feedback(text):
     """Tạo feedback chấm điểm từ text bằng AI"""
@@ -844,41 +899,7 @@ def extract_average_from_feedback(feedback: str):
         except:
             return None
     return None
-
 ###########
-@app.route('/vanbai', methods=['GET', 'POST'])
-def vanbai():
-    if request.method == 'GET':
-        return render_template('vanbai_form.html')
-
-    essay = request.form.get("essay", "").strip()
-    if not essay:
-        return "Vui lòng nhập bài văn."
-
-    if len(essay) > 1900:
-        return "Bài văn vượt quá giới hạn 600 chữ. Vui lòng rút gọn."
-
-    prompt = (
-        f"Học sinh gửi bài văn sau:\n\n{essay}\n\n"
-        "Bạn là giáo viên môn Ngữ văn. Hãy:\n"
-        "1. Phân tích điểm mạnh và điểm yếu của bài viết.\n"
-        "2. Nhận xét về cách hành văn, lập luận, cảm xúc, và ngôn ngữ.\n"
-        "3. Đưa ra lời khuyên để cải thiện bài viết.\n"
-        "4. Đánh giá xem bài viết có dấu hiệu được tạo bởi AI hay không (dựa vào phong cách, độ tự nhiên, tính cá nhân).\n"
-        "Trình bày rõ ràng, dễ hiểu, giọng văn thân thiện."
-    )
-
-    try:
-        response = model.generate_content([prompt])
-        ai_feedback = response.text
-    except Exception as e:
-        ai_feedback = f"❌ Lỗi khi gọi Gemini: {str(e)}"
-
-    return render_template(
-        'vanbai_result.html',
-        essay=essay,
-        ai_feedback=ai_feedback
-    )
 
 ###
 @app.route("/")

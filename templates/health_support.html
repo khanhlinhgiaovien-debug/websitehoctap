@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tư vấn sức khỏe học sinh</title>
+    <title>Tư vấn sức khỏe- tâm lí học đường </title>
     <style>
         * {
             margin: 0;
@@ -13,7 +13,7 @@
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
             min-height: 100vh;
             padding: 20px;
         }
@@ -172,6 +172,37 @@
             cursor: pointer;
         }
 
+        /* Style cho checkbox ẩn danh */
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 15px;
+            background: #fef5e7;
+            border: 2px solid #f39c12;
+            border-radius: 10px;
+            margin-top: 10px;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        .checkbox-group label {
+            margin: 0;
+            cursor: pointer;
+            color: #975a16;
+        }
+
+        .anonymous-note {
+            font-size: 0.85em;
+            color: #7c2d12;
+            font-style: italic;
+            margin-top: 5px;
+        }
+
         .questions-list {
             background: white;
             border-radius: 20px;
@@ -245,6 +276,11 @@
         .badge-answered {
             background: #c6f6d5;
             color: #22543d;
+        }
+
+        .badge-anonymous {
+            background: #e2e8f0;
+            color: #4a5568;
         }
 
         .question-text {
@@ -377,6 +413,10 @@
             .btn {
                 width: 100%;
             }
+
+            .radio-group {
+                flex-direction: column;
+            }
         }
     </style>
 </head>
@@ -435,6 +475,16 @@
                         </div>
                     </div>
 
+                    <div class="form-group">
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="is_anonymous" name="is_anonymous">
+                            <label for="is_anonymous">🔒 Đặt câu hỏi ẩn danh</label>
+                        </div>
+                        <p class="anonymous-note">
+                            ⚠️ Khi chọn ẩn danh: Chỉ chuyên gia mới thấy câu hỏi và thông tin của bạn. Người khác chỉ thấy câu trả lời sau khi đã được tư vấn.
+                        </p>
+                    </div>
+
                     <button type="submit" class="btn btn-primary" style="width: 100%; padding: 15px;">
                         📤 Gửi câu hỏi
                     </button>
@@ -453,6 +503,9 @@
                                     <span class="question-badge {% if q.consult_type == 'ai' %}badge-ai{% else %}badge-expert{% endif %}">
                                         {% if q.consult_type == 'ai' %}🤖 AI{% else %}👨‍⚕️ Chuyên gia{% endif %}
                                     </span>
+                                    {% if q.get('is_anonymous', False) %}
+                                        <span class="question-badge badge-anonymous">🔒 Ẩn danh</span>
+                                    {% endif %}
                                     {% if q.status == 'answered' %}
                                         <span class="question-badge badge-answered">✅ Đã trả lời</span>
                                     {% endif %}

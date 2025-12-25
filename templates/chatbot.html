@@ -12,8 +12,8 @@
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+            background: #343541;
             height: 100vh;
             overflow: hidden;
         }
@@ -21,83 +21,99 @@
         .chat-container {
             width: 100%;
             height: 100vh;
-            background: white;
             display: flex;
             flex-direction: column;
-            overflow: hidden;
         }
 
         .chat-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 20px 30px;
+            background: #343541;
+            border-bottom: 1px solid #565869;
+            padding: 12px 16px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
         }
 
-        .chat-header h2 {
-            font-size: 1.8em;
+        .header-left {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
         }
 
-        .header-buttons {
-            display: flex;
-            gap: 10px;
-        }
-
-        .btn-clear, .btn-home {
-            background: rgba(255, 255, 255, 0.2);
-            color: white;
-            border: 2px solid white;
-            padding: 8px 20px;
-            border-radius: 20px;
+        .new-chat-btn {
+            background: transparent;
+            border: 1px solid #565869;
+            color: #ececf1;
+            padding: 8px 16px;
+            border-radius: 6px;
             cursor: pointer;
-            font-weight: bold;
-            transition: all 0.3s ease;
-            text-decoration: none;
-            display: inline-block;
+            font-size: 14px;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
-        .btn-clear:hover, .btn-home:hover {
-            background: white;
-            color: #667eea;
+        .new-chat-btn:hover {
+            background: #40414f;
+        }
+
+        .header-title {
+            color: #ececf1;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .header-right {
+            display: flex;
+            gap: 8px;
+        }
+
+        .header-btn {
+            background: transparent;
+            border: 1px solid #565869;
+            color: #ececf1;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .header-btn:hover {
+            background: #40414f;
         }
 
         .chat-messages {
             flex: 1;
             overflow-y: auto;
-            padding: 30px;
-            background: #f8f9fa;
+            background: #343541;
         }
 
-        /* Custom scrollbar */
         .chat-messages::-webkit-scrollbar {
-            width: 10px;
+            width: 8px;
         }
 
         .chat-messages::-webkit-scrollbar-track {
-            background: #f1f1f1;
+            background: transparent;
         }
 
         .chat-messages::-webkit-scrollbar-thumb {
-            background: #667eea;
-            border-radius: 5px;
+            background: #565869;
+            border-radius: 4px;
         }
 
         .chat-messages::-webkit-scrollbar-thumb:hover {
-            background: #764ba2;
+            background: #6e6e80;
         }
 
         .message {
-            margin-bottom: 20px;
-            animation: slideIn 0.3s ease-out;
+            padding: 24px 0;
+            animation: fadeIn 0.3s ease-out;
         }
 
-        @keyframes slideIn {
+        @keyframes fadeIn {
             from {
                 opacity: 0;
                 transform: translateY(10px);
@@ -109,248 +125,270 @@
         }
 
         .message-user {
-            display: flex;
-            justify-content: flex-end;
+            background: #343541;
+            border-bottom: 1px solid #565869;
         }
 
         .message-bot {
+            background: #444654;
+            border-bottom: 1px solid #565869;
+        }
+
+        .message-wrapper {
+            max-width: 768px;
+            margin: 0 auto;
+            padding: 0 16px;
             display: flex;
-            justify-content: flex-start;
+            gap: 24px;
+        }
+
+        .message-avatar {
+            width: 30px;
+            height: 30px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            font-size: 18px;
+        }
+
+        .avatar-user {
+            background: #5436da;
+        }
+
+        .avatar-bot {
+            background: #19c37d;
         }
 
         .message-content {
-            max-width: 70%;
-            padding: 15px 20px;
-            border-radius: 18px;
-            word-wrap: break-word;
+            flex: 1;
+            color: #ececf1;
+            line-height: 1.7;
+            font-size: 16px;
             white-space: pre-wrap;
-            line-height: 1.6;
+            word-wrap: break-word;
         }
 
-        .message-user .message-content {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border-bottom-right-radius: 5px;
+        .welcome-screen {
+            max-width: 768px;
+            margin: 0 auto;
+            padding: 60px 24px;
+            text-align: center;
         }
 
-        .message-bot .message-content {
-            background: white;
-            color: #2d3748;
-            border-bottom-left-radius: 5px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        .welcome-title {
+            color: #ececf1;
+            font-size: 32px;
+            font-weight: 600;
+            margin-bottom: 48px;
         }
 
-        .message-time {
-            font-size: 0.75em;
-            color: #a0aec0;
-            margin-top: 5px;
-            text-align: right;
+        .examples-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 12px;
+            margin-top: 32px;
         }
 
-        .message-user .message-time {
-            color: rgba(255, 255, 255, 0.8);
+        .example-card {
+            background: #444654;
+            border: 1px solid #565869;
+            padding: 16px;
+            border-radius: 8px;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s;
         }
 
-        .chat-input-area {
-            padding: 20px 30px;
-            background: white;
-            border-top: 2px solid #e2e8f0;
+        .example-card:hover {
+            background: #4a4b5a;
         }
 
-        .file-preview {
+        .example-title {
+            color: #ececf1;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 8px;
             display: flex;
             align-items: center;
-            gap: 10px;
-            padding: 10px;
-            background: #f0f4f8;
-            border-radius: 10px;
-            margin-bottom: 10px;
+            gap: 8px;
         }
 
-        .file-preview span {
-            flex: 1;
-            font-size: 0.9em;
-            color: #4a5568;
+        .example-text {
+            color: #c5c5d2;
+            font-size: 13px;
         }
 
-        .file-preview button {
-            background: #f56565;
-            color: white;
-            border: none;
-            padding: 5px 15px;
-            border-radius: 15px;
-            cursor: pointer;
-            font-size: 0.85em;
+        .chat-input-container {
+            background: #343541;
+            padding: 12px 0 24px 0;
         }
 
-        .input-wrapper {
+        .chat-input-wrapper {
+            max-width: 768px;
+            margin: 0 auto;
+            padding: 0 16px;
+        }
+
+        .file-preview-area {
+            background: #40414f;
+            border: 1px solid #565869;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 12px;
+            display: none;
+        }
+
+        .file-preview-area.active {
             display: flex;
-            gap: 10px;
-            align-items: flex-end;
+            align-items: center;
+            gap: 12px;
         }
 
-        .file-upload-btn {
-            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
-            color: white;
+        .file-info {
+            flex: 1;
+            color: #ececf1;
+            font-size: 14px;
+        }
+
+        .remove-file-btn {
+            background: transparent;
             border: none;
-            padding: 12px 18px;
-            border-radius: 12px;
+            color: #c5c5d2;
             cursor: pointer;
-            font-size: 1.2em;
-            transition: all 0.3s ease;
+            padding: 4px 8px;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+
+        .remove-file-btn:hover {
+            background: #565869;
+            color: #ececf1;
+        }
+
+        .input-box {
+            background: #40414f;
+            border: 1px solid #565869;
+            border-radius: 12px;
+            display: flex;
+            align-items: flex-end;
+            padding: 12px;
+            gap: 12px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .input-box:focus-within {
+            border-color: #ececf1;
+            box-shadow: 0 0 0 1px #ececf1;
+        }
+
+        .attach-btn {
+            background: transparent;
+            border: none;
+            color: #ececf1;
+            cursor: pointer;
+            font-size: 20px;
+            padding: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            border-radius: 6px;
             position: relative;
         }
 
-        .file-upload-btn:hover {
-            transform: scale(1.1);
+        .attach-btn:hover {
+            background: #565869;
         }
 
-        .file-upload-btn input[type="file"] {
+        .attach-btn input[type="file"] {
             position: absolute;
             opacity: 0;
             width: 100%;
             height: 100%;
             cursor: pointer;
-            left: 0;
-            top: 0;
         }
 
-        .message-input {
+        .message-textarea {
             flex: 1;
-            padding: 12px 20px;
-            border: 2px solid #e2e8f0;
-            border-radius: 25px;
-            font-size: 1em;
+            background: transparent;
+            border: none;
+            color: #ececf1;
+            font-size: 16px;
             font-family: inherit;
             resize: none;
-            max-height: 120px;
-            transition: border-color 0.3s;
-        }
-
-        .message-input:focus {
             outline: none;
-            border-color: #667eea;
+            max-height: 200px;
+            padding: 8px 0;
         }
 
-        .send-btn {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
+        .message-textarea::placeholder {
+            color: #8e8ea0;
+        }
+
+        .send-button {
+            background: #19c37d;
             border: none;
-            padding: 12px 25px;
-            border-radius: 25px;
+            color: white;
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
             cursor: pointer;
-            font-size: 1.1em;
-            font-weight: bold;
-            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            flex-shrink: 0;
         }
 
-        .send-btn:hover {
-            transform: scale(1.05);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        .send-button:hover:not(:disabled) {
+            background: #1a9f6a;
         }
 
-        .send-btn:disabled {
-            background: #cbd5e0;
+        .send-button:disabled {
+            background: #565869;
             cursor: not-allowed;
-            transform: none;
+            opacity: 0.5;
         }
 
-        .welcome-message {
+        .powered-by {
             text-align: center;
-            padding: 60px 20px;
-            color: #718096;
-        }
-
-        .welcome-message h3 {
-            color: #667eea;
-            font-size: 2em;
-            margin-bottom: 20px;
-        }
-
-        .welcome-message p {
-            font-size: 1.1em;
-            line-height: 1.8;
-            max-width: 600px;
-            margin: 0 auto;
-        }
-
-        .feature-list {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            margin-top: 30px;
-            max-width: 1000px;
-            margin-left: auto;
-            margin-right: auto;
-        }
-
-        .feature-item {
-            background: white;
-            padding: 20px;
-            border-radius: 15px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-            text-align: center;
-        }
-
-        .feature-item span {
-            font-size: 2em;
-            display: block;
-            margin-bottom: 10px;
+            color: #8e8ea0;
+            font-size: 12px;
+            margin-top: 12px;
+            padding: 0 16px;
         }
 
         @media (max-width: 768px) {
-            .chat-header h2 {
-                font-size: 1.3em;
+            .message-wrapper {
+                padding: 0 12px;
             }
 
-            .chat-messages {
-                padding: 20px;
+            .chat-input-wrapper {
+                padding: 0 12px;
             }
 
-            .message-content {
-                max-width: 85%;
+            .welcome-screen {
+                padding: 40px 16px;
             }
 
-            .feature-list {
+            .welcome-title {
+                font-size: 24px;
+            }
+
+            .examples-grid {
                 grid-template-columns: 1fr;
             }
 
-            .header-buttons {
+            .header-right {
                 flex-direction: column;
-                gap: 5px;
+                gap: 4px;
             }
 
-            .btn-clear, .btn-home {
-                padding: 6px 15px;
-                font-size: 0.9em;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .chat-header {
-                padding: 15px 20px;
-            }
-
-            .chat-header h2 {
-                font-size: 1.1em;
-            }
-
-            .chat-input-area {
-                padding: 15px 20px;
-            }
-
-            .input-wrapper {
-                gap: 8px;
-            }
-
-            .file-upload-btn {
-                padding: 10px 15px;
-                font-size: 1em;
-            }
-
-            .send-btn {
-                padding: 10px 20px;
-                font-size: 1em;
+            .header-btn, .new-chat-btn {
+                padding: 6px 12px;
+                font-size: 13px;
             }
         }
     </style>
@@ -358,12 +396,17 @@
 <body>
     <div class="chat-container">
         <div class="chat-header">
-            <h2> Trợ lý AI học tập</h2>
-            <div class="header-buttons">
+            <div class="header-left">
                 <form action="{{ url_for('clear_chat') }}" method="POST" style="display: inline;">
-                    <button type="submit" class="btn-clear"> Xóa chat</button>
+                    <button type="submit" class="new-chat-btn">
+                        <span>+</span>
+                        <span>Chat mới</span>
+                    </button>
                 </form>
-                <a href="/" class="btn-home">Trang chủ</a>
+                <div class="header-title">Trợ lý AI học tập</div>
+            </div>
+            <div class="header-right">
+                <a href="/" class="header-btn">Trang chủ</a>
             </div>
         </div>
 
@@ -371,79 +414,95 @@
             {% if chat_history %}
                 {% for msg in chat_history %}
                     <div class="message message-user">
-                        <div>
+                        <div class="message-wrapper">
+                            <div class="message-avatar avatar-user">👤</div>
                             <div class="message-content">{{ msg.user }}</div>
-                            <div class="message-time">{{ msg.timestamp }}</div>
                         </div>
                     </div>
                     <div class="message message-bot">
-                        <div>
+                        <div class="message-wrapper">
+                            <div class="message-avatar avatar-bot">🤖</div>
                             <div class="message-content">{{ msg.bot }}</div>
-                            <div class="message-time">{{ msg.timestamp }}</div>
                         </div>
                     </div>
                 {% endfor %}
             {% else %}
-                <div class="welcome-message">
-                    <h3> Chào bạn!</h3>
-                    <p>Mình là trợ lý AI, sẵn sàng giúp bạn trong học tập. Hãy hỏi mình bất kỳ câu hỏi nào hoặc gửi ảnh/file bài tập cần hỗ trợ nhé!</p>
+                <div class="welcome-screen">
+                    <h1 class="welcome-title">Trợ lý AI học tập</h1>
                     
-                    <div class="feature-list">
-                        <div class="feature-item">
-                            <span></span>
-                            <strong>Giải đáp thắc mắc</strong>
-                            <p>Mọi môn học</p>
+                    <div class="examples-grid">
+                        <div class="example-card">
+                            <div class="example-title">
+                                <span>💡</span>
+                                <span>Giải đáp thắc mắc</span>
+                            </div>
+                            <div class="example-text">Hỏi bất kỳ câu hỏi nào về bài học, công thức, lý thuyết...</div>
                         </div>
-                        <div class="feature-item">
-                            <span></span>
-                            <strong>Phân tích ảnh</strong>
-                            <p>Bài tập, đề bài</p>
+                        <div class="example-card">
+                            <div class="example-title">
+                                <span>📸</span>
+                                <span>Phân tích ảnh bài tập</span>
+                            </div>
+                            <div class="example-text">Chụp ảnh đề bài hoặc bài làm để được hướng dẫn chi tiết</div>
                         </div>
-                        <div class="feature-item">
-                            <span></span>
-                            <strong>Đọc PDF</strong>
-                            <p>Tài liệu học tập</p>
+                        <div class="example-card">
+                            <div class="example-title">
+                                <span>📄</span>
+                                <span>Đọc tài liệu PDF</span>
+                            </div>
+                            <div class="example-text">Gửi file PDF để tóm tắt nội dung hoặc giải đáp thắc mắc</div>
                         </div>
-                        <div class="feature-item">
-                            <span></span>
-                            <strong>Giải thích chi tiết</strong>
-                            <p>Từng bước cụ thể</p>
+                        <div class="example-card">
+                            <div class="example-title">
+                                <span>🎯</span>
+                                <span>Hướng dẫn từng bước</span>
+                            </div>
+                            <div class="example-text">Nhận hướng dẫn chi tiết, dễ hiểu cho mọi bài tập</div>
                         </div>
                     </div>
                 </div>
             {% endif %}
         </div>
 
-        <div class="chat-input-area">
-            <form method="POST" enctype="multipart/form-data" id="chatForm">
-                <div id="filePreview" style="display: none;" class="file-preview">
-                    <span id="fileName"></span>
-                    <button type="button" onclick="removeFile()"> Xóa</button>
-                </div>
+        <div class="chat-input-container">
+            <div class="chat-input-wrapper">
+                <form method="POST" enctype="multipart/form-data" id="chatForm">
+                    <div class="file-preview-area" id="filePreviewArea">
+                        <div class="file-info" id="fileInfo">📎 File đã chọn</div>
+                        <button type="button" class="remove-file-btn" onclick="removeFile()">✕</button>
+                    </div>
+                    
+                    <div class="input-box">
+                        <label class="attach-btn" title="Đính kèm file">
+                            📎
+                            <input type="file" name="file" id="fileInput" accept=".png,.jpg,.jpeg,.pdf" onchange="showFilePreview()">
+                        </label>
+                        
+                        <textarea 
+                            name="message" 
+                            class="message-textarea" 
+                            placeholder="Gửi tin nhắn..." 
+                            rows="1"
+                            id="messageInput"
+                            onkeydown="handleKeyPress(event)"
+                        ></textarea>
+                        
+                        <button type="submit" class="send-button" id="sendBtn">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
+                            </svg>
+                        </button>
+                    </div>
+                </form>
                 
-                <div class="input-wrapper">
-                    <label class="file-upload-btn" title="Đính kèm file">
-                        📎
-                        <input type="file" name="file" id="fileInput" accept=".png,.jpg,.jpeg,.pdf" onchange="showFilePreview()">
-                    </label>
-                    
-                    <textarea 
-                        name="message" 
-                        class="message-input" 
-                        placeholder="Nhập câu hỏi của bạn..." 
-                        rows="1"
-                        id="messageInput"
-                        onkeydown="handleKeyPress(event)"
-                    ></textarea>
-                    
-                    <button type="submit" class="send-btn" id="sendBtn">Gửi ➤</button>
+                <div class="powered-by">
+                    Trợ lý AI có thể mắc lỗi. Hãy kiểm tra thông tin quan trọng.
                 </div>
-            </form>
+            </div>
         </div>
     </div>
 
     <script>
-        // Auto-scroll to bottom
         function scrollToBottom() {
             const chatMessages = document.getElementById('chatMessages');
             chatMessages.scrollTop = chatMessages.scrollHeight;
@@ -451,47 +510,61 @@
         
         window.onload = scrollToBottom;
 
-        // Show file preview
         function showFilePreview() {
             const fileInput = document.getElementById('fileInput');
-            const filePreview = document.getElementById('filePreview');
-            const fileName = document.getElementById('fileName');
+            const filePreviewArea = document.getElementById('filePreviewArea');
+            const fileInfo = document.getElementById('fileInfo');
             
             if (fileInput.files.length > 0) {
-                fileName.textContent = '📎 ' + fileInput.files[0].name;
-                filePreview.style.display = 'flex';
+                fileInfo.textContent = '📎 ' + fileInput.files[0].name;
+                filePreviewArea.classList.add('active');
             }
         }
 
-        // Remove file
         function removeFile() {
             const fileInput = document.getElementById('fileInput');
-            const filePreview = document.getElementById('filePreview');
+            const filePreviewArea = document.getElementById('filePreviewArea');
             
             fileInput.value = '';
-            filePreview.style.display = 'none';
+            filePreviewArea.classList.remove('active');
         }
 
-        // Auto-resize textarea
         const messageInput = document.getElementById('messageInput');
         messageInput.addEventListener('input', function() {
             this.style.height = 'auto';
-            this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+            this.style.height = Math.min(this.scrollHeight, 200) + 'px';
         });
 
-        // Submit on Enter (Shift+Enter for new line)
         function handleKeyPress(event) {
             if (event.key === 'Enter' && !event.shiftKey) {
                 event.preventDefault();
-                document.getElementById('chatForm').submit();
+                const form = document.getElementById('chatForm');
+                const messageInput = document.getElementById('messageInput');
+                const fileInput = document.getElementById('fileInput');
+                
+                if (messageInput.value.trim() !== '' || fileInput.files.length > 0) {
+                    form.submit();
+                }
             }
         }
 
-        // Disable send button during submit
-        document.getElementById('chatForm').addEventListener('submit', function() {
+        document.getElementById('chatForm').addEventListener('submit', function(e) {
+            const messageInput = document.getElementById('messageInput');
+            const fileInput = document.getElementById('fileInput');
             const sendBtn = document.getElementById('sendBtn');
+            
+            if (messageInput.value.trim() === '' && fileInput.files.length === 0) {
+                e.preventDefault();
+                return;
+            }
+            
             sendBtn.disabled = true;
-            sendBtn.textContent = 'Đang gửi...';
+        });
+
+        messageInput.addEventListener('input', function() {
+            const sendBtn = document.getElementById('sendBtn');
+            const fileInput = document.getElementById('fileInput');
+            sendBtn.disabled = this.value.trim() === '' && fileInput.files.length === 0;
         });
     </script>
 </body>
