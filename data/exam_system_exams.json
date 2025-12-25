@@ -1,1 +1,136 @@
-[]
+[
+  {
+    "id": "c9b5e001-5007-47e9-ab2a-2709215999bc",
+    "title": "test",
+    "description": "test",
+    "type": "multiple_choice",
+    "teacher_id": "teacher_003",
+    "created_at": "26/12/2025 01:10",
+    "time_limit": 10,
+    "subject": "Toán",
+    "grade": "7",
+    "status": "active",
+    "questions": [
+      {
+        "correct_answer": "A",
+        "explanation": "Phương trình bậc nhất một ẩn có dạng ax + b = 0 với a ≠ 0.",
+        "id": 1,
+        "options": [
+          "A. ax + b = 0 (a ≠ 0)",
+          "B. ax² + bx + c = 0",
+          "C. ax + by = c",
+          "D. ax = 0"
+        ],
+        "question": "Phương trình bậc nhất một ẩn có dạng như thế nào?"
+      },
+      {
+        "correct_answer": "B",
+        "explanation": "3x - 6 = 0 ⇒ 3x = 6 ⇒ x = 2.",
+        "id": 2,
+        "options": [
+          "A. x = 1",
+          "B. x = 2",
+          "C. x = 3",
+          "D. x = -2"
+        ],
+        "question": "Nghiệm của phương trình 3x - 6 = 0 là?"
+      },
+      {
+        "correct_answer": "A",
+        "explanation": "4x = 21 - 5 = 16 ⇒ x = 4.",
+        "id": 3,
+        "options": [
+          "A. x = 3",
+          "B. x = 4",
+          "C. x = 5",
+          "D. x = 6"
+        ],
+        "question": "Tìm x biết: 4x + 5 = 21"
+      },
+      {
+        "correct_answer": "A",
+        "explanation": "Số đối của -7 là số 7.",
+        "id": 4,
+        "options": [
+          "A. 7",
+          "B. -7",
+          "C. 0",
+          "D. -1"
+        ],
+        "question": "Số đối của -7 là số nào?"
+      },
+      {
+        "correct_answer": "B",
+        "explanation": "2³ = 8 ⇒ 8 + 5 = 13.",
+        "id": 5,
+        "options": [
+          "A. 11",
+          "B. 13",
+          "C. 8",
+          "D. 15"
+        ],
+        "question": "Giá trị biểu thức 2³ + 5 là:"
+      },
+      {
+        "correct_answer": "A",
+        "explanation": "12/16 chia tử và mẫu cho 4 ⇒ 3/4.",
+        "id": 6,
+        "options": [
+          "A. 3/4",
+          "B. 6/8",
+          "C. 2/3",
+          "D. 4/3"
+        ],
+        "question": "Cho phân số 12/16, rút gọn phân số bằng:"
+      },
+      {
+        "correct_answer": "C",
+        "explanation": "x = 3 × 5 = 15.",
+        "id": 7,
+        "options": [
+          "A. x = 8",
+          "B. x = 10",
+          "C. x = 15",
+          "D. x = 5"
+        ],
+        "question": "Tìm x biết: x/5 = 3"
+      },
+      {
+        "correct_answer": "B",
+        "explanation": "Giá trị tuyệt đối của số âm là số dương tương ứng.",
+        "id": 8,
+        "options": [
+          "A. -12",
+          "B. 12",
+          "C. 0",
+          "D. -1"
+        ],
+        "question": "Giá trị | -12 | bằng:"
+      },
+      {
+        "correct_answer": "C",
+        "explanation": "Tổng ba góc trong tam giác luôn bằng 180°.",
+        "id": 9,
+        "options": [
+          "A. 90°",
+          "B. 120°",
+          "C. 180°",
+          "D. 360°"
+        ],
+        "question": "Trong tam giác, tổng ba góc luôn bằng:"
+      },
+      {
+        "correct_answer": "D",
+        "explanation": "25/100 = 0,25 = 25%.",
+        "id": 10,
+        "options": [
+          "A. 10%",
+          "B. 15%",
+          "C. 20%",
+          "D. 25%"
+        ],
+        "question": "Tìm phần trăm của 25 so với 100:"
+      }
+    ]
+  }
+]

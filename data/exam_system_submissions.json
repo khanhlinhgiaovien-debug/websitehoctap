@@ -1,1 +1,105 @@
-[]
+[
+  {
+    "id": "757dc24c-b5ae-4888-907f-40050907f4d1",
+    "exam_id": "c9b5e001-5007-47e9-ab2a-2709215999bc",
+    "student_id": "2ea73b1f-5707-4f58-afa5-571559b0990a",
+    "submitted_at": "26/12/2025 01:11",
+    "time_taken": 0,
+    "answers": {
+      "1": "A",
+      "2": "A",
+      "3": "C",
+      "4": "D",
+      "5": "D",
+      "6": "B",
+      "7": "D",
+      "8": "A",
+      "9": "D",
+      "10": "B"
+    },
+    "score": 1.0,
+    "ai_feedback": "Chào bạn, đây là nhận xét và lời khuyên dành cho bạn:\n\n---\n\n1. Nhận xét chung về kết quả\nKết quả 1/10 cho thấy bạn còn rất nhiều cơ hội để học hỏi và tiến bộ. Đừng nản lòng, đây là điểm xuất phát để bạn nhìn nhận và cải thiện.\n\n2. Phân tích điểm mạnh/yếu\n*   Điểm mạnh: Bạn đã hoàn thành bài thi và ít nhất đã làm đúng được 1 câu. Điều này cho thấy bạn vẫn có khả năng *nhận diện* hoặc có một chút kiến thức ở lĩnh vực đó.\n*   Điểm yếu: Kiến thức nền tảng còn rất yếu. Có thể do chưa ôn tập kỹ, chưa hiểu sâu bài hoặc phương pháp làm bài trắc nghiệm chưa hiệu quả (ví dụ: đoán mò không có căn cứ).\n\n3. Lời khuyên cải thiện\n1.  Củng cố kiến thức nền tảng: Quay lại sách giáo khoa, ghi chép và đảm bảo bạn hiểu rõ các khái niệm cơ bản nhất. Đừng cố gắng học thuộc lòng.\n2.  Luyện tập thường xuyên: Làm thêm bài tập, đặc biệt là các dạng trắc nghiệm, để làm quen với cách ra đề và áp dụng kiến thức.\n3.  Chủ động tìm kiếm hỗ trợ: Hỏi thầy cô, bạn bè những phần bạn chưa rõ. Đừng ngại!\n4.  Xem lại lỗi sai: Luôn dành thời gian phân tích tại sao mình sai để rút kinh nghiệm và không mắc lại.\n\nHãy xem đây là động lực để cố gắng hơn nữa nhé! Bạn hoàn toàn có thể cải thiện!",
+    "detailed_results": [
+      {
+        "question_id": 1,
+        "question": "Phương trình bậc nhất một ẩn có dạng như thế nào?",
+        "is_correct": true,
+        "student_answer": "A",
+        "correct_answer": "A",
+        "explanation": "Phương trình bậc nhất một ẩn có dạng ax + b = 0 với a ≠ 0."
+      },
+      {
+        "question_id": 2,
+        "question": "Nghiệm của phương trình 3x - 6 = 0 là?",
+        "is_correct": false,
+        "student_answer": "A",
+        "correct_answer": "B",
+        "explanation": "3x - 6 = 0 ⇒ 3x = 6 ⇒ x = 2."
+      },
+      {
+        "question_id": 3,
+        "question": "Tìm x biết: 4x + 5 = 21",
+        "is_correct": false,
+        "student_answer": "C",
+        "correct_answer": "A",
+        "explanation": "4x = 21 - 5 = 16 ⇒ x = 4."
+      },
+      {
+        "question_id": 4,
+        "question": "Số đối của -7 là số nào?",
+        "is_correct": false,
+        "student_answer": "D",
+        "correct_answer": "A",
+        "explanation": "Số đối của -7 là số 7."
+      },
+      {
+        "question_id": 5,
+        "question": "Giá trị biểu thức 2³ + 5 là:",
+        "is_correct": false,
+        "student_answer": "D",
+        "correct_answer": "B",
+        "explanation": "2³ = 8 ⇒ 8 + 5 = 13."
+      },
+      {
+        "question_id": 6,
+        "question": "Cho phân số 12/16, rút gọn phân số bằng:",
+        "is_correct": false,
+        "student_answer": "B",
+        "correct_answer": "A",
+        "explanation": "12/16 chia tử và mẫu cho 4 ⇒ 3/4."
+      },
+      {
+        "question_id": 7,
+        "question": "Tìm x biết: x/5 = 3",
+        "is_correct": false,
+        "student_answer": "D",
+        "correct_answer": "C",
+        "explanation": "x = 3 × 5 = 15."
+      },
+      {
+        "question_id": 8,
+        "question": "Giá trị | -12 | bằng:",
+        "is_correct": false,
+        "student_answer": "A",
+        "correct_answer": "B",
+        "explanation": "Giá trị tuyệt đối của số âm là số dương tương ứng."
+      },
+      {
+        "question_id": 9,
+        "question": "Trong tam giác, tổng ba góc luôn bằng:",
+        "is_correct": false,
+        "student_answer": "D",
+        "correct_answer": "C",
+        "explanation": "Tổng ba góc trong tam giác luôn bằng 180°."
+      },
+      {
+        "question_id": 10,
+        "question": "Tìm phần trăm của 25 so với 100:",
+        "is_correct": false,
+        "student_answer": "B",
+        "correct_answer": "D",
+        "explanation": "25/100 = 0,25 = 25%."
+      }
+    ]
+  }
+]
