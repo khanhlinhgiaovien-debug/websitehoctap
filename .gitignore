@@ -16,7 +16,6 @@ instance/
 .idea/
 
 # Uploads (nếu không muốn đẩy ảnh lên git)
-static/uploads/
 
 # Data files (tùy chọn)
 
