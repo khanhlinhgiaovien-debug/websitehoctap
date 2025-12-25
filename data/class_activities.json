@@ -158,116 +158,116 @@
         }
       ]
     },
-    "ai_analysis": "{\n\"tong_quan\": \"Tuần 11 vừa qua, tình hình sinh hoạt lớp nhìn chung có sự tiến bộ ở một số mặt, đặc biệt là vệ sinh lớp học đã được duy trì tốt. Tuy nhiên, vẫn còn những tồn tại đáng chú ý liên quan đến kỷ luật giờ học, chuẩn bị bài vở và tuân thủ nội quy trang phục. Tổ 2 đã thể hiện sự nỗ lực và đạt kết quả tốt nhất tuần, trong khi các tổ còn lại cần cố gắng hơn nữa để cải thiện các vấn đề còn mắc phải.\",\n\"thoi_khoa_bieu\": [\n{\n\"thu\": \"Thứ 2\",\n\"tiet_1\": \"Toán\",\n\"tiet_2\": \"Văn\",\n\"tiet_3\": \"Anh\",\n\"tiet_4\": \"Hóa\",\n\"tiet_5\": \"Thể dục\",\n\"do_dong_phuc\": \"Áo trắng\"\n},\n{\n\"thu\": \"Thứ 3\",\n\"tiet_1\": \"Lý\",\n\"tiet_2\": \"Sinh\",\n\"tiet_3\": \"Sử\",\n\"tiet_4\": \"Địa\",\n\"tiet_5\": \"GDCD\",\n\"do_dong_phuc\": \"Quần tây\"\n},\n{\n\"thu\": \"Thứ 4\",\n\"tiet_1\": \"Toán\",\n\"tiet_2\": \"Văn\",\n\"tiet_3\": \"Anh\",\n\"tiet_4\": \"Vật lý\",\n\"tiet_5\": \"Tin học\",\n\"do_dong_phuc\": \"Áo trắng\"\n},\n{\n\"thu\": \"Thứ 5\",\n\"tiet_1\": \"Hóa\",\n\"tiet_2\": \"Sinh\",\n\"tiet_3\": \"Toán\",\n\"tiet_4\": \"Ngữ văn\",\n\"tiet_5\": \"Lịch sử\",\n\"do_dong_phuc\": \"Quần tây\"\n},\n{\n\"thu\": \"Thứ 6\",\n\"tiet_1\": \"Địa lý\",\n\"tiet_2\": \"GDCD\",\n\"tiet_3\": \"Mỹ thuật\",\n\"tiet_4\": \"Hoạt động\",\n\"tiet_5\": \"Sinh hoạt lớp\",\n\"do_dong_phuc\": \"Tự do\"\n}\n],\n\"danh_gia_chi_tiet\": {\n\"to_1\": {\n\"diem_manh\": \"Có nhiều thành viên tích cực đóng góp việc tốt (Lê Gia Hoàng, Hồ Đại Hải).\",\n\"diem_yeu\": \"Vẫn còn học sinh bị ghi sổ đầu bài và không chuẩn bị bài đầy đủ (Mai Phạm Huyền Anh, Nguyễn Hoàng Ngọc Hà).\",\n\"xep_loai\": \"Khá\",\n\"diem\": 7.5\n},\n\"to_2\": {\n\"diem_manh\": \"Nhiều thành viên gương mẫu, đóng góp việc tốt, tổ không có điểm trừ tổng thể, cho thấy sự nỗ lực tập thể.\",\n\"diem_yeu\": \"Vẫn còn một số trường hợp vi phạm nhỏ như bị ghi sổ đầu bài (Dương Ngọc Khánh Chi) và có việc không nên.\",\n\"xep_loai\": \"Tốt\",\n\"diem\": 8.5\n},\n\"to_3\": {\n\"diem_manh\": \"Có nhiều học sinh đạt thành tích tốt, tinh thần tích cực trong các hoạt động.\",\n\"diem_yeu\": \"Một số học sinh còn bị ghi sổ đầu bài (Dương Hải Đạt, Phan Tuệ Nhi) và có hành vi chưa đúng.\",\n\"xep_loai\": \"Khá\",\n\"diem\": 7.5\n},\n\"to_4\": {\n\"diem_manh\": \"Có những cá nhân nổi bật với đóng góp tích cực và việc làm tốt (Lê Gia Hoàng, Hồ Đại Hải).\",\n\"diem_yeu\": \"Vẫn còn thành viên vi phạm kỷ luật học tập và bị ghi sổ đầu bài (Mai Phạm Huyền Anh, Nguyễn Hoàng Ngọc Hà).\",\n\"xep_loai\": \"Khá\",\n\"diem\": 7.5\n}\n},\n\"nhan_xet_tuan_qua\": [\n{\n\"tieu_chi\": \"Kỷ luật giờ học\",\n\"danh_gia\": \"Vẫn còn tình trạng nói chuyện riêng và chưa tập trung trong giờ học.\",\n\"xep_loai\": \"Trung bình\",\n\"icon\": \"🗣️\"\n},\n{\n\"tieu_chi\": \"Nội quy lớp\",\n\"danh_gia\": \"Một số học sinh còn sai trang phục theo quy định.\",\n\"xep_loai\": \"Trung bình\",\n\"icon\": \"👔\"\n},\n{\n\"tieu_chi\": \"Chuẩn bị bài vở\",\n\"danh_gia\": \"Vẫn còn học sinh chưa chuẩn bị bài đầy đủ hoặc không học bài.\",\n\"xep_loai\": \"Cần cải thiện\",\n\"icon\": \"📖\"\n},\n{\n\"tieu_chi\": \"Vệ sinh lớp học\",\n\"danh_gia\": \"Lớp học được giữ gìn sạch sẽ và đảm bảo vệ sinh tốt.\",\n\"xep_loai\": \"Tốt\",\n\"icon\": \"🧹\"\n}\n],\n\"phuong_huong_tuan_moi\": [\n\"Nâng cao ý thức kỷ luật: Toàn thể lớp cần nghiêm túc tập trung, tuyệt đối không nói chuyện riêng trong giờ học, và tích cực tham gia phát biểu xây dựng bài.\",\n\"Chấp hành nghiêm chỉnh nội quy: Tất cả học sinh cần kiểm tra và đảm bảo trang phục đúng quy định trước khi đến lớp, đặc biệt vào các ngày có đồng phục.\",\n\"Chuẩn bị bài vở đầy đủ: Mỗi học sinh phải hoàn thành bài tập về nhà, đọc trước bài mới và chuẩn bị đầy đủ dụng cụ học tập cho mỗi buổi học.\",\n\"Phát huy tinh thần trách nhiệm tập thể: Tổ trưởng và các thành viên trong tổ cần chủ động theo dõi, nhắc nhở và hỗ trợ lẫn nhau để duy trì và cải thiện các mặt hoạt động.\",\n\"Duy trì vệ sinh môi trường học tập: Tiếp tục giữ gìn vệ sinh chung của lớp, không xả rác bừa bãi và sắp xếp bàn ghế gọn gàng sau mỗi buổi học.\"\n]\n}",
-    "analyzed_at": "24/12/2025 08:45",
+    "ai_analysis": "{\n\"tong_quan\": \"Tuần 11 nhìn chung các tổ đã có nhiều nỗ lực trong việc duy trì nề nếp và học tập. Tuy nhiên, vẫn còn một số vấn đề cần khắc phục như tình trạng nói chuyện riêng trong giờ học, việc chuẩn bị bài chưa đầy đủ, và một số trường hợp vi phạm quy định về trang phục. Tổ 2 nổi bật với thành tích cao nhất tuần, cho thấy tinh thần trách nhiệm và sự cố gắng của toàn thể thành viên.\",\n\"thoi_khoa_bieu\": [\n{\"thu\": \"Thứ 2\", \"tiet_1\": \"Toán\", \"tiet_2\": \"Ngữ Văn\", \"tiet_3\": \"Anh\", \"tiet_4\": \"Sử\", \"tiet_5\": \"Hóa\", \"do_dong_phuc\": \"Áo trắng\"},\n{\"thu\": \"Thứ 3\", \"tiet_1\": \"Toán\", \"tiet_2\": \"Lý\", \"tiet_3\": \"Sinh\", \"tiet_4\": \"Địa\", \"tiet_5\": \"Thể dục\", \"do_dong_phuc\": \"Quần tây\"},\n{\"thu\": \"Thứ 4\", \"tiet_1\": \"Ngữ Văn\", \"tiet_2\": \"Anh\", \"tiet_3\": \"GDCD\", \"tiet_4\": \"Tin học\", \"tiet_5\": \"Công nghệ\", \"do_dong_phuc\": \"Áo trắng\"},\n{\"thu\": \"Thứ 5\", \"tiet_1\": \"Toán\", \"tiet_2\": \"Vật lý\", \"tiet_3\": \"Hóa học\", \"tiet_4\": \"Sinh học\", \"tiet_5\": \"Mỹ thuật\", \"do_dong_phuc\": \"Quần tây\"},\n{\"thu\": \"Thứ 6\", \"tiet_1\": \"Ngữ Văn\", \"tiet_2\": \"Anh\", \"tiet_3\": \"GDQP\", \"tiet_4\": \"Hoạt động trải nghiệm\", \"tiet_5\": \"Sinh hoạt\", \"do_dong_phuc\": \"Áo trắng\"}\n],\n\"danh_gia_chi_tiet\": {\n\"to_1\": {\n\"diem_manh\": \"Nhiều thành viên tích cực, duy trì tốt các quy định và có ý thức học tập tốt. Có học sinh đạt điểm tuyệt đối.\",\n\"diem_yeu\": \"Vẫn còn học sinh bị ghi sổ đầu bài (Mai Phạm Huyền Anh, Nguyễn Hoàng Ngọc Hà), chưa nghiêm túc trong giờ học (nói chuyện riêng), và sai quy định trang phục (ghi chú).\",\n\"xep_loai\": \"Tốt\",\n\"diem\": 9\n},\n\"to_2\": {\n\"diem_manh\": \"Là tổ dẫn đầu về kết quả tuần, đạt điểm cao nhất. Nhiều thành viên xuất sắc, có tinh thần trách nhiệm và duy trì tốt kỷ luật.\",\n\"diem_yeu\": \"Vẫn còn học sinh bị ghi sổ đầu bài (Dương Ngọc Khánh Chi) và một số vi phạm nhỏ về 'việc không nên' cũng như trang phục.\",\n\"xep_loai\": \"Tốt\",\n\"diem\": 10\n},\n\"to_3\": {\n\"diem_manh\": \"Nhiều thành viên có thành tích tốt, ý thức học tập cao và đóng góp tích cực vào các hoạt động chung của lớp.\",\n\"diem_yeu\": \"Còn học sinh bị ghi sổ đầu bài (Dương Hải Đạt, Phan Tuệ Nhi) và tình trạng nói chuyện riêng trong giờ học.\",\n\"xep_loai\": \"Tốt\",\n\"diem\": 9\n},\n\"to_4\": {\n\"diem_manh\": \"Tương tự Tổ 1, nhiều thành viên tích cực và tuân thủ các quy định của lớp, có những đóng góp đáng kể.\",\n\"diem_yeu\": \"Tương tự Tổ 1, còn học sinh bị ghi sổ đầu bài (Mai Phạm Huyền Anh, Nguyễn Hoàng Ngọc Hà), chưa nghiêm túc trong giờ học và sai quy định trang phục.\",\n\"xep_loai\": \"Tốt\",\n\"diem\": 9\n}\n},\n\"nhan_xet_tuan_qua\": [\n{\"tieu_chi\": \"Kỷ luật giờ học\", \"danh_gia\": \"Vẫn còn tình trạng nói chuyện riêng trong giờ, một số trường hợp bị ghi sổ đầu bài gây ảnh hưởng đến không khí học tập.\", \"xep_loai\": \"Trung bình\", \"icon\": \"📚\"},\n{\"tieu_chi\": \"Nội quy lớp\", \"danh_gia\": \"Một số học sinh chưa thực hiện đúng quy định về trang phục (áo trắng, quần tây).\", \"xep_loai\": \"Trung bình\", \"icon\": \"👔\"},\n{\"tieu_chi\": \"Chuẩn bị bài vở\", \"danh_gia\": \"Vẫn còn trường hợp chưa chuẩn bị bài đầy đủ, đặc biệt có học sinh bị trừ điểm vì không học bài.\", \"xep_loai\": \"Cần cải thiện\", \"icon\": \"📖\"},\n{\"tieu_chi\": \"Vệ sinh lớp học\", \"danh_gia\": \"Lớp học nhìn chung sạch sẽ, gọn gàng, các tổ đã duy trì tốt việc vệ sinh hằng ngày.\", \"xep_loai\": \"Tốt\", \"icon\": \"🧹\"}\n],\n\"phuong_huong_tuan_moi\": [\n\"Nghiêm túc chấp hành kỷ luật giờ học: tuyệt đối không nói chuyện riêng, tập trung cao độ vào bài giảng của giáo viên.\",\n\"Chuẩn bị bài đầy đủ: chủ động xem trước bài mới, làm bài tập về nhà và ôn tập kiến thức cũ trước khi đến lớp.\",\n\"Thực hiện đúng nội quy về trang phục: mặc đúng đồng phục theo quy định của nhà trường và lớp học.\",\n\"Duy trì và nâng cao ý thức giữ gìn vệ sinh lớp học: không xả rác bừa bãi, sắp xếp bàn ghế gọn gàng sau mỗi buổi học.\",\n\"Tích cực tham gia xây dựng bài: mạnh dạn phát biểu ý kiến, hỏi bài khi có thắc mắc để nâng cao hiệu quả học tập.\"\n]\n}",
+    "analyzed_at": "25/12/2025 19:27",
     "infographic_html": "/static/class_activity_infographics/1728608c-4690-4f5c-ab89-236403028f92_infographic.html",
     "analysis_data": {
-      "tong_quan": "Tuần 11 vừa qua, tình hình sinh hoạt lớp nhìn chung có sự tiến bộ ở một số mặt, đặc biệt là vệ sinh lớp học đã được duy trì tốt. Tuy nhiên, vẫn còn những tồn tại đáng chú ý liên quan đến kỷ luật giờ học, chuẩn bị bài vở và tuân thủ nội quy trang phục. Tổ 2 đã thể hiện sự nỗ lực và đạt kết quả tốt nhất tuần, trong khi các tổ còn lại cần cố gắng hơn nữa để cải thiện các vấn đề còn mắc phải.",
+      "tong_quan": "Tuần 11 nhìn chung các tổ đã có nhiều nỗ lực trong việc duy trì nề nếp và học tập. Tuy nhiên, vẫn còn một số vấn đề cần khắc phục như tình trạng nói chuyện riêng trong giờ học, việc chuẩn bị bài chưa đầy đủ, và một số trường hợp vi phạm quy định về trang phục. Tổ 2 nổi bật với thành tích cao nhất tuần, cho thấy tinh thần trách nhiệm và sự cố gắng của toàn thể thành viên.",
       "thoi_khoa_bieu": [
         {
           "thu": "Thứ 2",
           "tiet_1": "Toán",
-          "tiet_2": "Văn",
+          "tiet_2": "Ngữ Văn",
           "tiet_3": "Anh",
-          "tiet_4": "Hóa",
-          "tiet_5": "Thể dục",
+          "tiet_4": "Sử",
+          "tiet_5": "Hóa",
           "do_dong_phuc": "Áo trắng"
         },
         {
           "thu": "Thứ 3",
-          "tiet_1": "Lý",
-          "tiet_2": "Sinh",
-          "tiet_3": "Sử",
+          "tiet_1": "Toán",
+          "tiet_2": "Lý",
+          "tiet_3": "Sinh",
           "tiet_4": "Địa",
-          "tiet_5": "GDCD",
+          "tiet_5": "Thể dục",
           "do_dong_phuc": "Quần tây"
         },
         {
           "thu": "Thứ 4",
-          "tiet_1": "Toán",
-          "tiet_2": "Văn",
-          "tiet_3": "Anh",
-          "tiet_4": "Vật lý",
-          "tiet_5": "Tin học",
+          "tiet_1": "Ngữ Văn",
+          "tiet_2": "Anh",
+          "tiet_3": "GDCD",
+          "tiet_4": "Tin học",
+          "tiet_5": "Công nghệ",
           "do_dong_phuc": "Áo trắng"
         },
         {
           "thu": "Thứ 5",
-          "tiet_1": "Hóa",
-          "tiet_2": "Sinh",
-          "tiet_3": "Toán",
-          "tiet_4": "Ngữ văn",
-          "tiet_5": "Lịch sử",
+          "tiet_1": "Toán",
+          "tiet_2": "Vật lý",
+          "tiet_3": "Hóa học",
+          "tiet_4": "Sinh học",
+          "tiet_5": "Mỹ thuật",
           "do_dong_phuc": "Quần tây"
         },
         {
           "thu": "Thứ 6",
-          "tiet_1": "Địa lý",
-          "tiet_2": "GDCD",
-          "tiet_3": "Mỹ thuật",
-          "tiet_4": "Hoạt động",
-          "tiet_5": "Sinh hoạt lớp",
-          "do_dong_phuc": "Tự do"
+          "tiet_1": "Ngữ Văn",
+          "tiet_2": "Anh",
+          "tiet_3": "GDQP",
+          "tiet_4": "Hoạt động trải nghiệm",
+          "tiet_5": "Sinh hoạt",
+          "do_dong_phuc": "Áo trắng"
         }
       ],
       "danh_gia_chi_tiet": {
         "to_1": {
-          "diem_manh": "Có nhiều thành viên tích cực đóng góp việc tốt (Lê Gia Hoàng, Hồ Đại Hải).",
-          "diem_yeu": "Vẫn còn học sinh bị ghi sổ đầu bài và không chuẩn bị bài đầy đủ (Mai Phạm Huyền Anh, Nguyễn Hoàng Ngọc Hà).",
-          "xep_loai": "Khá",
-          "diem": 7.5
+          "diem_manh": "Nhiều thành viên tích cực, duy trì tốt các quy định và có ý thức học tập tốt. Có học sinh đạt điểm tuyệt đối.",
+          "diem_yeu": "Vẫn còn học sinh bị ghi sổ đầu bài (Mai Phạm Huyền Anh, Nguyễn Hoàng Ngọc Hà), chưa nghiêm túc trong giờ học (nói chuyện riêng), và sai quy định trang phục (ghi chú).",
+          "xep_loai": "Tốt",
+          "diem": 9
         },
         "to_2": {
-          "diem_manh": "Nhiều thành viên gương mẫu, đóng góp việc tốt, tổ không có điểm trừ tổng thể, cho thấy sự nỗ lực tập thể.",
-          "diem_yeu": "Vẫn còn một số trường hợp vi phạm nhỏ như bị ghi sổ đầu bài (Dương Ngọc Khánh Chi) và có việc không nên.",
+          "diem_manh": "Là tổ dẫn đầu về kết quả tuần, đạt điểm cao nhất. Nhiều thành viên xuất sắc, có tinh thần trách nhiệm và duy trì tốt kỷ luật.",
+          "diem_yeu": "Vẫn còn học sinh bị ghi sổ đầu bài (Dương Ngọc Khánh Chi) và một số vi phạm nhỏ về 'việc không nên' cũng như trang phục.",
           "xep_loai": "Tốt",
-          "diem": 8.5
+          "diem": 10
         },
         "to_3": {
-          "diem_manh": "Có nhiều học sinh đạt thành tích tốt, tinh thần tích cực trong các hoạt động.",
-          "diem_yeu": "Một số học sinh còn bị ghi sổ đầu bài (Dương Hải Đạt, Phan Tuệ Nhi) và có hành vi chưa đúng.",
-          "xep_loai": "Khá",
-          "diem": 7.5
+          "diem_manh": "Nhiều thành viên có thành tích tốt, ý thức học tập cao và đóng góp tích cực vào các hoạt động chung của lớp.",
+          "diem_yeu": "Còn học sinh bị ghi sổ đầu bài (Dương Hải Đạt, Phan Tuệ Nhi) và tình trạng nói chuyện riêng trong giờ học.",
+          "xep_loai": "Tốt",
+          "diem": 9
         },
         "to_4": {
-          "diem_manh": "Có những cá nhân nổi bật với đóng góp tích cực và việc làm tốt (Lê Gia Hoàng, Hồ Đại Hải).",
-          "diem_yeu": "Vẫn còn thành viên vi phạm kỷ luật học tập và bị ghi sổ đầu bài (Mai Phạm Huyền Anh, Nguyễn Hoàng Ngọc Hà).",
-          "xep_loai": "Khá",
-          "diem": 7.5
+          "diem_manh": "Tương tự Tổ 1, nhiều thành viên tích cực và tuân thủ các quy định của lớp, có những đóng góp đáng kể.",
+          "diem_yeu": "Tương tự Tổ 1, còn học sinh bị ghi sổ đầu bài (Mai Phạm Huyền Anh, Nguyễn Hoàng Ngọc Hà), chưa nghiêm túc trong giờ học và sai quy định trang phục.",
+          "xep_loai": "Tốt",
+          "diem": 9
         }
       },
       "nhan_xet_tuan_qua": [
         {
           "tieu_chi": "Kỷ luật giờ học",
-          "danh_gia": "Vẫn còn tình trạng nói chuyện riêng và chưa tập trung trong giờ học.",
+          "danh_gia": "Vẫn còn tình trạng nói chuyện riêng trong giờ, một số trường hợp bị ghi sổ đầu bài gây ảnh hưởng đến không khí học tập.",
           "xep_loai": "Trung bình",
-          "icon": "🗣️"
+          "icon": "📚"
         },
         {
           "tieu_chi": "Nội quy lớp",
-          "danh_gia": "Một số học sinh còn sai trang phục theo quy định.",
+          "danh_gia": "Một số học sinh chưa thực hiện đúng quy định về trang phục (áo trắng, quần tây).",
           "xep_loai": "Trung bình",
           "icon": "👔"
         },
         {
           "tieu_chi": "Chuẩn bị bài vở",
-          "danh_gia": "Vẫn còn học sinh chưa chuẩn bị bài đầy đủ hoặc không học bài.",
+          "danh_gia": "Vẫn còn trường hợp chưa chuẩn bị bài đầy đủ, đặc biệt có học sinh bị trừ điểm vì không học bài.",
           "xep_loai": "Cần cải thiện",
           "icon": "📖"
         },
         {
           "tieu_chi": "Vệ sinh lớp học",
-          "danh_gia": "Lớp học được giữ gìn sạch sẽ và đảm bảo vệ sinh tốt.",
+          "danh_gia": "Lớp học nhìn chung sạch sẽ, gọn gàng, các tổ đã duy trì tốt việc vệ sinh hằng ngày.",
           "xep_loai": "Tốt",
           "icon": "🧹"
         }
       ],
       "phuong_huong_tuan_moi": [
-        "Nâng cao ý thức kỷ luật: Toàn thể lớp cần nghiêm túc tập trung, tuyệt đối không nói chuyện riêng trong giờ học, và tích cực tham gia phát biểu xây dựng bài.",
-        "Chấp hành nghiêm chỉnh nội quy: Tất cả học sinh cần kiểm tra và đảm bảo trang phục đúng quy định trước khi đến lớp, đặc biệt vào các ngày có đồng phục.",
-        "Chuẩn bị bài vở đầy đủ: Mỗi học sinh phải hoàn thành bài tập về nhà, đọc trước bài mới và chuẩn bị đầy đủ dụng cụ học tập cho mỗi buổi học.",
-        "Phát huy tinh thần trách nhiệm tập thể: Tổ trưởng và các thành viên trong tổ cần chủ động theo dõi, nhắc nhở và hỗ trợ lẫn nhau để duy trì và cải thiện các mặt hoạt động.",
-        "Duy trì vệ sinh môi trường học tập: Tiếp tục giữ gìn vệ sinh chung của lớp, không xả rác bừa bãi và sắp xếp bàn ghế gọn gàng sau mỗi buổi học."
+        "Nghiêm túc chấp hành kỷ luật giờ học: tuyệt đối không nói chuyện riêng, tập trung cao độ vào bài giảng của giáo viên.",
+        "Chuẩn bị bài đầy đủ: chủ động xem trước bài mới, làm bài tập về nhà và ôn tập kiến thức cũ trước khi đến lớp.",
+        "Thực hiện đúng nội quy về trang phục: mặc đúng đồng phục theo quy định của nhà trường và lớp học.",
+        "Duy trì và nâng cao ý thức giữ gìn vệ sinh lớp học: không xả rác bừa bãi, sắp xếp bàn ghế gọn gàng sau mỗi buổi học.",
+        "Tích cực tham gia xây dựng bài: mạnh dạn phát biểu ý kiến, hỏi bài khi có thắc mắc để nâng cao hiệu quả học tập."
       ]
     }
   }
