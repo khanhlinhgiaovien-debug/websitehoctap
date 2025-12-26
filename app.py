@@ -1634,8 +1634,8 @@ def load_projects():
     if not any(p["id"] == "general" for p in projects):
         projects.append({
             "id": "general",
-            "title": "Bài làm không phân loại",
-            "description": "Dành cho các bài làm không gắn với đề cụ thể."
+            "title": "Bài tập nhóm",
+            "description": "Các nhóm làm bài và nộp tại đây."
         })
 
     return projects
