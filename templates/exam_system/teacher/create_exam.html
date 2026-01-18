@@ -1,0 +1,261 @@
+{% extends "exam_system/base.html" %}
+
+{% block title %}Tạo Đề Kiểm Tra{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <h2 class="text-success">
+                <i class="fas fa-file-signature"></i> Tạo Đề Kiểm Tra Mới
+            </h2>
+            <p class="text-muted">Chọn loại đề kiểm tra bạn muốn tạo</p>
+            <hr>
+        </div>
+    </div>
+
+    <!-- Chọn loại đề -->
+    <div class="row">
+        <div class="col-md-10 offset-md-1">
+            <form method="POST">
+                <div class="row">
+                    <!-- Trắc nghiệm -->
+                    <div class="col-md-6 mb-4">
+                        <div class="card shadow-lg h-100 exam-type-card" onclick="selectExamType('multiple_choice')">
+                            <div class="card-body text-center p-5">
+                                <div class="exam-icon mb-4">
+                                    <i class="fas fa-list-ul fa-5x text-primary"></i>
+                                </div>
+                                <h3 class="card-title text-primary mb-3">Đề Trắc Nghiệm</h3>
+                                <p class="card-text text-muted mb-4">
+                                    Tạo đề kiểm tra với các câu hỏi trắc nghiệm 4 đáp án. 
+                                    Hệ thống tự động chấm điểm và đưa ra kết quả ngay lập tức.
+                                </p>
+                                
+                                <div class="features text-left mb-4">
+                                    <h6 class="text-primary">
+                                        <i class="fas fa-check-circle"></i> Tính năng:
+                                    </h6>
+                                    <ul class="list-unstyled">
+                                        <li>
+                                            <i class="fas fa-chevron-right text-success"></i> 
+                                            Tạo thủ công hoặc import từ Word
+                                        </li>
+                                        <li>
+                                            <i class="fas fa-chevron-right text-success"></i> 
+                                            AI hỗ trợ parse file Word tự động
+                                        </li>
+                                        <li>
+                                            <i class="fas fa-chevron-right text-success"></i> 
+                                            Chấm điểm tự động 100%
+                                        </li>
+                                        <li>
+                                            <i class="fas fa-chevron-right text-success"></i> 
+                                            Hiển thị giải thích đáp án
+                                        </li>
+                                        <li>
+                                            <i class="fas fa-chevron-right text-success"></i> 
+                                            AI feedback chi tiết
+                                        </li>
+                                    </ul>
+                                </div>
+
+                                <button type="submit" 
+                                        name="exam_type" 
+                                        value="multiple_choice" 
+                                        class="btn btn-primary btn-lg btn-block">
+                                    <i class="fas fa-arrow-right"></i> Tạo Đề Trắc Nghiệm
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tự luận -->
+                    <div class="col-md-6 mb-4">
+                        <div class="card shadow-lg h-100 exam-type-card" onclick="selectExamType('essay')">
+                            <div class="card-body text-center p-5">
+                                <div class="exam-icon mb-4">
+                                    <i class="fas fa-edit fa-5x text-warning"></i>
+                                </div>
+                                <h3 class="card-title text-warning mb-3">Đề Tự Luận</h3>
+                                <p class="card-text text-muted mb-4">
+                                    Tạo đề kiểm tra với các câu hỏi tự luận, yêu cầu học sinh 
+                                    trình bày chi tiết. AI hỗ trợ chấm điểm và nhận xét.
+                                </p>
+                                
+                                <div class="features text-left mb-4">
+                                    <h6 class="text-warning">
+                                        <i class="fas fa-check-circle"></i> Tính năng:
+                                    </h6>
+                                    <ul class="list-unstyled">
+                                        <li>
+                                            <i class="fas fa-chevron-right text-success"></i> 
+                                            Tạo câu hỏi với điểm số riêng
+                                        </li>
+                                        <li>
+                                            <i class="fas fa-chevron-right text-success"></i> 
+                                            Cung cấp đáp án gợi ý
+                                        </li>
+                                        <li>
+                                            <i class="fas fa-chevron-right text-success"></i> 
+                                            AI chấm điểm tự động
+                                        </li>
+                                        <li>
+                                            <i class="fas fa-chevron-right text-success"></i> 
+                                            AI nhận xét chi tiết từng câu
+                                        </li>
+                                        <li>
+                                            <i class="fas fa-chevron-right text-success"></i> 
+                                            Đánh giá kỹ năng trình bày
+                                        </li>
+                                    </ul>
+                                </div>
+
+                                <button type="submit" 
+                                        name="exam_type" 
+                                        value="essay" 
+                                        class="btn btn-warning btn-lg btn-block">
+                                    <i class="fas fa-arrow-right"></i> Tạo Đề Tự Luận
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+
+            <!-- So sánh -->
+            <div class="card mt-4 shadow-sm">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-balance-scale"></i> So Sánh Hai Loại Đề
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead class="thead-light">
+                                <tr>
+                                    <th width="20%">Tiêu chí</th>
+                                    <th width="40%">Trắc Nghiệm</th>
+                                    <th width="40%">Tự Luận</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>Thời gian tạo đề</strong></td>
+                                    <td><span class="badge badge-success">Nhanh</span> (có thể import Word)</td>
+                                    <td><span class="badge badge-warning">Trung bình</span></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Chấm điểm</strong></td>
+                                    <td><span class="badge badge-success">Tự động 100%</span></td>
+                                    <td><span class="badge badge-info">AI hỗ trợ chấm</span></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Phù hợp với</strong></td>
+                                    <td>Kiểm tra kiến thức, ghi nhớ</td>
+                                    <td>Đánh giá tư duy, trình bày</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Thời gian làm bài</strong></td>
+                                    <td>Ngắn (15-45 phút)</td>
+                                    <td>Dài hơn (45-90 phút)</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Kết quả</strong></td>
+                                    <td>Ngay lập tức</td>
+                                    <td>Ngay lập tức (AI chấm)</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tips -->
+            <div class="card mt-4 shadow-sm">
+                <div class="card-header bg-success text-white">
+                    <h6 class="mb-0">
+                        <i class="fas fa-lightbulb"></i> Mẹo Chọn Loại Đề
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="text-primary">Nên chọn Trắc Nghiệm khi:</h6>
+                            <ul>
+                                <li>Cần kiểm tra nhanh kiến thức</li>
+                                <li>Số lượng học sinh đông</li>
+                                <li>Cần kết quả ngay lập tức</li>
+                                <li>Kiểm tra khả năng ghi nhớ</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-warning">Nên chọn Tự Luận khi:</h6>
+                            <ul>
+                                <li>Đánh giá tư duy phản biện</li>
+                                <li>Kiểm tra kỹ năng trình bày</li>
+                                <li>Cần câu trả lời chi tiết</li>
+                                <li>Đánh giá khả năng phân tích</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Back button -->
+            <div class="text-center mt-4 mb-4">
+                <a href="{{ url_for('teacher_dashboard') }}" class="btn btn-secondary btn-lg">
+                    <i class="fas fa-arrow-left"></i> Quay Lại Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.exam-type-card {
+    transition: all 0.3s ease;
+    cursor: pointer;
+    border: 2px solid transparent;
+}
+
+.exam-type-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2) !important;
+}
+
+.exam-type-card:hover:nth-child(1) {
+    border-color: #007bff;
+}
+
+.exam-type-card:hover:nth-child(2) {
+    border-color: #ffc107;
+}
+
+.exam-icon {
+    animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+    0%, 100% {
+        transform: translateY(0px);
+    }
+    50% {
+        transform: translateY(-10px);
+    }
+}
+
+.features li {
+    padding: 5px 0;
+}
+</style>
+
+<script>
+function selectExamType(type) {
+    // Optional: thêm hiệu ứng khi click vào card
+    console.log('Selected exam type:', type);
+}
+</script>
+{% endblock %}

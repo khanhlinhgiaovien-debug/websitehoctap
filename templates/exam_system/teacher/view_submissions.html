@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Danh sách bài nộp - {{ exam.title }}</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .flash-messages {
+            margin-bottom: 20px;
+        }
+
+        .alert {
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border-left: 4px solid #28a745;
+        }
+
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border-left: 4px solid #dc3545;
+        }
+
+        .alert-info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border-left: 4px solid #17a2b8;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(-20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .header {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: #667eea;
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .exam-info {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+        }
+
+        .exam-info p {
+            color: #666;
+            margin: 5px 0;
+        }
+
+        .exam-info strong {
+            color: #333;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .stat-card h3 {
+            font-size: 36px;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+
+        .stat-card p {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .submissions-table {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+
+        .table-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .table-header h2 {
+            font-size: 22px;
+        }
+
+        .filter-box {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .filter-box input, .filter-box select {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background: #f8f9fa;
+        }
+
+        th {
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            color: #333;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        td {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            color: #666;
+        }
+
+        tbody tr {
+            transition: background 0.3s;
+        }
+
+        tbody tr:hover {
+            background: #f8f9fa;
+        }
+
+        .score {
+            font-weight: bold;
+            font-size: 18px;
+            padding: 5px 12px;
+            border-radius: 8px;
+            display: inline-block;
+        }
+
+        .score.excellent {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .score.good {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+
+        .score.average {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .score.poor {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .btn {
+            padding: 8px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+
+        .empty-state i {
+            font-size: 64px;
+            margin-bottom: 20px;
+            opacity: 0.3;
+        }
+
+        .badge {
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .badge-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .badge-warning {
+            background: #ffc107;
+            color: #333;
+        }
+
+        .time-taken {
+            color: #999;
+            font-size: 13px;
+        }
+
+        .actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 22px;
+            }
+
+            .stats {
+                grid-template-columns: 1fr;
+            }
+
+            .table-header {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .filter-box {
+                width: 100%;
+                flex-direction: column;
+            }
+
+            .filter-box input, .filter-box select {
+                width: 100%;
+            }
+
+            table {
+                font-size: 14px;
+            }
+
+            th, td {
+                padding: 10px;
+            }
+
+            .actions {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flash-messages">
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }}">
+                            <span>{{ message }}</span>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <div class="header">
+            <h1>📊 Danh sách bài nộp</h1>
+            <div class="exam-info">
+                <p><strong>Đề thi:</strong> {{ exam.title }}</p>
+                <p><strong>Môn học:</strong> {{ exam.subject }} - Lớp {{ exam.grade }}</p>
+                <p><strong>Loại đề:</strong> 
+                    {% if exam.type == 'multiple_choice' %}
+                    <span class="badge badge-success">Trắc nghiệm</span>
+                    {% else %}
+                    <span class="badge badge-warning">Tự luận</span>
+                    {% endif %}
+                </p>
+                <p><strong>Thời gian:</strong> {{ exam.time_limit }} phút</p>
+            </div>
+        </div>
+
+        <div class="stats">
+            <div class="stat-card">
+                <h3>{{ submissions|length }}</h3>
+                <p>Tổng bài nộp</p>
+            </div>
+            <div class="stat-card">
+                <h3>{{ "%.2f"|format(submissions|map(attribute='score')|sum / submissions|length if submissions else 0) }}</h3>
+                <p>Điểm trung bình</p>
+            </div>
+            <div class="stat-card">
+                <h3>{{ submissions|selectattr('score', 'ge', 8)|list|length }}</h3>
+                <p>Học sinh giỏi (≥8đ)</p>
+            </div>
+            <div class="stat-card">
+                <h3>{{ submissions|selectattr('score', 'lt', 5)|list|length }}</h3>
+                <p>Cần cải thiện (<5đ)</p>
+            </div>
+        </div>
+
+        <div class="submissions-table">
+            <div class="table-header">
+                <h2>Chi tiết bài nộp</h2>
+                <div class="filter-box">
+                    <input type="text" id="searchStudent" placeholder="🔍 Tìm học sinh..." onkeyup="filterTable()">
+                    <select id="filterScore" onchange="filterTable()">
+                        <option value="">Tất cả điểm</option>
+                        <option value="excellent">Giỏi (8-10)</option>
+                        <option value="good">Khá (6.5-8)</option>
+                        <option value="average">Trung bình (5-6.5)</option>
+                        <option value="poor">Yếu (<5)</option>
+                    </select>
+                </div>
+            </div>
+
+            {% if submissions %}
+            <table id="submissionsTable">
+                <thead>
+                    <tr>
+                        <th>STT</th>
+                        <th>Học sinh</th>
+                        <th>Lớp</th>
+                        <th>Thời gian nộp</th>
+                        <th>Thời gian làm</th>
+                        <th>Điểm</th>
+                        <th>Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for sub in submissions %}
+                    <tr data-score="{{ sub.score }}">
+                        <td>{{ loop.index }}</td>
+                        <td><strong>{{ sub.student_name }}</strong></td>
+                        <td>{{ sub.student_class }}</td>
+                        <td>{{ sub.submitted_at }}</td>
+                        <td class="time-taken">⏱️ {{ sub.time_taken }} phút</td>
+                        <td>
+                            {% if sub.score >= 8 %}
+                            <span class="score excellent">{{ "%.2f"|format(sub.score) }}</span>
+                            {% elif sub.score >= 6.5 %}
+                            <span class="score good">{{ "%.2f"|format(sub.score) }}</span>
+                            {% elif sub.score >= 5 %}
+                            <span class="score average">{{ "%.2f"|format(sub.score) }}</span>
+                            {% else %}
+                            <span class="score poor">{{ "%.2f"|format(sub.score) }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="actions">
+                                <a href="{{ url_for('teacher_view_submission', submission_id=sub.id) }}" class="btn btn-primary">
+                                    👁️ Xem chi tiết
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div class="empty-state">
+                <div style="font-size: 64px; opacity: 0.3;">📭</div>
+                <h3>Chưa có bài nộp nào</h3>
+                <p>Hiện tại chưa có học sinh nào nộp bài cho đề thi này.</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <div style="margin-top: 30px; text-align: center;">
+            <a href="{{ url_for('teacher_dashboard') }}" class="btn btn-secondary">
+                ← Quay lại Dashboard
+            </a>
+        </div>
+    </div>
+
+    <script>
+        function filterTable() {
+            const searchInput = document.getElementById('searchStudent').value.toLowerCase();
+            const scoreFilter = document.getElementById('filterScore').value;
+            const table = document.getElementById('submissionsTable');
+            const rows = table.getElementsByTagName('tr');
+
+            for (let i = 1; i < rows.length; i++) {
+                const row = rows[i];
+                const studentName = row.cells[1].textContent.toLowerCase();
+                const score = parseFloat(row.dataset.score);
+                
+                let showRow = true;
+
+                if (searchInput && !studentName.includes(searchInput)) {
+                    showRow = false;
+                }
+
+                if (scoreFilter) {
+                    if (scoreFilter === 'excellent' && score < 8) showRow = false;
+                    if (scoreFilter === 'good' && (score < 6.5 || score >= 8)) showRow = false;
+                    if (scoreFilter === 'average' && (score < 5 || score >= 6.5)) showRow = false;
+                    if (scoreFilter === 'poor' && score >= 5) showRow = false;
+                }
+
+                row.style.display = showRow ? '' : 'none';
+            }
+        }
+    </script>
+</body>
+</html>

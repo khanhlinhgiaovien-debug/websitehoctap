@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block title %}Bài làm của tôi{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>📊 Bài làm của tôi</h2>
+        <a href="{{ url_for('student_dashboard') }}" class="btn btn-secondary">← Quay lại</a>
+    </div>
+    
+    {% if submissions %}
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>STT</th>
+                            <th>Đề thi</th>
+                            <th>Loại</th>
+                            <th>Điểm</th>
+                            <th>Thời gian nộp</th>
+                            <th>Thời gian làm</th>
+                            <th>Hành động</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for sub in submissions %}
+                        <tr>
+                            <td>{{ loop.index }}</td>
+                            <td>{{ sub.exam_title }}</td>
+                            <td>
+                                {% if 'answers' in sub %}
+                                    <span class="badge bg-primary">Trắc nghiệm</span>
+                                {% else %}
+                                    <span class="badge bg-info">Tự luận</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <strong class="
+                                    {% if sub.score >= 8 %}text-success
+                                    {% elif sub.score >= 5 %}text-warning
+                                    {% else %}text-danger{% endif %}
+                                ">{{ sub.score }}/10</strong>
+                            </td>
+                            <td>{{ sub.submitted_at }}</td>
+                            <td>{{ sub.time_taken }} phút</td>
+                            <td>
+                                <a href="{{ url_for('student_view_result', submission_id=sub.id) }}" 
+                                   class="btn btn-sm btn-primary">Xem chi tiết</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            {% if submissions|length > 0 %}
+            <div class="mt-3">
+                <h5>📈 Thống kê của bạn:</h5>
+                <p><strong>Tổng bài làm:</strong> {{ submissions|length }}</p>
+                <p><strong>Điểm trung bình:</strong> {{ "%.2f"|format(submissions|map(attribute='score')|sum / submissions|length) }}</p>
+                <p><strong>Điểm cao nhất:</strong> {{ submissions|map(attribute='score')|max }}</p>
+                <p><strong>Điểm thấp nhất:</strong> {{ submissions|map(attribute='score')|min }}</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% else %}
+    <div class="alert alert-info">
+        <strong>ℹ️ Bạn chưa nộp bài nào.</strong>
+        <p class="mb-0">Hãy về <a href="{{ url_for('student_dashboard') }}">trang chủ</a> và làm bài kiểm tra!</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

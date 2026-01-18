@@ -1,0 +1,182 @@
+{% extends "exam_system/base.html" %}
+
+{% block title %}Tạo Đề Trắc Nghiệm{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <h2 class="text-primary">
+                <i class="fas fa-list-ul"></i> Tạo Đề Trắc Nghiệm
+            </h2>
+            <p class="text-muted">Import từ file Word hoặc xem preview trước khi lưu</p>
+            <hr>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-10 offset-md-1">
+            <!-- Hướng dẫn import Word -->
+            <div class="card mb-4 shadow-sm">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-info-circle"></i> Hướng Dẫn Import Từ Word
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Format file Word chuẩn:</strong></p>
+                    <div class="bg-light p-3 rounded mb-3">
+                        <pre class="mb-0"><code>Câu 1: Phương trình bậc nhất một ẩn có dạng như thế nào?
+A. ax + b = 0 (a ≠ 0)
+B. ax² + bx + c = 0
+C. ax + by = c
+D. ax = 0
+Đáp án: A
+Giải thích: Phương trình bậc nhất một ẩn có dạng ax + b = 0 với a ≠ 0.
+
+Câu 2: Nghiệm của phương trình 2x - 4 = 0 là?
+A. x = 1
+B. x = 2
+C. x = 3
+D. x = 4
+Đáp án: B
+Giải thích: 2x = 4 => x = 2</code></pre>
+                    </div>
+                    
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle"></i> <strong>Lưu ý:</strong>
+                        <ul class="mb-0 mt-2">
+                            <li>Mỗi câu hỏi bắt đầu bằng "Câu [số]:"</li>
+                            <li>4 đáp án A, B, C, D mỗi đáp án một dòng</li>
+                            <li>Dòng "Đáp án: [A/B/C/D]"</li>
+                            <li>Có thể thêm "Giải thích:" (không bắt buộc)</li>
+                            <li>File phải là định dạng .docx</li>
+                        </ul>
+                    </div>
+
+                    <a href="#" class="btn btn-sm btn-info" download>
+                        <i class="fas fa-download"></i> Tải File Mẫu
+                    </a>
+                </div>
+            </div>
+
+            <!-- Form Upload Word -->
+            <div class="card shadow mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-upload"></i> Bước 1: Upload File Word
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" enctype="multipart/form-data" id="uploadForm">
+                        <div class="form-group">
+                            <label for="word_file">
+                                <i class="fas fa-file-word"></i> Chọn File Word (.docx) <span class="text-danger">*</span>
+                            </label>
+                            <div class="custom-file">
+                                <input type="file" 
+                                       class="custom-file-input" 
+                                       id="word_file" 
+                                       name="word_file"
+                                       accept=".docx"
+                                       required>
+                                <label class="custom-file-label" for="word_file">Chọn file .docx...</label>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="fas fa-magic"></i> Parse File Bằng AI
+                        </button>
+                    </form>
+
+                    <div id="loading" class="text-center mt-4" style="display: none;">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="sr-only">Loading...</span>
+                        </div>
+                        <p class="mt-2">AI đang phân tích file của bạn...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Hoặc tạo thủ công -->
+            <div class="card shadow mb-4">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-keyboard"></i> Hoặc: Tạo Thủ Công (Sắp Ra Mắt)
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">
+                        <i class="fas fa-tools"></i> Tính năng tạo câu hỏi thủ công đang được phát triển. 
+                        Hiện tại vui lòng sử dụng tính năng import từ Word.
+                    </p>
+                    <button class="btn btn-secondary" disabled>
+                        <i class="fas fa-plus"></i> Tạo Câu Hỏi Thủ Công
+                    </button>
+                </div>
+            </div>
+
+            <!-- Example Preview -->
+            <div class="card shadow-sm">
+                <div class="card-header bg-success text-white">
+                    <h6 class="mb-0">
+                        <i class="fas fa-eye"></i> Preview Sau Khi Parse
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">Sau khi upload file Word, hệ thống sẽ hiển thị preview để bạn kiểm tra trước khi lưu.</p>
+                    
+                    <div class="border rounded p-3 bg-light">
+                        <h6 class="text-primary">Ví dụ preview:</h6>
+                        <div class="question-preview">
+                            <p><strong>Câu 1:</strong> Phương trình bậc nhất một ẩn có dạng như thế nào?</p>
+                            <ul class="list-unstyled ml-3">
+                                <li><span class="badge badge-success">✓</span> A. ax + b = 0 (a ≠ 0)</li>
+                                <li>B. ax² + bx + c = 0</li>
+                                <li>C. ax + by = c</li>
+                                <li>D. ax = 0</li>
+                            </ul>
+                            <p><small class="text-muted"><i>Giải thích: Phương trình bậc nhất...</i></small></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Back button -->
+            <div class="text-center mt-4 mb-4">
+                <a href="{{ url_for('teacher_create_exam') }}" class="btn btn-secondary btn-lg">
+                    <i class="fas fa-arrow-left"></i> Quay Lại
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Hiển thị tên file khi chọn
+document.getElementById('word_file').addEventListener('change', function(e) {
+    var fileName = e.target.files[0]?.name || 'Chọn file .docx...';
+    document.querySelector('.custom-file-label').textContent = fileName;
+});
+
+// Show loading khi submit
+document.getElementById('uploadForm').addEventListener('submit', function() {
+    document.getElementById('loading').style.display = 'block';
+});
+</script>
+
+<style>
+.question-preview {
+    font-size: 0.95rem;
+}
+
+.question-preview .badge {
+    margin-right: 5px;
+}
+
+pre code {
+    font-size: 0.85rem;
+}
+</style>
+{% endblock %}

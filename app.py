@@ -38,13 +38,683 @@ CLASS_ACTIVITY_IMAGES = os.path.join('static', 'class_activity_uploads')
 os.makedirs(os.path.dirname(CLASS_ACTIVITY_FILE), exist_ok=True)
 os.makedirs(CLASS_ACTIVITY_IMAGES, exist_ok=True)
 # Định nghĩa các extension được phép
+#############
 
+# ==========================================
+# HỆ THỐNG KIỂM TRA CÓ GÌ PHẢI LO
+# ==========================================
+
+import hashlib
+from werkzeug.security import generate_password_hash, check_password_hash
+import mammoth  # Để đọc file .docx
+
+# File paths
+EXAM_USERS_FILE = os.path.join('data', 'exam_system_users.json')
+EXAM_LESSONS_FILE = os.path.join('data', 'exam_system_lessons.json')
+EXAM_EXAMS_FILE = os.path.join('data', 'exam_system_exams.json')
+EXAM_SUBMISSIONS_FILE = os.path.join('data', 'exam_system_submissions.json')
+
+
+# Helper functions
+def load_exam_users():
+    try:
+        with open(EXAM_USERS_FILE, 'r', encoding='utf-8') as f:
+            return json.load(f)
+    except FileNotFoundError:
+        return {"students": [], "teachers": []}
+
+
+def save_exam_users(data):
+    with open(EXAM_USERS_FILE, 'w', encoding='utf-8') as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+
+
+def load_exam_lessons():
+    try:
+        with open(EXAM_LESSONS_FILE, 'r', encoding='utf-8') as f:
+            return json.load(f)
+    except FileNotFoundError:
+        return []
+
+
+def save_exam_lessons(data):
+    with open(EXAM_LESSONS_FILE, 'w', encoding='utf-8') as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+
+
+def load_exam_exams():
+    try:
+        with open(EXAM_EXAMS_FILE, 'r', encoding='utf-8') as f:
+            return json.load(f)
+    except FileNotFoundError:
+        return []
+
+
+def save_exam_exams(data):
+    with open(EXAM_EXAMS_FILE, 'w', encoding='utf-8') as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+
+
+def load_exam_submissions():
+    try:
+        with open(EXAM_SUBMISSIONS_FILE, 'r', encoding='utf-8') as f:
+            return json.load(f)
+    except FileNotFoundError:
+        return []
+
+
+def save_exam_submissions(data):
+    with open(EXAM_SUBMISSIONS_FILE, 'w', encoding='utf-8') as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+
+
+# ---------------- AUTHENTICATION ----------------
+@app.route('/exam_system/student_register', methods=['GET', 'POST'])
+def exam_student_register():
+    if request.method == 'POST':
+        username = request.form.get('username', '').strip()
+        password = request.form.get('password', '').strip()
+        full_name = request.form.get('full_name', '').strip()
+        class_name = request.form.get('class_name', '').strip()
+        email = request.form.get('email', '').strip()
+
+        if not all([username, password, full_name, class_name]):
+            flash('Vui lòng nhập đầy đủ thông tin!', 'error')
+            return redirect(url_for('exam_student_register'))
+
+        users = load_exam_users()
+        if any(s['username'] == username for s in users['students']):
+            flash('Tên đăng nhập đã tồn tại!', 'error')
+            return redirect(url_for('exam_student_register'))
+
+        new_student = {
+            'id': str(uuid.uuid4()),
+            'username': username,
+            'password': generate_password_hash(password),
+            'full_name': full_name,
+            'class': class_name,
+            'email': email,
+            'created_at': datetime.now().strftime("%d/%m/%Y %H:%M")
+        }
+        users['students'].append(new_student)
+        save_exam_users(users)
+
+        flash('Đăng ký thành công! Hãy đăng nhập.', 'success')
+        return redirect(url_for('exam_student_login'))
+
+    return render_template('exam_system/auth/student_register.html')
+
+
+@app.route('/exam_system/student_login', methods=['GET', 'POST'])
+def exam_student_login():
+    if request.method == 'POST':
+        username = request.form.get('username', '').strip()
+        password = request.form.get('password', '').strip()
+
+        users = load_exam_users()
+        student = next(
+            (s for s in users['students'] if s['username'] == username), None)
+
+        if student and check_password_hash(student['password'], password):
+            session['exam_user_type'] = 'student'
+            session['exam_user_id'] = student['id']
+            session['exam_user_name'] = student['full_name']
+            flash('Đăng nhập thành công!', 'success')
+            return redirect(url_for('student_dashboard'))
+        else:
+            flash('Sai tên đăng nhập hoặc mật khẩu!', 'error')
+
+    return render_template('exam_system/auth/student_login.html')
+
+
+@app.route('/exam_system/teacher_login', methods=['GET', 'POST'])
+def exam_teacher_login():
+    if request.method == 'POST':
+        username = request.form.get('username', '').strip()
+        password = request.form.get('password', '').strip()
+
+        users = load_exam_users()
+        teacher = next(
+            (t for t in users['teachers'] if t['username'] == username), None)
+
+        if teacher:
+            # Kiểm tra xem password có phải hash không
+            teacher_password = teacher['password']
+
+            # Nếu password bắt đầu bằng 'pbkdf2:', 'scrypt:', 'bcrypt:' thì là hash
+            if teacher_password.startswith(('pbkdf2:', 'scrypt:', 'bcrypt:')):
+                # So sánh dạng hash
+                if check_password_hash(teacher_password, password):
+                    session['exam_user_type'] = 'teacher'
+                    session['exam_user_id'] = teacher['id']
+                    session['exam_user_name'] = teacher['full_name']
+                    session['exam_subject'] = teacher.get('subject', 'Chung')
+                    flash('Đăng nhập thành công!', 'success')
+                    return redirect(url_for('teacher_dashboard'))
+            else:
+                # So sánh plain text
+                if teacher_password == password:
+                    session['exam_user_type'] = 'teacher'
+                    session['exam_user_id'] = teacher['id']
+                    session['exam_user_name'] = teacher['full_name']
+                    session['exam_subject'] = teacher.get('subject', 'Chung')
+                    flash('Đăng nhập thành công!', 'success')
+                    return redirect(url_for('teacher_dashboard'))
+
+        flash('Sai tên đăng nhập hoặc mật khẩu!', 'error')
+
+    return render_template('exam_system/auth/teacher_login.html')
+
+
+@app.route('/exam_system/logout')
+def exam_logout():
+    session.pop('exam_user_type', None)
+    session.pop('exam_user_id', None)
+    session.pop('exam_user_name', None)
+    session.pop('exam_subject', None)
+    flash('Đã đăng xuất!', 'info')
+    return redirect(url_for('exam_student_login'))
+
+
+# ---------------- TEACHER ROUTES ----------------
+@app.route('/exam_system/teacher/dashboard')
+def teacher_dashboard():
+    if session.get('exam_user_type') != 'teacher':
+        flash('Vui lòng đăng nhập với tư cách giáo viên!', 'error')
+        return redirect(url_for('exam_teacher_login'))
+
+    teacher_id = session.get('exam_user_id')
+    lessons = [l for l in load_exam_lessons() if l['teacher_id'] == teacher_id]
+    exams = [e for e in load_exam_exams() if e['teacher_id'] == teacher_id]
+
+    return render_template('exam_system/teacher/dashboard.html',
+                           lessons=lessons,
+                           exams=exams)
+
+
+@app.route('/exam_system/teacher/create_lesson', methods=['GET', 'POST'])
+def teacher_create_lesson():
+    if session.get('exam_user_type') != 'teacher':
+        return redirect(url_for('exam_teacher_login'))
+
+    if request.method == 'POST':
+        title = request.form.get('title', '').strip()
+        description = request.form.get('description', '').strip()
+        content = request.form.get('content', '').strip()
+        subject = request.form.get('subject', '').strip()
+        grade = request.form.get('grade', '').strip()
+
+        attachments = []
+        files = request.files.getlist('attachments')
+        for f in files:
+            if f and f.filename:
+                filename = f"{uuid.uuid4()}_{secure_filename(f.filename)}"
+                f.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+                attachments.append(filename)
+
+        new_lesson = {
+            'id': str(uuid.uuid4()),
+            'title': title,
+            'description': description,
+            'content': content,
+            'attachments': attachments,
+            'teacher_id': session.get('exam_user_id'),
+            'created_at': datetime.now().strftime("%d/%m/%Y %H:%M"),
+            'subject': subject,
+            'grade': grade
+        }
+
+        lessons = load_exam_lessons()
+        lessons.insert(0, new_lesson)
+        save_exam_lessons(lessons)
+
+        flash('Đã tạo bài giảng!', 'success')
+        return redirect(url_for('teacher_dashboard'))
+
+    return render_template('exam_system/teacher/create_lesson.html')
+
+
+@app.route('/exam_system/teacher/create_exam', methods=['GET', 'POST'])
+def teacher_create_exam():
+    if session.get('exam_user_type') != 'teacher':
+        return redirect(url_for('exam_teacher_login'))
+
+    if request.method == 'POST':
+        exam_type = request.form.get('exam_type')
+        if exam_type == 'multiple_choice':
+            return redirect(url_for('teacher_create_multiple_choice'))
+        elif exam_type == 'essay':
+            return redirect(url_for('teacher_create_essay'))
+
+    return render_template('exam_system/teacher/create_exam.html')
+
+
+@app.route('/exam_system/teacher/create_multiple_choice',
+           methods=['GET', 'POST'])
+def teacher_create_multiple_choice():
+    if session.get('exam_user_type') != 'teacher':
+        return redirect(url_for('exam_teacher_login'))
+
+    if request.method == 'POST':
+        if 'word_file' in request.files:
+            word_file = request.files['word_file']
+            if word_file and word_file.filename.endswith('.docx'):
+                # Đọc nội dung Word
+                word_content = mammoth.extract_raw_text(word_file).value
+
+                # Dùng AI parse thành JSON
+                prompt = f"""Đây là nội dung đề trắc nghiệm từ file Word:
+
+{word_content}
+
+Hãy chuyển đổi thành JSON với format:
+{{
+  "questions": [
+    {{
+      "id": 1,
+      "question": "Câu hỏi",
+      "options": ["A. Đáp án 1", "B. Đáp án 2", "C. Đáp án 3", "D. Đáp án 4"],
+      "correct_answer": "A",
+      "explanation": "Giải thích"
+    }}
+  ]
+}}
+
+CHỈ TRẢ VỀ JSON, KHÔNG THÊM TEXT KHÁC."""
+
+                try:
+                    response = model.generate_content([prompt])
+                    ai_json = response.text.replace('```json',
+                                                    '').replace('```',
+                                                                '').strip()
+                    questions_data = json.loads(ai_json)
+
+                    # Lưu vào session để preview
+                    session['preview_questions'] = questions_data
+
+                    return render_template(
+                        'exam_system/teacher/preview_questions.html',
+                        questions=questions_data['questions'])
+                except Exception as e:
+                    flash(f'Lỗi khi parse file: {str(e)}', 'error')
+
+        # Nếu confirm từ preview
+        if request.form.get('confirm') == 'yes':
+            title = request.form.get('title', '').strip()
+            description = request.form.get('description', '').strip()
+            time_limit = request.form.get('time_limit', '0')
+            subject = request.form.get('subject', '').strip()
+            grade = request.form.get('grade', '').strip()
+
+            questions_json = request.form.get('questions_json')
+            questions = json.loads(questions_json)
+
+            new_exam = {
+                'id': str(uuid.uuid4()),
+                'title': title,
+                'description': description,
+                'type': 'multiple_choice',
+                'teacher_id': session.get('exam_user_id'),
+                'created_at': datetime.now().strftime("%d/%m/%Y %H:%M"),
+                'time_limit': int(time_limit),
+                'subject': subject,
+                'grade': grade,
+                'status': 'active',
+                'questions': questions
+            }
+
+            exams = load_exam_exams()
+            exams.insert(0, new_exam)
+            save_exam_exams(exams)
+
+            flash('Đã tạo đề trắc nghiệm!', 'success')
+            return redirect(url_for('teacher_dashboard'))
+
+    return render_template('exam_system/teacher/create_multiple_choice.html')
+
+
+@app.route('/exam_system/teacher/create_essay', methods=['GET', 'POST'])
+def teacher_create_essay():
+    if session.get('exam_user_type') != 'teacher':
+        return redirect(url_for('exam_teacher_login'))
+
+    if request.method == 'POST':
+        title = request.form.get('title', '').strip()
+        description = request.form.get('description', '').strip()
+        time_limit = request.form.get('time_limit', '0')
+        subject = request.form.get('subject', '').strip()
+        grade = request.form.get('grade', '').strip()
+
+        # Lấy các câu hỏi tự luận
+        questions = []
+        i = 0
+        while True:
+            q_text = request.form.get(f'question_{i}')
+            if not q_text:
+                break
+            points = request.form.get(f'points_{i}', '10')
+            suggested = request.form.get(f'suggested_{i}', '')
+
+            questions.append({
+                'id': i + 1,
+                'question': q_text,
+                'points': int(points),
+                'suggested_answer': suggested
+            })
+            i += 1
+
+        new_exam = {
+            'id': str(uuid.uuid4()),
+            'title': title,
+            'description': description,
+            'type': 'essay',
+            'teacher_id': session.get('exam_user_id'),
+            'created_at': datetime.now().strftime("%d/%m/%Y %H:%M"),
+            'time_limit': int(time_limit),
+            'subject': subject,
+            'grade': grade,
+            'status': 'active',
+            'essay_questions': questions
+        }
+
+        exams = load_exam_exams()
+        exams.insert(0, new_exam)
+        save_exam_exams(exams)
+
+        flash('Đã tạo đề tự luận!', 'success')
+        return redirect(url_for('teacher_dashboard'))
+
+    return render_template('exam_system/teacher/create_essay.html')
+
+
+@app.route('/exam_system/teacher/view_submissions/<exam_id>')
+def teacher_view_submissions(exam_id):
+    if session.get('exam_user_type') != 'teacher':
+        return redirect(url_for('exam_teacher_login'))
+
+    exam = next((e for e in load_exam_exams() if e['id'] == exam_id), None)
+    if not exam:
+        flash('Không tìm thấy đề!', 'error')
+        return redirect(url_for('teacher_dashboard'))
+
+    submissions = [
+        s for s in load_exam_submissions() if s['exam_id'] == exam_id
+    ]
+    users = load_exam_users()
+
+    # Ghép thông tin học sinh
+    for sub in submissions:
+        student = next(
+            (s for s in users['students'] if s['id'] == sub['student_id']),
+            None)
+        sub['student_name'] = student['full_name'] if student else 'Unknown'
+        sub['student_class'] = student.get('class', '') if student else ''
+
+    return render_template('exam_system/teacher/view_submissions.html',
+                           exam=exam,
+                           submissions=submissions)
+
+
+@app.route('/exam_system/teacher/view_submission/<submission_id>')
+def teacher_view_submission(submission_id):
+    if session.get('exam_user_type') != 'teacher':
+        return redirect(url_for('exam_teacher_login'))
+
+    submission = next(
+        (s for s in load_exam_submissions() if s['id'] == submission_id), None)
+    if not submission:
+        flash('Không tìm thấy bài làm!', 'error')
+        return redirect(url_for('teacher_dashboard'))
+
+    exam = next(
+        (e for e in load_exam_exams() if e['id'] == submission['exam_id']),
+        None)
+    users = load_exam_users()
+    student = next(
+        (s for s in users['students'] if s['id'] == submission['student_id']),
+        None)
+
+    return render_template('exam_system/teacher/view_submission_detail.html',
+                           submission=submission,
+                           exam=exam,
+                           student=student)
+
+
+@app.route('/exam_system/teacher/delete_exam/<exam_id>', methods=['POST'])
+def teacher_delete_exam(exam_id):
+    if session.get('exam_user_type') != 'teacher':
+        return redirect(url_for('exam_teacher_login'))
+
+    exams = load_exam_exams()
+    exams = [e for e in exams if e['id'] != exam_id]
+    save_exam_exams(exams)
+
+    flash('Đã xóa đề kiểm tra!', 'success')
+    return redirect(url_for('teacher_dashboard'))
+
+
+# ---------------- STUDENT ROUTES ----------------
+@app.route('/exam_system/student/dashboard')
+def student_dashboard():
+    if session.get('exam_user_type') != 'student':
+        flash('Vui lòng đăng nhập với tư cách học sinh!', 'error')
+        return redirect(url_for('exam_student_login'))
+
+    lessons = load_exam_lessons()
+    exams = [e for e in load_exam_exams() if e['status'] == 'active']
+
+    return render_template('exam_system/student/dashboard.html',
+                           lessons=lessons,
+                           exams=exams)
+
+
+@app.route('/exam_system/student/view_lesson/<lesson_id>')
+def student_view_lesson(lesson_id):
+    if session.get('exam_user_type') != 'student':
+        return redirect(url_for('exam_student_login'))
+
+    lesson = next((l for l in load_exam_lessons() if l['id'] == lesson_id),
+                  None)
+    if not lesson:
+        flash('Không tìm thấy bài giảng!', 'error')
+        return redirect(url_for('student_dashboard'))
+
+    return render_template('exam_system/student/view_lesson.html',
+                           lesson=lesson)
+
+
+@app.route('/exam_system/student/take_exam/<exam_id>', methods=['GET', 'POST'])
+def student_take_exam(exam_id):
+    if session.get('exam_user_type') != 'student':
+        return redirect(url_for('exam_student_login'))
+
+    exam = next((e for e in load_exam_exams() if e['id'] == exam_id), None)
+    if not exam:
+        flash('Không tìm thấy đề!', 'error')
+        return redirect(url_for('student_dashboard'))
+
+    if request.method == 'POST':
+        student_id = session.get('exam_user_id')
+        time_taken = request.form.get('time_taken', '0')
+
+        submission_id = str(uuid.uuid4())
+
+        if exam['type'] == 'multiple_choice':
+            answers = {}
+            for q in exam['questions']:
+                ans = request.form.get(f"q_{q['id']}")
+                answers[str(q['id'])] = ans
+
+            # Chấm điểm trắc nghiệm
+            correct_count = 0
+            detailed_results = []
+            for q in exam['questions']:
+                student_ans = answers.get(str(q['id']))
+                is_correct = (student_ans == q['correct_answer'])
+                if is_correct:
+                    correct_count += 1
+
+                detailed_results.append({
+                    'question_id': q['id'],
+                    'question': q['question'],
+                    'is_correct': is_correct,
+                    'student_answer': student_ans,
+                    'correct_answer': q['correct_answer'],
+                    'explanation': q.get('explanation', '')
+                })
+
+            score = round((correct_count / len(exam['questions'])) * 10, 2)
+
+            # AI feedback
+            prompt = f"""Học sinh làm đúng {correct_count}/{len(exam['questions'])} câu trắc nghiệm.
+
+Hãy đưa ra:
+1. Nhận xét chung về kết quả
+2. Phân tích điểm mạnh/yếu
+3. Lời khuyên cải thiện
+
+Trả lời ngắn gọn, khuyến khích."""
+
+            try:
+                response = model.generate_content([prompt])
+                ai_feedback = clean_ai_output(response.text)
+            except:
+                ai_feedback = "Không có nhận xét từ AI."
+
+            submission = {
+                'id': submission_id,
+                'exam_id': exam_id,
+                'student_id': student_id,
+                'submitted_at': datetime.now().strftime("%d/%m/%Y %H:%M"),
+                'time_taken': int(time_taken),
+                'answers': answers,
+                'score': score,
+                'ai_feedback': ai_feedback,
+                'detailed_results': detailed_results
+            }
+
+        elif exam['type'] == 'essay':
+            essay_answers = {}
+            for q in exam['essay_questions']:
+                ans = request.form.get(f"essay_{q['id']}", '').strip()
+                essay_answers[str(q['id'])] = ans
+
+            # Chấm điểm tự luận bằng AI
+            total_points = 0
+            detailed_results = []
+
+            for q in exam['essay_questions']:
+                student_ans = essay_answers.get(str(q['id']), '')
+
+                prompt = f"""Đây là câu hỏi tự luận:
+
+Câu hỏi: {q['question']}
+Điểm tối đa: {q['points']}
+Đáp án gợi ý: {q.get('suggested_answer', 'Không có')}
+
+Câu trả lời của học sinh:
+{student_ans}
+
+Hãy chấm điểm (0-{q['points']}) và nhận xét ngắn gọn.
+Format: ĐIỂM: X/{q['points']}
+NHẬN XÉT: ..."""
+
+                try:
+                    response = model.generate_content([prompt])
+                    feedback = clean_ai_output(response.text)
+
+                    # Trích xuất điểm
+                    import re
+                    match = re.search(r'ĐIỂM:\s*(\d+\.?\d*)', feedback)
+                    q_score = float(match.group(1)) if match else 0
+                except:
+                    feedback = "Không chấm được."
+                    q_score = 0
+
+                total_points += q_score
+                detailed_results.append({
+                    'question_id': q['id'],
+                    'question': q['question'],
+                    'student_answer': student_ans,
+                    'points': q['points'],
+                    'score': q_score,
+                    'feedback': feedback
+                })
+
+            max_points = sum(q['points'] for q in exam['essay_questions'])
+            score = round((total_points / max_points) * 10, 2)
+
+            submission = {
+                'id': submission_id,
+                'exam_id': exam_id,
+                'student_id': student_id,
+                'submitted_at': datetime.now().strftime("%d/%m/%Y %H:%M"),
+                'time_taken': int(time_taken),
+                'essay_answers': essay_answers,
+                'score': score,
+                'ai_feedback': f"Tổng điểm: {total_points}/{max_points}",
+                'detailed_results': detailed_results
+            }
+
+        submissions = load_exam_submissions()
+        submissions.insert(0, submission)
+        save_exam_submissions(submissions)
+
+        flash('Đã nộp bài!', 'success')
+        return redirect(
+            url_for('student_view_result', submission_id=submission_id))
+
+    return render_template('exam_system/student/take_exam.html', exam=exam)
+
+
+@app.route('/exam_system/student/view_result/<submission_id>')
+def student_view_result(submission_id):
+    if session.get('exam_user_type') != 'student':
+        return redirect(url_for('exam_student_login'))
+
+    submission = next(
+        (s for s in load_exam_submissions() if s['id'] == submission_id), None)
+    if not submission:
+        flash('Không tìm thấy bài làm!', 'error')
+        return redirect(url_for('student_dashboard'))
+
+    exam = next(
+        (e for e in load_exam_exams() if e['id'] == submission['exam_id']),
+        None)
+
+    return render_template('exam_system/student/view_result.html',
+                           submission=submission,
+                           exam=exam)
+
+
+@app.route('/exam_system/student/my_submissions')
+def student_my_submissions():
+    if session.get('exam_user_type') != 'student':
+        return redirect(url_for('exam_student_login'))
+
+    student_id = session.get('exam_user_id')
+    submissions = [
+        s for s in load_exam_submissions() if s['student_id'] == student_id
+    ]
+
+    exams = load_exam_exams()
+    for sub in submissions:
+        exam = next((e for e in exams if e['id'] == sub['exam_id']), None)
+        sub['exam_title'] = exam['title'] if exam else 'Unknown'
+
+    return render_template('exam_system/student/my_submissions.html',
+                           submissions=submissions)
+
+
+#################
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'bmp', 'webp', 'pdf'}
+
 
 def allowed_file(filename):
     """Kiểm tra file có extension hợp lệ không"""
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
 
 def extract_text_from_pdf(pdf_path):
     """Trích xuất text từ file PDF"""
@@ -57,7 +727,10 @@ def extract_text_from_pdf(pdf_path):
         return text
     except Exception as e:
         return f"Lỗi khi đọc PDF: {str(e)}"
-    
+
+
+####
+### shl
 #################
 def load_class_activities():
     """Load danh sách các phiên sinh hoạt lớp"""
@@ -67,10 +740,12 @@ def load_class_activities():
     except FileNotFoundError:
         return []
 
+
 def save_class_activities(data):
     """Lưu danh sách sinh hoạt lớp"""
     with open(CLASS_ACTIVITY_FILE, 'w', encoding='utf-8') as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
+
 
 @app.route('/class_activity', methods=['GET'])
 def class_activity():
@@ -78,20 +753,21 @@ def class_activity():
     activities = load_class_activities()
     return render_template('class_activity.html', activities=activities)
 
+
 @app.route('/class_activity/new', methods=['GET', 'POST'])
 def new_class_activity():
     """Tạo phiên sinh hoạt mới"""
     if request.method == 'POST':
         week_name = request.form.get('week_name', '').strip()
         description = request.form.get('description', '').strip()
-        
+
         if not week_name:
             flash('Vui lòng nhập tên tuần sinh hoạt!', 'error')
             return redirect(url_for('new_class_activity'))
-        
+
         activity_id = str(uuid.uuid4())
         timestamp = datetime.now().strftime("%d/%m/%Y %H:%M")
-        
+
         new_activity = {
             'id': activity_id,
             'week_name': week_name,
@@ -107,91 +783,203 @@ def new_class_activity():
             },
             'ai_analysis': None
         }
-        
+
         activities = load_class_activities()
         activities.insert(0, new_activity)
         save_class_activities(activities)
-        
+
         flash('Đã tạo phiên sinh hoạt mới!', 'success')
-        return redirect(url_for('class_activity_detail', activity_id=activity_id))
-    
+        return redirect(
+            url_for('class_activity_detail', activity_id=activity_id))
+
     return render_template('new_class_activity.html')
 
+
+###
+def load_chat_messages(activity_id):
+    """Load tin nhắn chat của một phiên sinh hoạt"""
+    try:
+        with open(CLASS_CHAT_FILE, 'r', encoding='utf-8') as f:
+            all_chats = json.load(f)
+            return all_chats.get(activity_id, [])
+    except FileNotFoundError:
+        return []
+
+
+def save_chat_message(activity_id, message_data):
+    """Lưu tin nhắn chat mới"""
+    try:
+        with open(CLASS_CHAT_FILE, 'r', encoding='utf-8') as f:
+            all_chats = json.load(f)
+    except FileNotFoundError:
+        all_chats = {}
+
+    if activity_id not in all_chats:
+        all_chats[activity_id] = []
+
+    all_chats[activity_id].append(message_data)
+
+    with open(CLASS_CHAT_FILE, 'w', encoding='utf-8') as f:
+        json.dump(all_chats, f, ensure_ascii=False, indent=2)
+
+
+@app.route('/class_activity/<activity_id>/chat', methods=['GET'])
+def class_activity_chat(activity_id):
+    """Trang chat ẩn danh của lớp"""
+    activities = load_class_activities()
+    activity = next((a for a in activities if a['id'] == activity_id), None)
+
+    if not activity:
+        flash('Không tìm thấy phiên sinh hoạt!', 'error')
+        return redirect(url_for('class_activity'))
+
+    messages = load_chat_messages(activity_id)
+
+    return render_template('class_activity_chat.html',
+                           activity=activity,
+                           messages=messages)
+
+
+@app.route('/class_activity/<activity_id>/chat/send', methods=['POST'])
+def send_chat_message(activity_id):
+    """Gửi tin nhắn chat"""
+    activities = load_class_activities()
+    activity = next((a for a in activities if a['id'] == activity_id), None)
+
+    if not activity:
+        return jsonify({'success': False, 'error': 'Activity not found'}), 404
+
+    data = request.get_json()
+    message_text = data.get('message', '').strip()
+    nickname = data.get('nickname', '').strip()
+
+    if not message_text:
+        return jsonify({'success': False, 'error': 'Message is empty'}), 400
+
+    if not nickname:
+        nickname = 'Ẩn danh'
+
+    # Tạo message data
+    message_data = {
+        'id': str(uuid.uuid4()),
+        'nickname': nickname,
+        'message': message_text,
+        'timestamp': datetime.now().strftime("%d/%m/%Y %H:%M:%S"),
+        'avatar_color': generate_avatar_color(nickname)
+    }
+
+    save_chat_message(activity_id, message_data)
+
+    return jsonify({'success': True, 'message': message_data})
+
+
+@app.route('/class_activity/<activity_id>/chat/messages', methods=['GET'])
+def get_chat_messages(activity_id):
+    """Lấy danh sách tin nhắn (API cho auto-refresh)"""
+    messages = load_chat_messages(activity_id)
+    return jsonify({'success': True, 'messages': messages})
+
+
+def generate_avatar_color(nickname):
+    """Tạo màu avatar dựa trên nickname"""
+    colors = [
+        '#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8', '#F7DC6F',
+        '#BB8FCE', '#85C1E2', '#F8B500', '#52B788', '#E63946', '#457B9D'
+    ]
+    # Hash nickname để lấy màu cố định cho mỗi nickname
+    hash_value = sum(ord(c) for c in nickname)
+    return colors[hash_value % len(colors)]
+
+
+#####
 @app.route('/class_activity/<activity_id>', methods=['GET', 'POST'])
 def class_activity_detail(activity_id):
     """Chi tiết phiên sinh hoạt - Upload ảnh cho từng tổ"""
     activities = load_class_activities()
     activity = next((a for a in activities if a['id'] == activity_id), None)
-    
+
     if not activity:
         flash('Không tìm thấy phiên sinh hoạt!', 'error')
         return redirect(url_for('class_activity'))
-    
+
     if request.method == 'POST':
         group_name = request.form.get('group_name')
         uploaded_files = request.files.getlist('images')
-        
+
         if not group_name or group_name not in activity['groups']:
             flash('Tổ không hợp lệ!', 'error')
-            return redirect(url_for('class_activity_detail', activity_id=activity_id))
-        
+            return redirect(
+                url_for('class_activity_detail', activity_id=activity_id))
+
         if not uploaded_files or all(f.filename == '' for f in uploaded_files):
             flash('Vui lòng chọn ít nhất 1 ảnh!', 'error')
-            return redirect(url_for('class_activity_detail', activity_id=activity_id))
-        
+            return redirect(
+                url_for('class_activity_detail', activity_id=activity_id))
+
         # Xử lý từng file
         for uploaded_file in uploaded_files:
             if uploaded_file and uploaded_file.filename != '':
                 if not allowed_file(uploaded_file.filename):
                     continue
-                
+
                 # Lưu file
                 file_id = str(uuid.uuid4())
                 filename = f"{file_id}_{secure_filename(uploaded_file.filename)}"
                 file_path = os.path.join(CLASS_ACTIVITY_IMAGES, filename)
                 uploaded_file.save(file_path)
-                
+
                 # Thêm vào group
                 activity['groups'][group_name].append({
-                    'id': file_id,
-                    'filename': filename,
-                    'uploaded_at': datetime.now().strftime("%d/%m/%Y %H:%M")
+                    'id':
+                    file_id,
+                    'filename':
+                    filename,
+                    'uploaded_at':
+                    datetime.now().strftime("%d/%m/%Y %H:%M")
                 })
-        
+
         # Cập nhật activity
         for i, a in enumerate(activities):
             if a['id'] == activity_id:
                 activities[i] = activity
                 break
-        
+
         save_class_activities(activities)
-        
+
         flash(f'Đã upload ảnh cho {group_name}!', 'success')
-        return redirect(url_for('class_activity_detail', activity_id=activity_id))
-    
+        return redirect(
+            url_for('class_activity_detail', activity_id=activity_id))
+
     return render_template('class_activity_detail.html', activity=activity)
+
+
+#####
 #####
 @app.route('/class_activity/<activity_id>/analyze', methods=['POST'])
 def analyze_class_activity(activity_id):
     """AI phân tích tất cả báo cáo của các tổ VÀ tạo HTML infographic"""
     activities = load_class_activities()
     activity = next((a for a in activities if a['id'] == activity_id), None)
-    
+
     if not activity:
         flash('Không tìm thấy phiên sinh hoạt!', 'error')
         return redirect(url_for('class_activity'))
-    
+
     # Kiểm tra xem có đủ dữ liệu không
     total_images = sum(len(images) for images in activity['groups'].values())
     if total_images == 0:
-        flash('Chưa có ảnh nào được upload. Vui lòng upload ảnh trước khi phân tích!', 'error')
-        return redirect(url_for('class_activity_detail', activity_id=activity_id))
-    
+        flash(
+            'Chưa có ảnh nào được upload. Vui lòng upload ảnh trước khi phân tích!',
+            'error')
+        return redirect(
+            url_for('class_activity_detail', activity_id=activity_id))
+
     try:
         # ========================================
         # BƯỚC 1: PHÂN TÍCH TEXT TỪ ẢNH CÁC TỔ
         # ========================================
-        analysis_prompt = [f"""Bạn là giáo viên chủ nhiệm đang đánh giá sinh hoạt lớp tuần này.
+        analysis_prompt = [
+            f"""Bạn là giáo viên chủ nhiệm đang đánh giá sinh hoạt lớp tuần này.
 
 THÔNG TIN TUẦN SINH HOẠT:
 - Tên: {activity['week_name']}
@@ -205,14 +993,25 @@ NHIỆM VỤ:
 5. Trích xuất THỜI KHÓA BIỂU từ ảnh (nếu có)
 6. Đánh giá các tiêu chí: Ký luật, Nội quy, Chuẩn bị bài, Vệ sinh
 7. Đề xuất phương hướng tuần mới CỤ THỂ (4-5 mục tiêu)
+8. Khen cá nhân tập thể có điểm số thi đua cao tặng huy hiệu thi đua tuần cho cá nhân và tập thể tổ đó
+**LƯU Ý VỀ ĐỒNG PHỤC:**
+- CHỈ sử dụng các lựa chọn SAU ĐÂY:
+  + "Đồng phục áo trắng, quần tối màu"
+  + "Đồng phục thể dục"
+  + "Áo khoác mùa đông" (có thể kết hợp với các loại trên)
+- KHÔNG được viết "váy",hay bất kỳ từ ngữ nào khác
+- VÍ DỤ ĐÚNG: "Đồng phục áo trắng, quần tối màu, áo khoác mùa đông"
+- VÍ DỤ SAI: "Áo trắng, váy tối màu"
 
 ĐỊNH DẠNG PHẢN HỒI (JSON) - BẮT BUỘC:
 {{
   "tong_quan": "Tổng quan về tuần học...",
   "thoi_khoa_bieu": [
-    {{"thu": "Thứ 2", "tiet_1": "Toán", "tiet_2": "Văn", "tiet_3": "Anh", "tiet_4": "Hóa", "tiet_5": "Thể dục", "do_dong_phuc": "Áo trắng"}},
-    {{"thu": "Thứ 3", "tiet_1": "Lý", "tiet_2": "Sinh", "tiet_3": "Sử", "tiet_4": "Địa", "tiet_5": "GDCD", "do_dong_phuc": "Quần tây"}},
-    {{"thu": "Thứ 4", "tiet_1": "Toán", "tiet_2": "Văn", "tiet_3": "Anh", "tiet_4": "Vật lý", "tiet_5": "TD", "do_dong_phuc": "Áo trắng"}}
+    {{"thu": "Thứ 2", "tiet_1": "Toán", "tiet_2": "Văn", "tiet_3": "Anh", "tiet_4": "Hóa", "tiet_5": "Thể dục", "do_dong_phuc": "Đồng phục áo trắng, quần tối màu"}},
+    {{"thu": "Thứ 3", "tiet_1": "Lý", "tiet_2": "Sinh", "tiet_3": "Sử", "tiet_4": "Địa", "tiet_5": "GDCD", "do_dong_phuc": "Đồng phục thể dục"}},
+    {{"thu": "Thứ 4", "tiet_1": "Toán", "tiet_2": "Văn", "tiet_3": "Anh", "tiet_4": "Vật lý", "tiet_5": "TD", "do_dong_phuc": "Đồng phục áo trắng, quần tối màu, áo khoác mùa đông"}},
+    {{"thu": "Thứ 5", "tiet_1": "Toán", "tiet_2": "Văn", "tiet_3": "Anh", "tiet_4": "Hóa", "tiet_5": "Sinh", "do_dong_phuc": "Đồng phục thể dục, áo khoác mùa đông"}},
+    {{"thu": "Thứ 6", "tiet_1": "Toán", "tiet_2": "Văn", "tiet_3": "Anh", "tiet_4": "Sử", "tiet_5": "TD", "do_dong_phuc": "Đồng phục áo trắng, quần tối màu"}}
   ],
   "danh_gia_chi_tiet": {{
     "to_1": {{"diem_manh": "Học tập tốt", "diem_yeu": "Đi trễ", "xep_loai": "Tốt", "diem": 9}},
@@ -230,6 +1029,7 @@ NHIỆM VỤ:
     "Ôn tập chủ động, chuẩn bị bài trước khi đến lớp",
     "Nghiêm túc tập trung, tham gia phát biểu tích cực",
     "Hoàn thành bài tập đầy đủ, nộp đúng hạn",
+    "Khen những học sinh đạt điểm cao tặng huy hiệu cho học sinh đó",
     "Giữ gìn vệ sinh, không xả rác bừa bãi"
   ]
 }}
@@ -237,56 +1037,76 @@ NHIỆM VỤ:
 CHỈ TRẢ VỀ JSON, KHÔNG THÊM TEXT KHÁC.
 
 Dưới đây là báo cáo các tổ:
-"""]
-        
+"""
+        ]
+
         # Thêm ảnh của từng tổ
         for group_name, images in activity['groups'].items():
             if images:
                 group_display = {
-                    'to_1': 'TỔ 1', 'to_2': 'TỔ 2', 
-                    'to_3': 'TỔ 3', 'to_4': 'TỔ 4',
+                    'to_1': 'TỔ 1',
+                    'to_2': 'TỔ 2',
+                    'to_3': 'TỔ 3',
+                    'to_4': 'TỔ 4',
                     'giao_vien': 'GIÁO VIÊN'
                 }
-                analysis_prompt.append(f"\n--- BÁO CÁO {group_display[group_name]} ---")
-                
+                analysis_prompt.append(
+                    f"\n--- BÁO CÁO {group_display[group_name]} ---")
+
                 for img_data in images:
-                    img_path = os.path.join(CLASS_ACTIVITY_IMAGES, img_data['filename'])
+                    img_path = os.path.join(CLASS_ACTIVITY_IMAGES,
+                                            img_data['filename'])
                     if os.path.exists(img_path):
                         img = Image.open(img_path)
                         analysis_prompt.append(img)
-        
+
         # Gọi Gemini phân tích
         analysis_response = model.generate_content(analysis_prompt)
         ai_analysis = clean_ai_output(analysis_response.text)
-        
+
         # Parse JSON
         try:
             # Loại bỏ markdown code blocks
-            ai_analysis_clean = ai_analysis.replace('```json', '').replace('```', '').strip()
+            ai_analysis_clean = ai_analysis.replace('```json',
+                                                    '').replace('```',
+                                                                '').strip()
             analysis_data = json.loads(ai_analysis_clean)
         except Exception as parse_error:
             print(f"JSON Parse Error: {parse_error}")
             print(f"AI Response: {ai_analysis}")
             # Tạo data mẫu nếu parse thất bại
             analysis_data = {
-                "tong_quan": "Không thể phân tích được dữ liệu từ ảnh.",
-                "thoi_khoa_bieu": [
-                    {"thu": "Thứ 2", "tiet_1": "Toán", "tiet_2": "Văn", "tiet_3": "Anh", "tiet_4": "Hóa", "tiet_5": "TD"},
-                    {"thu": "Thứ 3", "tiet_1": "Lý", "tiet_2": "Sinh", "tiet_3": "Sử", "tiet_4": "Địa", "tiet_5": "GDCD"}
-                ],
-                "nhan_xet_tuan_qua": [
-                    {"tieu_chi": "Học tập", "danh_gia": "Tốt", "xep_loai": "Khá", "icon": "✅"}
-                ],
-                "phuong_huong_tuan_moi": [
-                    "Ôn tập chủ động",
-                    "Tham gia phát biểu"
-                ]
+                "tong_quan":
+                "Không thể phân tích được dữ liệu từ ảnh.",
+                "thoi_khoa_bieu": [{
+                    "thu": "Thứ 2",
+                    "tiet_1": "Toán",
+                    "tiet_2": "Văn",
+                    "tiet_3": "Anh",
+                    "tiet_4": "Hóa",
+                    "tiet_5": "TD"
+                }, {
+                    "thu": "Thứ 3",
+                    "tiet_1": "Lý",
+                    "tiet_2": "Sinh",
+                    "tiet_3": "Sử",
+                    "tiet_4": "Địa",
+                    "tiet_5": "GDCD"
+                }],
+                "nhan_xet_tuan_qua": [{
+                    "tieu_chi": "Học tập",
+                    "danh_gia": "Tốt",
+                    "xep_loai": "Khá",
+                    "icon": "✅"
+                }],
+                "phuong_huong_tuan_moi":
+                ["Ôn tập chủ động", "Tham gia phát biểu"]
             }
-        
+
         # ========================================
         # BƯỚC 2: TẠO HTML INFOGRAPHIC ĐẦY ĐỦ
         # ========================================
-        
+
         # Build thời khóa biểu HTML
         tkb_html = ""
         for day_info in analysis_data.get('thoi_khoa_bieu', [])[:5]:
@@ -299,7 +1119,7 @@ Dưới đây là báo cáo các tổ:
             do_dp = day_info.get('do_dong_phuc', '')
             if do_dp:
                 tkb_html += f"<tr><td colspan='3' style='background:#e3f2fd; text-align:center; padding:8px;'>👔 {do_dp}</td></tr>"
-        
+
         # Build nhận xét tuần qua
         nhan_xet_html = ""
         for item in analysis_data.get('nhan_xet_tuan_qua', [])[:6]:
@@ -307,7 +1127,7 @@ Dưới đây là báo cáo các tổ:
             tieu_chi = item.get('tieu_chi', '')
             danh_gia = item.get('danh_gia', '')
             xep_loai = item.get('xep_loai', '')
-            
+
             nhan_xet_html += f"""
             <div class="eval-row">
                 <div class="eval-icon">{icon}</div>
@@ -318,7 +1138,7 @@ Dưới đây là báo cáo các tổ:
                 </div>
             </div>
             """
-        
+
         # Build phương hướng tuần mới
         phuong_huong_html = ""
         for item in analysis_data.get('phuong_huong_tuan_moi', [])[:5]:
@@ -328,9 +1148,9 @@ Dưới đây là báo cáo các tổ:
                 <div class="goal-text">{item}</div>
             </div>
             """
-        
+
         # HTML PROMPT ĐẦY ĐỦ
-        html_prompt = f"""Tạo file HTML HOÀN CHỈNH cho infographic kế hoạch tuần học lớp 8A4 - THCS Cẩm Phả.
+        html_prompt = f"""Tạo file HTML HOÀN CHỈNH cho infographic kế hoạch tuần học lớp 8A9 - THCS Cẩm Phả.
 
 YÊU CẦU BẮT BUỘC:
 - File HTML hoàn chỉnh: <!DOCTYPE html>, <html lang="vi">, <head> với <meta charset="UTF-8">
@@ -351,13 +1171,13 @@ CẤU TRÚC CHÍNH:
   <div class="header" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); padding:30px; position:relative;">
     <div class="logo" style="position:absolute; top:20px; left:30px; background:white; width:80px; height:80px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:bold; color:#3a8fd9;">THCS<br>CẨM PHẢ</div>
     <span style="position:absolute; top:20px; left:120px; font-size:60px;">☀️</span>
-    <h1 style="text-align:center; color:white; font-size:48px; text-shadow: 3px 3px 6px rgba(0,0,0,0.3); margin-bottom:10px;">KẾ HOẠCH TUẦN HỌC LỚP 8A4</h1>
+    <h1 style="text-align:center; color:white; font-size:48px; text-shadow: 3px 3px 6px rgba(0,0,0,0.3); margin-bottom:10px;">KẾ HOẠCH TUẦN HỌC LỚP 8A9</h1>
     <div style="text-align:center; color:white; font-size:32px;">THCS CẨM PHẢ - TUẤN HẠC</div>
     <div style="text-align:center; color:white; font-size:24px; margin-top:10px;">{activity['week_name']}</div>
   </div>
 
   <div class="content" style="display:grid; grid-template-columns:1fr 1fr; gap:30px; padding:30px;">
-    
+
     <!-- CỘT TRÁI: THỜI KHÓA BIỂU -->
     <div class="schedule-box" style="background:white; border-radius:15px; padding:20px; box-shadow:0 8px 20px rgba(0,0,0,0.15); border:4px solid #4facfe;">
       <div class="title" style="background:linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color:white; padding:15px; border-radius:10px; text-align:center; font-size:20px; font-weight:bold; margin-bottom:20px;">📅 THỜI KHÓA BIỂU</div>
@@ -421,22 +1241,24 @@ CHỈ TRẢ VỀ CODE HTML HOÀN CHỈNH, KHÔNG GIẢI THÍCH."""
         # Gọi Gemini tạo HTML
         html_response = model.generate_content([html_prompt])
         html_content = clean_ai_output(html_response.text)
-        
+
         # Loại bỏ markdown code blocks
-        html_content = html_content.replace('```html', '').replace('```', '').strip()
-        
+        html_content = html_content.replace('```html', '').replace('```',
+                                                                   '').strip()
+
         # Lưu file HTML
         infographic_dir = "static/class_activity_infographics"
         os.makedirs(infographic_dir, exist_ok=True)
-        
+
         infographic_filename = f"{activity_id}_infographic.html"
         infographic_path = os.path.join(infographic_dir, infographic_filename)
-        
+
         with open(infographic_path, 'w', encoding='utf-8') as f:
             f.write(html_content)
-        
-        activity['infographic_html'] = f"/static/class_activity_infographics/{infographic_filename}"
-        
+
+        activity[
+            'infographic_html'] = f"/static/class_activity_infographics/{infographic_filename}"
+
         # ========================================
         # LƯU KẾT QUẢ
         # ========================================
@@ -444,78 +1266,85 @@ CHỈ TRẢ VỀ CODE HTML HOÀN CHỈNH, KHÔNG GIẢI THÍCH."""
         activity['analysis_data'] = analysis_data
         activity['status'] = 'analyzed'
         activity['analyzed_at'] = datetime.now().strftime("%d/%m/%Y %H:%M")
-        
+
         for i, a in enumerate(activities):
             if a['id'] == activity_id:
                 activities[i] = activity
                 break
-        
+
         save_class_activities(activities)
-        
+
         flash('Đã phân tích và tạo infographic thành công!', 'success')
-        
+
     except Exception as e:
         flash(f'Lỗi khi phân tích: {str(e)}', 'error')
         import traceback
         print(traceback.format_exc())
-    
+
     return redirect(url_for('class_activity_result', activity_id=activity_id))
+
+
     #################
 @app.route('/class_activity/<activity_id>/result')
 def class_activity_result(activity_id):
     """Xem kết quả phân tích"""
     activities = load_class_activities()
     activity = next((a for a in activities if a['id'] == activity_id), None)
-    
+
     if not activity:
         flash('Không tìm thấy phiên sinh hoạt!', 'error')
         return redirect(url_for('class_activity'))
-    
+
     if activity['status'] != 'analyzed' or not activity.get('ai_analysis'):
         flash('Phiên này chưa được phân tích!', 'error')
-        return redirect(url_for('class_activity_detail', activity_id=activity_id))
-    
+        return redirect(
+            url_for('class_activity_detail', activity_id=activity_id))
+
     return render_template('class_activity_result.html', activity=activity)
+
 
 @app.route('/class_activity/<activity_id>/delete', methods=['POST'])
 def delete_class_activity(activity_id):
     """Xóa phiên sinh hoạt"""
     activities = load_class_activities()
     activity = next((a for a in activities if a['id'] == activity_id), None)
-    
+
     if activity:
         # Xóa các file ảnh
         for group_name, images in activity['groups'].items():
             for img_data in images:
-                img_path = os.path.join(CLASS_ACTIVITY_IMAGES, img_data['filename'])
+                img_path = os.path.join(CLASS_ACTIVITY_IMAGES,
+                                        img_data['filename'])
                 try:
                     if os.path.exists(img_path):
                         os.remove(img_path)
                 except:
                     pass
-        
+
         # Xóa activity
         activities = [a for a in activities if a['id'] != activity_id]
         save_class_activities(activities)
-        
-        flash('Đã xóa phiên sinh hoạt!', 'success') 
-    
+
+        flash('Đã xóa phiên sinh hoạt!', 'success')
+
     return redirect(url_for('class_activity'))
+
+
 ###############
 ###
-#  
+#
 # Route cho chatbot
 @app.route('/chatbot', methods=['GET', 'POST'])
 def chatbot():
     if 'chat_history' not in session:
         session['chat_history'] = []
-    
+
     response_text = None
-    
+
     if request.method == 'POST':
         user_message = request.form.get('message', '').strip()
         uploaded_file = request.files.get('file')
-        
+
         # Đọc dữ liệu từ data.txt
         knowledge_base = ""
         try:
@@ -523,7 +1352,7 @@ def chatbot():
                 knowledge_base = f.read()
         except FileNotFoundError:
             knowledge_base = "Không tìm thấy file data.txt"
-        
+
         # Xây dựng prompt chi tiết cho AI
         system_prompt = f"""Bạn là trợ lý AI thông minh hỗ trợ học sinh trong học tập.
 
@@ -562,11 +1391,11 @@ CÁCH TRẢ LỜI:
    - "Để giải bài này, em cần biết công thức/định lý..."
    - "Hướng tiếp cận: Bước 1... Bước 2... Em thử làm xem"
    - "Gợi ý: Em hãy chú ý đến... và áp dụng..."
-   
+
 3. Với bài đã làm:
    - "Câu 1: Em làm đúng/sai. Giải thích:..."
    - "Câu 2: Đáp án của em là... nhưng đáp án đúng là... vì..."
-   
+
 4. Với văn/ngữ văn:
    - Gợi ý cách phân tích tác phẩm, nhân vật
    - Hướng dẫn cấu trúc bài văn
@@ -590,12 +1419,13 @@ Hãy ưu tiên sử dụng thông tin từ KIẾN THỨC CƠ SỞ khi trả lờ
             # Xử lý nếu có file đính kèm
             if uploaded_file and uploaded_file.filename != '':
                 file_ext = uploaded_file.filename.rsplit('.', 1)[1].lower()
-                
+
                 # Lưu file tạm
                 temp_filename = f"temp_{uuid.uuid4()}_{secure_filename(uploaded_file.filename)}"
-                temp_path = os.path.join(app.config['UPLOAD_FOLDER'], temp_filename)
+                temp_path = os.path.join(app.config['UPLOAD_FOLDER'],
+                                         temp_filename)
                 uploaded_file.save(temp_path)
-                
+
                 # Xử lý theo loại file
                 if file_ext == 'pdf':
                     # Đọc text từ PDF
@@ -603,23 +1433,23 @@ Hãy ưu tiên sử dụng thông tin từ KIẾN THỨC CƠ SỞ khi trả lờ
                     full_prompt = f"{system_prompt}\n\nHọc sinh gửi file PDF với nội dung:\n{pdf_text}\n\nCâu hỏi: {user_message if user_message else 'Hãy phân tích nội dung file này và hướng dẫn cách làm'}"
                     response = model.generate_content([full_prompt])
                     response_text = response.text
-                    
+
                 elif file_ext in ['png', 'jpg', 'jpeg', 'gif', 'bmp', 'webp']:
                     # Đọc ảnh
                     img = Image.open(temp_path)
                     full_prompt = f"{system_prompt}\n\nHọc sinh gửi ảnh bài tập/đề thi.\n\nQUAN TRỌNG: Hãy kiểm tra kỹ xem học sinh đã làm bài chưa (có đánh dấu, khoanh tròn, ghi đáp án không).\n- Nếu ĐÃ LÀM: Chấm bài, chỉ ra đúng/sai và giải thích.\n- Nếu CHƯA LÀM: CHỈ hướng dẫn phương pháp, KHÔNG cho đáp án.\n\nCâu hỏi thêm: {user_message if user_message else 'Hãy phân tích và hướng dẫn em'}"
                     response = model.generate_content([img, full_prompt])
                     response_text = response.text
-                    
+
                 else:
                     response_text = "Định dạng file không được hỗ trợ. Chỉ chấp nhận ảnh (.png, .jpg, .jpeg) hoặc PDF."
-                
+
                 # Xóa file tạm
                 try:
                     os.remove(temp_path)
                 except:
                     pass
-                    
+
             else:
                 # Chỉ có text message
                 if user_message:
@@ -628,32 +1458,39 @@ Hãy ưu tiên sử dụng thông tin từ KIẾN THỨC CƠ SỞ khi trả lờ
                     response_text = response.text
                 else:
                     response_text = "Vui lòng nhập câu hỏi hoặc gửi file."
-            
+
             # Làm sạch output
             response_text = clean_ai_output(response_text)
-            
+
             # Lưu vào lịch sử chat
             session['chat_history'].append({
-                'user': user_message if user_message else '[Đã gửi file]',
-                'bot': response_text,
-                'timestamp': datetime.now().strftime("%H:%M")
+                'user':
+                user_message if user_message else '[Đã gửi file]',
+                'bot':
+                response_text,
+                'timestamp':
+                datetime.now().strftime("%H:%M")
             })
             session.modified = True
-            
+
         except Exception as e:
             response_text = f"Lỗi: {str(e)}"
-    
-    return render_template('chatbot.html', 
-                         chat_history=session.get('chat_history', []),
-                         response=response_text)
+
+    return render_template('chatbot.html',
+                           chat_history=session.get('chat_history', []),
+                           response=response_text)
+
 
 @app.route('/clear_chat', methods=['POST'])
 def clear_chat():
     session['chat_history'] = []
     session.modified = True
     return redirect(url_for('chatbot'))
+
+
 ####
 # Thêm vào file Flask
+
 
 # Route đăng nhập cho chuyên gia
 @app.route('/expert_login', methods=['GET', 'POST'])
@@ -661,17 +1498,19 @@ def expert_login():
     if request.method == 'POST':
         username = request.form.get('username')
         password = request.form.get('password')
-        
+
         # Đọc danh sách chuyên gia từ file
         try:
             with open('experts.json', 'r', encoding='utf-8') as f:
                 experts = json.load(f)
         except FileNotFoundError:
             experts = []
-        
+
         # Kiểm tra đăng nhập
-        expert = next((e for e in experts if e['username'] == username and e['password'] == password), None)
-        
+        expert = next(
+            (e for e in experts
+             if e['username'] == username and e['password'] == password), None)
+
         if expert:
             session['expert_logged_in'] = True
             session['expert_name'] = expert['name']
@@ -681,8 +1520,9 @@ def expert_login():
             return redirect(url_for('health_support'))
         else:
             flash('Sai tên đăng nhập hoặc mật khẩu!', 'error')
-    
+
     return render_template('expert_login.html')
+
 
 @app.route('/expert_logout')
 def expert_logout():
@@ -693,6 +1533,7 @@ def expert_logout():
     flash('Đã đăng xuất!', 'info')
     return redirect(url_for('health_support'))
 
+
 # Route trang tư vấn sức khỏe
 @app.route('/health_support', methods=['GET', 'POST'])
 def health_support():
@@ -702,22 +1543,23 @@ def health_support():
             questions = json.load(f)
     except FileNotFoundError:
         questions = []
-    
+
     ai_response = None
-    
+
     if request.method == 'POST':
         student_name = request.form.get('student_name', '').strip()
         question = request.form.get('question', '').strip()
         consult_type = request.form.get('consult_type')  # 'ai' hoặc 'expert'
-        is_anonymous = request.form.get('is_anonymous') == 'on'  # Checkbox ẩn danh
-        
+        is_anonymous = request.form.get(
+            'is_anonymous') == 'on'  # Checkbox ẩn danh
+
         if not student_name or not question:
             flash('Vui lòng nhập đầy đủ thông tin!', 'error')
             return redirect(url_for('health_support'))
-        
+
         question_id = str(uuid.uuid4())
         timestamp = datetime.now().strftime("%d/%m/%Y %H:%M")
-        
+
         new_question = {
             'id': question_id,
             'student_name': student_name,
@@ -729,7 +1571,7 @@ def health_support():
             'status': 'pending',  # pending, answered
             'is_anonymous': is_anonymous  # Thêm trường ẩn danh
         }
-        
+
         # Nếu chọn AI tư vấn
         if consult_type == 'ai':
             try:
@@ -740,7 +1582,7 @@ def health_support():
                         health_knowledge = f.read()
                 except FileNotFoundError:
                     health_knowledge = "Không có dữ liệu sức khỏe."
-                
+
                 prompt = f"""Bạn là chuyên gia tư vấn sức khỏe cho học sinh.
 
 KIẾN THỨC VỀ SỨC KHỎE:
@@ -767,27 +1609,27 @@ Hãy tư vấn chi tiết, có lời khuyên cụ thể."""
                 ai_response = clean_ai_output(response.text)
                 new_question['ai_response'] = ai_response
                 new_question['status'] = 'answered'
-                
+
             except Exception as e:
                 ai_response = f"❌ Lỗi: {str(e)}"
                 new_question['ai_response'] = ai_response
-        
+
         # Lưu câu hỏi
         questions.insert(0, new_question)  # Thêm vào đầu danh sách
-        
+
         # Giữ tối đa 100 câu hỏi
         if len(questions) > 100:
             questions = questions[:100]
-        
+
         with open('health_questions.json', 'w', encoding='utf-8') as f:
             json.dump(questions, f, ensure_ascii=False, indent=2)
-        
+
         flash('Câu hỏi đã được gửi!', 'success')
         return redirect(url_for('health_support'))
-    
+
     # Kiểm tra xem user có phải chuyên gia không
     is_expert = session.get('expert_logged_in', False)
-    
+
     # Lọc câu hỏi hiển thị theo quyền
     display_questions = []
     for q in questions:
@@ -798,19 +1640,25 @@ Hãy tư vấn chi tiết, có lời khuyên cụ thể."""
                 display_questions.append(q)
             else:
                 # Người khác chỉ thấy câu hỏi đã được trả lời và ẩn thông tin
-                if q['status'] == 'answered' and (q.get('ai_response') or q.get('expert_responses')):
+                if q['status'] == 'answered' and (q.get('ai_response') or
+                                                  q.get('expert_responses')):
                     hidden_q = q.copy()
                     hidden_q['student_name'] = 'Ẩn danh'
-                    hidden_q['question'] = '[Câu hỏi riêng tư - chỉ chuyên gia xem được]'
+                    hidden_q[
+                        'question'] = '[Câu hỏi riêng tư - chỉ chuyên gia xem được]'
                     display_questions.append(hidden_q)
         else:
             # Câu hỏi công khai - tất cả đều thấy
             display_questions.append(q)
-    
-    return render_template('health_support.html', 
-                         questions=display_questions, 
-                         is_expert=is_expert,
-                         expert_name=session.get('expert_name'))
+
+    return render_template('health_support.html',
+                           questions=display_questions,
+                           is_expert=is_expert,
+                           expert_name=session.get('expert_name'))
+
+
+#######################
+
 
 # Route chuyên gia trả lời
 @app.route('/expert_answer/<question_id>', methods=['POST'])
@@ -818,22 +1666,22 @@ def expert_answer(question_id):
     if not session.get('expert_logged_in'):
         flash('Bạn cần đăng nhập với tư cách chuyên gia!', 'error')
         return redirect(url_for('expert_login'))
-    
+
     answer = request.form.get('answer', '').strip()
-    
+
     if not answer:
         flash('Vui lòng nhập câu trả lời!', 'error')
         return redirect(url_for('health_support'))
-    
+
     try:
         with open('health_questions.json', 'r', encoding='utf-8') as f:
             questions = json.load(f)
     except FileNotFoundError:
         questions = []
-    
+
     # Tìm câu hỏi
     question = next((q for q in questions if q['id'] == question_id), None)
-    
+
     if question:
         expert_response = {
             'expert_name': session.get('expert_name'),
@@ -841,20 +1689,22 @@ def expert_answer(question_id):
             'answer': answer,
             'timestamp': datetime.now().strftime("%d/%m/%Y %H:%M")
         }
-        
+
         question['expert_responses'].append(expert_response)
         question['status'] = 'answered'
-        
+
         with open('health_questions.json', 'w', encoding='utf-8') as f:
             json.dump(questions, f, ensure_ascii=False, indent=2)
-        
+
         flash('Đã gửi câu trả lời!', 'success')
     else:
         flash('Không tìm thấy câu hỏi!', 'error')
-    
+
     return redirect(url_for('health_support'))
 
+
 #####
+
 
 def generate_feedback(text):
     """Tạo feedback từ text bằng AI"""
@@ -864,6 +1714,7 @@ def generate_feedback(text):
         return response.text
     except Exception as e:
         return f"❌ Lỗi khi tạo feedback: {str(e)}"
+
 
 def generate_score_feedback(text):
     """Tạo feedback chấm điểm từ text bằng AI"""
@@ -884,6 +1735,7 @@ Sau đó, tổng kết điểm trung bình và đưa ra nhận xét ngắn gọn
     except Exception as e:
         return f"❌ Lỗi khi chấm điểm: {str(e)}"
 
+
 def extract_average_from_feedback(feedback: str):
     """
     Thử tìm số điểm trung bình trong chuỗi feedback của AI.
@@ -899,16 +1751,21 @@ def extract_average_from_feedback(feedback: str):
         except:
             return None
     return None
+
+
 ###########
+
 
 ###
 @app.route("/")
 def home():
     return render_template("index.html")
 
+
 @app.route("/enter_nickname")
 def enter_nickname():
     return render_template("nickname.html")
+
 
 @app.route("/start_game", methods=["POST"])
 def start_game():
@@ -918,11 +1775,13 @@ def start_game():
     session["bai"] = bai
     return redirect("/game")
 
+
 @app.route("/game")
 def game():
     if "nickname" not in session or "bai" not in session:
         return redirect("/enter_nickname")
     return render_template("game.html")
+
 
 @app.route("/get_questions")
 def get_questions():
@@ -934,6 +1793,7 @@ def get_questions():
     for q in questions:
         random.shuffle(q["options"])
     return jsonify(questions[:20])
+
 
 @app.route("/submit_score", methods=["POST"])
 def submit_score():
@@ -954,7 +1814,9 @@ def submit_score():
         scores = json.load(f)
         now = datetime.now().strftime("%d/%m/%Y %H:%M")
 
-        existing = next((s for s in scores if s["nickname"] == nickname and s.get("bai") == bai), None)
+        existing = next((s for s in scores
+                         if s["nickname"] == nickname and s.get("bai") == bai),
+                        None)
 
         if existing:
             if score > existing["score"]:
@@ -980,6 +1842,7 @@ def submit_score():
 
     return jsonify({"status": "ok"})
 
+
 @app.route("/leaderboard")
 def leaderboard():
     bai = session.get("bai")
@@ -998,10 +1861,12 @@ def leaderboard():
 
     return render_template("leaderboard.html", players=top5, bai=bai)
 
+
 @app.route("/logout")
 def logout():
     session.clear()
     return redirect("/enter_nickname")
+
 
 # Đường dẫn file dữ liệu
 DATA_FOLDER = 'data'
@@ -1010,10 +1875,12 @@ PROJECTS_FILE = os.path.join(DATA_FOLDER, 'projects.json')
 PROJECT_IMAGES_FILE = os.path.join(DATA_FOLDER, 'project_images.json')
 GENERAL_IMAGES_FILE = os.path.join(DATA_FOLDER, 'data.json')
 
+
 def load_exam(de_id):
     with open(EXAM_FILE, 'r', encoding='utf-8') as f:
         data = json.load(f)
     return data.get(de_id)
+
 
 def load_projects():
     with open(PROJECTS_FILE, 'r', encoding='utf-8') as f:
@@ -1022,11 +1889,12 @@ def load_projects():
     if not any(p["id"] == "general" for p in projects):
         projects.append({
             "id": "general",
-            "title": "Bài làm không phân loại",
-            "description": "Dành cho các bài làm không gắn với đề cụ thể."
+            "title": "Bài tập nhóm",
+            "description": "Các nhóm làm bài và nộp tại đây."
         })
 
     return projects
+
 
 def load_project_images():
     try:
@@ -1035,9 +1903,11 @@ def load_project_images():
     except:
         return {}
 
+
 def save_project_images(data):
     with open(PROJECT_IMAGES_FILE, 'w', encoding='utf-8') as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
+
 
 def load_general_images():
     try:
@@ -1046,9 +1916,11 @@ def load_general_images():
     except:
         return []
 
+
 def save_general_images(data):
     with open(GENERAL_IMAGES_FILE, 'w', encoding='utf-8') as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
+
 
 @app.route('/exam/<de_id>')
 def exam(de_id):
@@ -1057,10 +1929,12 @@ def exam(de_id):
         return "Không tìm thấy đề thi."
     return render_template('exam.html', questions=questions, de_id=de_id)
 
+
 @app.route('/projects')
 def projects():
     project_list = load_projects()
     return render_template('projects.html', projects=project_list)
+
 
 @app.route('/submit/<de_id>', methods=['GET', 'POST'])
 def submit(de_id):
@@ -1080,7 +1954,8 @@ def submit(de_id):
         user_answer = request.form.get(f"mc_{i}")
         correct = q["answer"]
         total_questions += 1
-        if user_answer and user_answer.strip().lower() == correct.strip().lower():
+        if user_answer and user_answer.strip().lower() == correct.strip(
+        ).lower():
             correct_count += 1
             results.append({"status": "Đúng", "note": ""})
         else:
@@ -1101,7 +1976,6 @@ def submit(de_id):
                 results.append({"status": "Sai", "note": msg})
                 feedback.append(msg)
 
-    
     detailed_errors = "\n".join(feedback)
 
     prompt = f"""Học sinh làm đúng {correct_count} / {total_questions} câu.
@@ -1152,13 +2026,14 @@ Trả lời bằng tiếng Việt, thân thiện."""
         ai_feedback = response.text
     except Exception as e:
         ai_feedback = f"❌ Lỗi: {str(e)}"
-    
-    return render_template('result.html', 
-                         score=correct_count,
-                         feedback=feedback,
-                         ai_feedback=ai_feedback,
-                         total_questions=total_questions,
-                         results=results)
+
+    return render_template('result.html',
+                           score=correct_count,
+                           feedback=feedback,
+                           ai_feedback=ai_feedback,
+                           total_questions=total_questions,
+                           results=results)
+
 
 @app.route('/project/<project_id>', methods=['GET', 'POST'])
 def project(project_id):
@@ -1177,12 +2052,10 @@ def project(project_id):
         note = request.form.get('note', '').strip()
 
         if not image or image.filename == '' or not group_name:
-            return render_template(
-                'project.html',
-                project=project_info,
-                images=images,
-                feedback="❌ Thiếu ảnh hoặc tên nhóm."
-            )
+            return render_template('project.html',
+                                   project=project_info,
+                                   images=images,
+                                   feedback="❌ Thiếu ảnh hoặc tên nhóm.")
 
         image_id = str(uuid.uuid4())
         filename = f"{image_id}_{image.filename}"
@@ -1212,12 +2085,11 @@ def project(project_id):
         all_images[project_id] = images
         save_project_images(all_images)
 
-    return render_template(
-        'project.html',
-        project=project_info,
-        images=images,
-        feedback=ai_feedback
-    )
+    return render_template('project.html',
+                           project=project_info,
+                           images=images,
+                           feedback=ai_feedback)
+
 
 @app.route('/comment/<project_id>/<image_id>', methods=['POST'])
 def comment(project_id, image_id):
@@ -1245,16 +2117,17 @@ def comment(project_id, image_id):
         flash("Đề bài không tồn tại.")
         return redirect(url_for('home'))
 
-    target_image = next((img for img in images if img.get("id") == image_id), None)
+    target_image = next((img for img in images if img.get("id") == image_id),
+                        None)
 
     if target_image is None:
         flash("Không tìm thấy ảnh để bình luận.")
         return redirect(url_for('project', project_id=project_id))
 
     for c in target_image.get("comments", []):
-        if (c["student_name"] == student_name 
-            and c["comment_text"] == comment_text 
-            and c.get("score") == score):
+        if (c["student_name"] == student_name
+                and c["comment_text"] == comment_text
+                and c.get("score") == score):
             flash("Bình luận đã tồn tại.")
             return redirect(url_for('project', project_id=project_id))
 
@@ -1264,7 +2137,9 @@ def comment(project_id, image_id):
         "score": score
     })
 
-    scores = [c["score"] for c in target_image.get("comments", []) if "score" in c]
+    scores = [
+        c["score"] for c in target_image.get("comments", []) if "score" in c
+    ]
     avg_score = round(sum(scores) / len(scores), 2) if scores else 0
     target_image["average_score"] = avg_score
 
@@ -1273,6 +2148,8 @@ def comment(project_id, image_id):
 
     flash(f"Bình luận đã được thêm. Điểm trung bình hiện tại: {avg_score}")
     return redirect(url_for('project', project_id=project_id))
+
+
 @app.route('/upload_image', methods=['GET', 'POST'])
 def upload_image():
     ai_feedback = None
@@ -1285,10 +2162,15 @@ def upload_image():
         group_name = request.form.get('group_name')
 
         if not uploaded_file or uploaded_file.filename == '' or not group_name:
-            return render_template('upload_image.html', feedback="❌ Thiếu file hoặc tên nhóm.", images=images)
+            return render_template('upload_image.html',
+                                   feedback="❌ Thiếu file hoặc tên nhóm.",
+                                   images=images)
 
         if not allowed_file(uploaded_file.filename):
-            return render_template('upload_image.html', feedback="❌ File không hợp lệ. Chỉ chấp nhận ảnh hoặc PDF.", images=images)
+            return render_template(
+                'upload_image.html',
+                feedback="❌ File không hợp lệ. Chỉ chấp nhận ảnh hoặc PDF.",
+                images=images)
 
         file_ext = uploaded_file.filename.rsplit('.', 1)[1].lower()
         file_id = str(uuid.uuid4())
@@ -1430,23 +2312,39 @@ def clean_ai_output(text):
     Làm sạch output của AI để hiển thị đẹp hơn
     """
     import re
-    
+
     # Loại bỏ các dấu markdown không mong muốn
     text = re.sub(r'\*\*\*', '', text)  # Loại bỏ ***
-    text = re.sub(r'\*\*', '', text)    # Loại bỏ **
+    text = re.sub(r'\*\*', '', text)  # Loại bỏ **
     text = re.sub(r'#{1,6}\s', '', text)  # Loại bỏ ##, ###
-    
+
     # Loại bỏ code blocks
     text = re.sub(r'```[a-z]*\n', '', text)
     text = re.sub(r'```', '', text)
-    
+
     # Chuẩn hóa xuống dòng (loại bỏ xuống dòng thừa)
     text = re.sub(r'\n{3,}', '\n\n', text)
-    
+
     # Loại bỏ khoảng trắng thừa đầu/cuối dòng
     lines = [line.strip() for line in text.split('\n')]
     text = '\n'.join(lines)
-    
+
     return text.strip()
+
+####
+@app.route('/health', methods=['GET'])
+def health_check():
+    """Endpoint đơn giản để ping service giữ server thức"""
+    return jsonify({
+        "status": "ok",
+        "message": "Server is running",
+        "timestamp": datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+    }), 200
+
+# Hoặc đơn giản hơn:
+@app.route('/ping')
+def ping():
+    return "pong", 200
+###
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(host="0.0.0.0", port=5000, debug=True)

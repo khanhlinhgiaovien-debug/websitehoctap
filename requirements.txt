@@ -4,3 +4,4 @@ PyMuPDF
 google-generativeai
 gunicorn
 dotenv
+mammoth

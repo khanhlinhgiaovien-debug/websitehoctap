@@ -1,0 +1,320 @@
+{% extends "exam_system/base.html" %}
+
+{% block title %}Tạo Đề Tự Luận{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <h2 class="text-warning">
+                <i class="fas fa-edit"></i> Tạo Đề Tự Luận
+            </h2>
+            <p class="text-muted">Tạo đề thi với các câu hỏi yêu cầu trình bày chi tiết</p>
+            <hr>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-10 offset-md-1">
+            <form method="POST" id="essayForm">
+                <!-- Thông tin chung -->
+                <div class="card shadow mb-4">
+                    <div class="card-header bg-warning text-dark">
+                        <h5 class="mb-0">
+                            <i class="fas fa-info-circle"></i> Thông Tin Đề Thi
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <!-- Tiêu đề -->
+                        <div class="form-group">
+                            <label for="title">
+                                <i class="fas fa-heading"></i> Tiêu Đề Đề Thi <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="title" 
+                                   name="title" 
+                                   placeholder="VD: Kiểm Tra Giữa Kỳ - Văn Học Việt Nam"
+                                   required>
+                        </div>
+
+                        <!-- Mô tả -->
+                        <div class="form-group">
+                            <label for="description">
+                                <i class="fas fa-align-left"></i> Mô Tả
+                            </label>
+                            <textarea class="form-control" 
+                                      id="description" 
+                                      name="description" 
+                                      rows="2"
+                                      placeholder="Mô tả ngắn về nội dung đề thi..."></textarea>
+                        </div>
+
+                        <div class="row">
+                            <!-- Môn học -->
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="subject">
+                                        <i class="fas fa-book"></i> Môn Học <span class="text-danger">*</span>
+                                    </label>
+                                    <select class="form-control" id="subject" name="subject" required>
+                                        <option value="">-- Chọn môn học --</option>
+                                        <option value="Toán">Toán</option>
+                                        <option value="Văn">Văn</option>
+                                        <option value="Tiếng Anh">Tiếng Anh</option>
+                                        <option value="Vật Lý">Vật Lý</option>
+                                        <option value="Hóa Học">Hóa Học</option>
+                                        <option value="Sinh Học">Sinh Học</option>
+                                        <option value="Lịch Sử">Lịch Sử</option>
+                                        <option value="Địa Lý">Địa Lý</option>
+                                        <option value="GDCD">GDCD</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Khối -->
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="grade">
+                                        <i class="fas fa-layer-group"></i> Khối <span class="text-danger">*</span>
+                                    </label>
+                                    <select class="form-control" id="grade" name="grade" required>
+                                        <option value="">-- Chọn khối --</option>
+                                        <option value="6">Lớp 6</option>
+                                        <option value="7">Lớp 7</option>
+                                        <option value="8">Lớp 8</option>
+                                        <option value="9">Lớp 9</option>
+                                        <option value="10">Lớp 10</option>
+                                        <option value="11">Lớp 11</option>
+                                        <option value="12">Lớp 12</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Thời gian -->
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="time_limit">
+                                        <i class="fas fa-clock"></i> Thời Gian (phút)
+                                    </label>
+                                    <input type="number" 
+                                           class="form-control" 
+                                           id="time_limit" 
+                                           name="time_limit" 
+                                           value="90"
+                                           min="0"
+                                           placeholder="0 = không giới hạn">
+                                    <small class="form-text text-muted">0 = không giới hạn</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Danh sách câu hỏi -->
+                <div class="card shadow mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-question-circle"></i> Câu Hỏi Tự Luận
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="questionsContainer">
+                            <!-- Câu hỏi đầu tiên -->
+                            <div class="question-item border rounded p-3 mb-3">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <h6 class="mb-0 text-primary">
+                                        <i class="fas fa-edit"></i> Câu Hỏi 1
+                                    </h6>
+                                    <button type="button" class="btn btn-sm btn-danger" onclick="removeQuestion(this)" disabled>
+                                        <i class="fas fa-trash"></i> Xóa
+                                    </button>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>Nội dung câu hỏi <span class="text-danger">*</span></label>
+                                    <textarea class="form-control" 
+                                              name="question_0" 
+                                              rows="3"
+                                              placeholder="Nhập câu hỏi tự luận..."
+                                              required></textarea>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <label>Điểm</label>
+                                            <input type="number" 
+                                                   class="form-control" 
+                                                   name="points_0" 
+                                                   value="10"
+                                                   min="1"
+                                                   max="100"
+                                                   required>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-9">
+                                        <div class="form-group">
+                                            <label>
+                                                Đáp án gợi ý 
+                                                <small class="text-muted">(AI sẽ dùng để chấm)</small>
+                                            </label>
+                                            <textarea class="form-control" 
+                                                      name="suggested_0" 
+                                                      rows="2"
+                                                      placeholder="Nhập đáp án mẫu hoặc hướng dẫn chấm điểm..."></textarea>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button type="button" class="btn btn-success" onclick="addQuestion()">
+                            <i class="fas fa-plus-circle"></i> Thêm Câu Hỏi
+                        </button>
+
+                        <div class="alert alert-info mt-3">
+                            <i class="fas fa-info-circle"></i> 
+                            <strong>Lưu ý:</strong> Tổng điểm các câu hỏi sẽ được quy về thang điểm 10.
+                            <br>
+                            <small>Ví dụ: Câu 1 (10đ) + Câu 2 (10đ) = 20đ → Quy về thang 10</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Hướng dẫn -->
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-info text-white">
+                        <h6 class="mb-0">
+                            <i class="fas fa-lightbulb"></i> Gợi Ý Đặt Câu Hỏi Tự Luận Hiệu Quả
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <ul class="mb-0">
+                            <li><strong>Câu hỏi rõ ràng:</strong> Đặt câu hỏi cụ thể, tránh mơ hồ</li>
+                            <li><strong>Phân loại mức độ:</strong> Có câu dễ, trung bình, khó</li>
+                            <li><strong>Đáp án gợi ý chi tiết:</strong> Giúp AI chấm điểm chính xác hơn</li>
+                            <li><strong>Điểm số hợp lý:</strong> Câu khó nên có điểm cao hơn</li>
+                            <li><strong>Yêu cầu rõ ràng:</strong> Phân tích, so sánh, giải thích...</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Buttons -->
+                <div class="text-center mb-4">
+                    <button type="submit" class="btn btn-warning btn-lg">
+                        <i class="fas fa-save"></i> Tạo Đề Tự Luận
+                    </button>
+                    <a href="{{ url_for('teacher_create_exam') }}" class="btn btn-secondary btn-lg">
+                        <i class="fas fa-times"></i> Hủy
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+let questionCount = 1;
+
+function addQuestion() {
+    const container = document.getElementById('questionsContainer');
+    const newQuestion = document.createElement('div');
+    newQuestion.className = 'question-item border rounded p-3 mb-3';
+    newQuestion.innerHTML = `
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h6 class="mb-0 text-primary">
+                <i class="fas fa-edit"></i> Câu Hỏi ${questionCount + 1}
+            </h6>
+            <button type="button" class="btn btn-sm btn-danger" onclick="removeQuestion(this)">
+                <i class="fas fa-trash"></i> Xóa
+            </button>
+        </div>
+
+        <div class="form-group">
+            <label>Nội dung câu hỏi <span class="text-danger">*</span></label>
+            <textarea class="form-control" 
+                      name="question_${questionCount}" 
+                      rows="3"
+                      placeholder="Nhập câu hỏi tự luận..."
+                      required></textarea>
+        </div>
+
+        <div class="row">
+            <div class="col-md-3">
+                <div class="form-group">
+                    <label>Điểm</label>
+                    <input type="number" 
+                           class="form-control" 
+                           name="points_${questionCount}" 
+                           value="10"
+                           min="1"
+                           max="100"
+                           required>
+                </div>
+            </div>
+            <div class="col-md-9">
+                <div class="form-group">
+                    <label>
+                        Đáp án gợi ý 
+                        <small class="text-muted">(AI sẽ dùng để chấm)</small>
+                    </label>
+                    <textarea class="form-control" 
+                              name="suggested_${questionCount}" 
+                              rows="2"
+                              placeholder="Nhập đáp án mẫu hoặc hướng dẫn chấm điểm..."></textarea>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    container.appendChild(newQuestion);
+    questionCount++;
+    updateQuestionNumbers();
+}
+
+function removeQuestion(button) {
+    const questionItem = button.closest('.question-item');
+    questionItem.remove();
+    updateQuestionNumbers();
+}
+
+function updateQuestionNumbers() {
+    const questions = document.querySelectorAll('.question-item');
+    questions.forEach((item, index) => {
+        const title = item.querySelector('h6');
+        title.innerHTML = `<i class="fas fa-edit"></i> Câu Hỏi ${index + 1}`;
+        
+        // Disable xóa nếu chỉ còn 1 câu
+        if (questions.length === 1) {
+            item.querySelector('.btn-danger').disabled = true;
+        } else {
+            item.querySelector('.btn-danger').disabled = false;
+        }
+    });
+}
+
+// Validate form trước khi submit
+document.getElementById('essayForm').addEventListener('submit', function(e) {
+    const questions = document.querySelectorAll('.question-item');
+    if (questions.length === 0) {
+        e.preventDefault();
+        alert('Vui lòng thêm ít nhất 1 câu hỏi!');
+        return false;
+    }
+});
+</script>
+
+<style>
+.question-item {
+    background-color: #f8f9fa;
+    transition: all 0.3s ease;
+}
+
+.question-item:hover {
+    background-color: #e9ecef;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+</style>
+{% endblock %}
