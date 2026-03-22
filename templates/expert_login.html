@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Đăng nhập chuyên gia</title>
+    <title>Đăng nhập GVCN/Chuyên gia</title>
     <style>
         * {
             margin: 0;
@@ -177,8 +177,8 @@
     <div class="login-container">
         <div class="login-header">
             <div class="icon-circle">👨‍⚕️</div>
-            <h2>Đăng nhập chuyên gia</h2>
-            <p>Hệ thống tư vấn sức khỏe học sinh</p>
+            <h2>Đăng nhập GVCN/Chuyên gia</h2>
+            <p>Hệ thống tiếp nhận cảnh báo và tư vấn học sinh</p>
         </div>
 
         {% with messages = get_flashed_messages(with_categories=true) %}
@@ -208,7 +208,7 @@
         <a href="{{ url_for('health_support') }}" class="back-link">← Quay lại trang tư vấn</a>
 
         <div class="info-box">
-            <p><strong>📌 Dành cho giáo viên/chuyên gia</strong></p>
+            <p><strong>📌 Dành cho GVCN/chuyên gia</strong></p>
             <p>Liên hệ quản trị viên để được cấp tài khoản</p>
         </div>
     </div>

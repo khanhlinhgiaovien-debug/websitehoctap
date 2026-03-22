@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, redirect, url_for
-import json, os, re
+import json, os, re, unicodedata
 from PIL import Image
 import google.generativeai as genai
 import uuid
@@ -1534,6 +1534,154 @@ def expert_logout():
     return redirect(url_for('health_support'))
 
 
+def parse_ai_json_response(raw_text):
+    """Parse JSON text returned by the AI, even when wrapped in markdown."""
+    if not raw_text:
+        raise ValueError("Empty AI response")
+
+    cleaned = raw_text.strip()
+    cleaned = re.sub(r'^```json\s*', '', cleaned, flags=re.IGNORECASE)
+    cleaned = re.sub(r'^```\s*', '', cleaned)
+    cleaned = re.sub(r'\s*```$', '', cleaned)
+
+    match = re.search(r'\{.*\}', cleaned, re.DOTALL)
+    if match:
+        cleaned = match.group(0)
+
+    return json.loads(cleaned)
+
+
+def fallback_health_triage(question_text):
+    """Keyword-based fallback triage used when structured AI output is unavailable."""
+    text = unicodedata.normalize('NFKD', question_text.lower())
+    text = ''.join(ch for ch in text if not unicodedata.combining(ch))
+
+    critical_keywords = [
+        'tu tu', 'muon chet', 'khong muon song', 'muon bien mat',
+        'cuu voi', 'bat tinh', 'chay mau', 'tai nan nghiem trong',
+        'kho tho', 'co giat', 'uong thuoc qua lieu', 'nhay lau'
+    ]
+    high_keywords = [
+        'tram cam', 'tuyet vong', 'hoang loan', 'khung hoang',
+        'bi danh', 'bao luc', 'xam hai', 'lam dung',
+        'mat ngu nhieu ngay', 'khong on', 'suy sup'
+    ]
+    medium_keywords = [
+        'stress', 'cang thang', 'lo au', 'buon', 'ap luc',
+        'met moi', 'khoc', 'co don', 'bi bat nat', 'so hai'
+    ]
+
+    risk_level = 'low'
+    if any(keyword in text for keyword in critical_keywords):
+        risk_level = 'critical'
+    elif any(keyword in text for keyword in high_keywords):
+        risk_level = 'high'
+    elif any(keyword in text for keyword in medium_keywords):
+        risk_level = 'medium'
+
+    needs_escalation = risk_level in {'high', 'critical'}
+    summary_map = {
+        'low': 'Ca tu van thong thuong, chua thay dau hieu nguy co cao.',
+        'medium': 'Hoc sinh co dau hieu can theo doi va dong vien som.',
+        'high': 'Co dau hieu bat on tam ly ro, can GVCN/chuyen gia tiep nhan som.',
+        'critical': 'Tinh huong co the khan cap, can kich hoat can thiep som ngay.'
+    }
+    note_map = {
+        'low': 'AI fallback khong ghi nhan tu khoa nguy co cao trong noi dung.',
+        'medium': 'AI fallback ghi nhan mot so dau hieu cang thang/tam ly.',
+        'high': 'AI fallback ghi nhan tu khoa nguy co cao nen de xuat chuyen tuyen.',
+        'critical': 'AI fallback ghi nhan tu khoa khan cap nen kich hoat canh bao ngay.'
+    }
+
+    if needs_escalation:
+        student_notice = (
+            'He thong da nhan dien day la ca can ho tro sau hon va '
+            'da chuyen canh bao an danh toi GVCN/chuyen gia de ho tro ban som.'
+        )
+    else:
+        student_notice = 'AI da tiep nhan va ho tro ban theo luong tu van thong thuong.'
+
+    return {
+        'risk_level': risk_level,
+        'needs_escalation': needs_escalation,
+        'escalation_target': 'gvcn_expert' if needs_escalation else None,
+        'alert_summary': summary_map[risk_level],
+        'ai_triage_note': note_map[risk_level],
+        'student_notice': student_notice
+    }
+
+
+def triage_health_question(question_text):
+    """Use AI to classify risk level and trigger the demo escalation flow."""
+    fallback_result = fallback_health_triage(question_text)
+    prompt = f"""You are a school safety triage system.
+
+Task:
+- Read the student's message.
+- Classify risk_level as one of: low, medium, high, critical.
+- Set needs_escalation=true for serious mental distress, self-harm, violence, abuse, or severe accident cases.
+- escalation_target must be null or "gvcn_expert".
+
+Return ONLY valid JSON with these keys:
+{{
+  "risk_level": "low|medium|high|critical",
+  "needs_escalation": true,
+  "escalation_target": "gvcn_expert",
+  "alert_summary": "short one-sentence summary",
+  "ai_triage_note": "1-2 sentence reason",
+  "student_notice": "short reassuring notice saying the system connected the anonymous alert to homeroom teacher/expert when needed"
+}}
+
+Student message:
+{question_text}
+"""
+
+    try:
+        response = model.generate_content([prompt])
+        triage_result = parse_ai_json_response(response.text)
+    except Exception:
+        triage_result = fallback_result
+
+    risk_level = str(triage_result.get('risk_level', 'low')).strip().lower()
+    if risk_level not in {'low', 'medium', 'high', 'critical'}:
+        risk_level = fallback_result['risk_level']
+
+    needs_escalation = bool(triage_result.get('needs_escalation', False))
+    if risk_level in {'high', 'critical'}:
+        needs_escalation = True
+
+    alert_summary = str(triage_result.get('alert_summary', '')).strip()
+    ai_triage_note = str(triage_result.get('ai_triage_note', '')).strip()
+    student_notice = str(triage_result.get('student_notice', '')).strip()
+
+    return {
+        'risk_level': risk_level,
+        'needs_escalation': needs_escalation,
+        'escalation_target': 'gvcn_expert' if needs_escalation else None,
+        'alert_summary': alert_summary or fallback_result['alert_summary'],
+        'ai_triage_note': ai_triage_note or fallback_result['ai_triage_note'],
+        'student_notice': student_notice or fallback_result['student_notice']
+    }
+
+
+def build_escalation_support_response(triage_result):
+    """Short, safe message shown while the case is being escalated."""
+    if triage_result.get('risk_level') == 'critical':
+        return (
+            "Minh nhan thay day co the la tinh huong khan cap. "
+            "Ban hay tim den ngay mot nguoi lon dang tin cay, GVCN, "
+            "phu huynh hoac nhan vien y te gan nhat. He thong da kich hoat "
+            "ket noi an danh de GVCN/chuyen gia co the ho tro ban som."
+        )
+
+    return (
+        "He thong nhan thay ban co the dang can ho tro sau hon. "
+        "Minh da kich hoat ket noi an danh den GVCN/chuyen gia de "
+        "ban duoc ho tro som. Trong luc cho, neu ban cam thay qua tai "
+        "hoac khong an toan, hay tim ngay mot nguoi lon dang tin cay o gan ban."
+    )
+
+
 # Route trang tư vấn sức khỏe
 @app.route('/health_support', methods=['GET', 'POST'])
 def health_support():
@@ -1559,6 +1707,11 @@ def health_support():
 
         question_id = str(uuid.uuid4())
         timestamp = datetime.now().strftime("%d/%m/%Y %H:%M")
+        triage_result = triage_health_question(question)
+        needs_escalation = triage_result['needs_escalation']
+
+        if needs_escalation:
+            is_anonymous = True
 
         new_question = {
             'id': question_id,
@@ -1569,11 +1722,21 @@ def health_support():
             'ai_response': None,
             'expert_responses': [],
             'status': 'pending',  # pending, answered
+            'risk_level': triage_result['risk_level'],
+            'needs_escalation': needs_escalation,
+            'escalation_target': triage_result['escalation_target'],
+            'handling_status': 'new' if needs_escalation else None,
+            'alert_summary': triage_result['alert_summary'],
+            'ai_triage_note': triage_result['ai_triage_note'],
+            'student_notice': triage_result['student_notice'],
             'is_anonymous': is_anonymous  # Thêm trường ẩn danh
         }
 
         # Nếu chọn AI tư vấn
-        if consult_type == 'ai':
+        if needs_escalation:
+            new_question['ai_response'] = build_escalation_support_response(
+                triage_result)
+        elif consult_type == 'ai':
             try:
                 # Đọc kiến thức về sức khỏe
                 health_knowledge = ""
@@ -1625,6 +1788,8 @@ Hãy tư vấn chi tiết, có lời khuyên cụ thể."""
             json.dump(questions, f, ensure_ascii=False, indent=2)
 
         flash('Câu hỏi đã được gửi!', 'success')
+        if needs_escalation:
+            flash(triage_result['student_notice'], 'info')
         return redirect(url_for('health_support'))
 
     # Kiểm tra xem user có phải chuyên gia không
@@ -1633,6 +1798,18 @@ Hãy tư vấn chi tiết, có lời khuyên cụ thể."""
     # Lọc câu hỏi hiển thị theo quyền
     display_questions = []
     for q in questions:
+        q.setdefault('risk_level', 'low')
+        q.setdefault('needs_escalation', False)
+        q.setdefault('escalation_target', None)
+        q.setdefault('handling_status', 'new' if q.get('needs_escalation')
+                     else None)
+        q.setdefault('alert_summary', None)
+        q.setdefault('ai_triage_note', None)
+        q.setdefault('student_notice', None)
+
+        if q.get('needs_escalation') and not is_expert:
+            continue
+
         if q.get('is_anonymous', False):
             # Nếu câu hỏi ẩn danh
             if is_expert:
@@ -1650,6 +1827,13 @@ Hãy tư vấn chi tiết, có lời khuyên cụ thể."""
         else:
             # Câu hỏi công khai - tất cả đều thấy
             display_questions.append(q)
+
+    if is_expert:
+        risk_priority = {'critical': 0, 'high': 1, 'medium': 2, 'low': 3}
+        display_questions.sort(
+            key=lambda q: (
+                0 if q.get('needs_escalation') else 1,
+                risk_priority.get(q.get('risk_level', 'low'), 3)))
 
     return render_template('health_support.html',
                            questions=display_questions,
@@ -1692,6 +1876,8 @@ def expert_answer(question_id):
 
         question['expert_responses'].append(expert_response)
         question['status'] = 'answered'
+        if question.get('needs_escalation'):
+            question['handling_status'] = 'contacted'
 
         with open('health_questions.json', 'w', encoding='utf-8') as f:
             json.dump(questions, f, ensure_ascii=False, indent=2)
@@ -1700,6 +1886,47 @@ def expert_answer(question_id):
     else:
         flash('Không tìm thấy câu hỏi!', 'error')
 
+    return redirect(url_for('health_support'))
+
+
+@app.route('/health_case_status/<question_id>', methods=['POST'])
+def health_case_status(question_id):
+    if not session.get('expert_logged_in'):
+        flash('Ban can dang nhap voi tu cach GVCN/chuyen gia!', 'error')
+        return redirect(url_for('expert_login'))
+
+    new_status = request.form.get('handling_status', '').strip().lower()
+    allowed_statuses = {
+        'new': 'Moi tiep nhan',
+        'contacted': 'Da tiep nhan',
+        'monitoring': 'Dang theo doi',
+        'closed': 'Da dong ca'
+    }
+
+    if new_status not in allowed_statuses:
+        flash('Trang thai xu ly khong hop le!', 'error')
+        return redirect(url_for('health_support'))
+
+    try:
+        with open('health_questions.json', 'r', encoding='utf-8') as f:
+            questions = json.load(f)
+    except FileNotFoundError:
+        questions = []
+
+    question = next((q for q in questions if q['id'] == question_id), None)
+
+    if not question:
+        flash('Khong tim thay ca canh bao!', 'error')
+        return redirect(url_for('health_support'))
+
+    question['handling_status'] = new_status
+    if new_status == 'closed':
+        question['status'] = 'answered'
+
+    with open('health_questions.json', 'w', encoding='utf-8') as f:
+        json.dump(questions, f, ensure_ascii=False, indent=2)
+
+    flash(f"Da cap nhat trang thai: {allowed_statuses[new_status]}", 'success')
     return redirect(url_for('health_support'))
 
 

@@ -1,5 +1,23 @@
 [
   {
+    "id": "9f8ebae4-6d75-4a4f-b7a4-demo0901khanhchi",
+    "student_name": "Dương",
+    "question": "Mẹ thường khen em và lấy em ra để nói con, ông bà cũng vậy, con thấy rất mệt mỏi. Mỗi lần con cứa tay thì con lại thấy đỡ đau đầu hơn. Con đã cứa tay 1 lần rồi, từ đó cứ áp lực là con muốn cứa tay.",
+    "consult_type": "ai",
+    "timestamp": "18/09/2025 08:30",
+    "ai_response": "Mình nhận thấy đây là tình huống nguy cơ cao và cần được người lớn hỗ trợ ngay. Hệ thống đã tự động kích hoạt kết nối ẩn danh tới GVCN/chuyên gia để tiếp nhận sớm. Trong lúc này, con đừng ở một mình với dao lam hay vật sắc nhọn. Hãy tìm ngay một người lớn đáng tin cậy ở gần con như bố mẹ, GVCN, cô phụ trách, hoặc người thân để ngồi cạnh và hỗ trợ con ngay lúc này.",
+    "expert_responses": [],
+    "status": "pending",
+    "risk_level": "critical",
+    "needs_escalation": true,
+    "escalation_target": "gvcn_expert",
+    "handling_status": "new",
+    "alert_summary": "Ca nguy cơ tự gây hại khi bị áp lực, cần GVCN/chuyên gia tiếp nhận ngay.",
+    "ai_triage_note": "Học sinh mô tả hành vi cứa tay để giảm đau đầu và có xu hướng lặp lại khi bị áp lực. Đây là dấu hiệu tự gây hại cần can thiệp sâu ngay.",
+    "student_notice": "Hệ thống đã chuyển cảnh báo ẩn danh trực tiếp tới tài khoản GVCN/chuyên gia để hỗ trợ con sớm.",
+    "is_anonymous": true
+  },
+  {
     "id": "a1aa58f9-93f6-4abb-b13e-f223735f8765",
     "student_name": "hung",
     "question": "tôi nên giam cân bằng cách nào",

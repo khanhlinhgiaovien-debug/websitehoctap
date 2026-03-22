@@ -1,4 +1,4 @@
-```
+
 # Environment variables
 .env
 
@@ -16,7 +16,6 @@ instance/
 .idea/
 
 # Uploads (nếu không muốn đẩy ảnh lên git)
-
 # Data files (tùy chọn)
 
-```
+
