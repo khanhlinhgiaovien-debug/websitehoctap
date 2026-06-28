@@ -17,26 +17,58 @@
     }
 
     .header {
-      background: linear-gradient(to right, #667eea, #764ba2);
-      color: white;
-      padding: 25px 40px;
+      background:
+        linear-gradient(90deg, rgba(37, 99, 235, 0.28) 2px, transparent 2px) 0 0 / 68px 68px,
+        linear-gradient(rgba(37, 99, 235, 0.28) 2px, transparent 2px) 0 0 / 68px 40px,
+        #ffffff;
+      color: #123a7a;
+      padding: 18px 40px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 28px;
+      min-height: 160px;
+      border-bottom: 2px solid #2563eb;
+    }
+
+    .header-brand {
       display: flex;
       align-items: center;
       gap: 15px;
+      min-width: 260px;
+      position: relative;
+      z-index: 1;
     }
 
     .header-logo {
-      width: 50px;
-      height: 50px;
+      width: 62px;
+      height: 62px;
       border-radius: 8px;
       object-fit: contain;
       background: white;
       padding: 5px;
+      border: 1px solid rgba(37, 99, 235, 0.25);
+      box-shadow: 0 8px 18px rgba(37, 99, 235, 0.16);
     }
 
     .header h1 {
-      font-size: 1.5rem;
+      font-size: 1.7rem;
       font-weight: 600;
+      line-height: 1.1;
+    }
+
+    .header-visual {
+      flex: 1;
+      min-width: 280px;
+      max-width: none;
+      height: 150px;
+      object-fit: cover;
+      object-position: right center;
+      border: none;
+      border-radius: 0;
+      box-shadow: none;
+      -webkit-mask-image: linear-gradient(to right, transparent 0, #000 12%, #000 100%);
+      mask-image: linear-gradient(to right, transparent 0, #000 12%, #000 100%);
     }
 
     .breadcrumb {
@@ -306,7 +338,19 @@
 
       .header {
         padding: 20px;
+        min-height: auto;
+        flex-direction: column;
+        align-items: flex-start;
       }
+
+      .header-visual {
+        width: 100%;
+        min-width: 0;
+        height: 110px;
+        -webkit-mask-image: none;
+        mask-image: none;
+      }
+
 
       .breadcrumb {
         padding: 10px 20px;
@@ -321,8 +365,11 @@
 <body>
 
 <div class="header">
+  <div class="header-brand">
   <img src="/static/images/logo.jpg" alt="Logo trường" class="header-logo">
   <h1>Tri-hand</h1>
+  </div>
+  <img src="/static/images/header-learning-banner.png" alt="Hoc sinh hoc tap cung cong nghe AI" class="header-visual">
 </div>
 
 <div class="breadcrumb">

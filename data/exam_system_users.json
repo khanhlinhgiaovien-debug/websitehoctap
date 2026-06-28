@@ -32,7 +32,7 @@
     {
       "id": "teacher_001",
       "username": "gv_toan",
-      "password": "toan123",
+      "password": "scrypt:32768:8:1$Sl6Rjoao1y5d3Nab$c7420536e43fc6bc92909f42e59c1cd0a5d8e1809cda131cfc07a7b397f089506eb8e43c13b2ac7719609fbae9b85862542a53cef4717fc91ea3a208b694c766",
       "full_name": "Nguyễn Thị Mai",
       "subject": "Toán",
       "email": "ntmai@school.edu.vn"
@@ -48,7 +48,7 @@
     {
       "id": "teacher_003",
       "username": "gvvan",
-      "password": "1234567",
+      "password": "scrypt:32768:8:1$sd65yMU0o3jRYh9J$5e7aa23f3a005efcb5e364ed694254e6e5dc9e2e9c5996f142b47c41f73609711edf33cce676a6ad10246341d225f9478efdbf01812a486a16e58274bf3e188f",
       "full_name": "Lê Văn Nam",
       "subject": "Ngữ Văn",
       "email": "lvnm@school.edu.vn"

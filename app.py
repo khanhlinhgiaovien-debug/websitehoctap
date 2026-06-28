@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for
 import json, os, re, unicodedata
 from PIL import Image
-import google.generativeai as genai
+from google import genai
 import uuid
 from datetime import datetime
 from flask import session
@@ -11,21 +11,195 @@ import fitz  # PyMuPDF
 from flask import flash
 from dotenv import load_dotenv
 from werkzeug.utils import secure_filename
+from threading import Lock
 
 load_dotenv()
 app = Flask(__name__)
-app.secret_key = 'your_secret_key_here'
+app.secret_key = os.environ.get("FLASK_SECRET_KEY", "dev-secret-key-change-me")
 
 # Cấu hình thư mục upload
 UPLOAD_FOLDER = os.path.join('static', 'uploads')
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
+if not os.environ.get("GOOGLE_API_KEY") and os.environ.get("GOOGLE_API_KEYS"):
+    os.environ["GOOGLE_API_KEY"] = os.environ["GOOGLE_API_KEYS"].split(",")[0].strip()
+
+GLOBAL_BACK_BUTTON_HTML = """
+<style>
+    .global-back-button {
+        position: fixed !important;
+        top: 16px !important;
+        left: 16px !important;
+        z-index: 2147483000;
+        display: inline-flex !important;
+        align-items: center;
+        justify-content: center;
+        width: auto !important;
+        max-width: max-content !important;
+        min-height: 40px !important;
+        margin: 0 !important;
+        padding: 0 14px !important;
+        color: #1d4ed8 !important;
+        background: rgba(255, 255, 255, 0.92) !important;
+        border: 1px solid rgba(37, 99, 235, 0.35) !important;
+        border-radius: 8px !important;
+        box-shadow: 0 10px 24px rgba(37, 99, 235, 0.18) !important;
+        font: 600 14px/1.2 Arial, sans-serif !important;
+        text-decoration: none !important;
+        cursor: pointer !important;
+        backdrop-filter: blur(8px);
+    }
+
+    .global-back-button:hover {
+        background: #ffffff !important;
+        box-shadow: 0 14px 30px rgba(37, 99, 235, 0.24) !important;
+    }
+
+    @media (max-width: 560px) {
+        .global-back-button {
+            top: 10px !important;
+            left: 10px !important;
+            min-height: 36px !important;
+            padding: 0 11px !important;
+            font-size: 13px !important;
+        }
+    }
+</style>
+<button type="button" class="global-back-button" onclick="if (window.history.length > 1) { window.history.back(); } else { window.location.href = '/'; }">← Quay lại</button>
+"""
+
+
+@app.after_request
+def add_global_back_button(response):
+    if response.status_code != 200 or response.direct_passthrough:
+        return response
+
+    if request.path == "/":
+        return response
+
+    content_type = response.headers.get("Content-Type", "")
+    if "text/html" not in content_type:
+        return response
+
+    html = response.get_data(as_text=True)
+    existing_navigation_markers = (
+        "global-back-button",
+        "back-link",
+        "back-button",
+        "back-btn",
+        "btn-back",
+        "btn-home",
+        "header-btn",
+        "Quay lại",
+        "Quay về",
+        "Trang chủ",
+    )
+
+    if "</body>" not in html or any(marker in html for marker in existing_navigation_markers):
+        return response
+
+    html = html.replace("</body>", f"{GLOBAL_BACK_BUTTON_HTML}\n</body>", 1)
+    response.set_data(html)
+    response.headers["Content-Length"] = str(len(response.get_data()))
+    return response
+
 api_key = os.environ.get("GOOGLE_API_KEY")  # ← SỬA DÒNG NÀY
 if not api_key:  
     raise ValueError(" Thiếu GOOGLE_API_KEY trong file .env")
-genai.configure(api_key=api_key)  # ← SỬA DÒNG NÀY
-model = genai.GenerativeModel("models/gemini-2.5-flash")
+
+
+def get_google_api_keys():
+    keys = []
+    multi_key_value = os.environ.get("GOOGLE_API_KEYS", "")
+    single_key_value = os.environ.get("GOOGLE_API_KEY", "")
+
+    for raw_key in multi_key_value.split(","):
+        key = raw_key.strip()
+        if key:
+            keys.append(key)
+
+    single_key = single_key_value.strip()
+    if single_key and single_key not in keys:
+        keys.append(single_key)
+
+    return keys
+
+
+class RotatingGeminiModel:
+    def __init__(self, model_name, api_keys):
+        self.model_name = model_name
+        self.api_keys = api_keys
+        self.current_key_index = 0
+        self.lock = Lock()
+
+    def _normalized_model_name(self):
+        if self.model_name.startswith("models/"):
+            return self.model_name.split("/", 1)[1]
+        return self.model_name
+
+    def _is_limit_error(self, error):
+        status_code = getattr(error, "code", None)
+        status_name = getattr(error, "status", "")
+        message = str(error).lower()
+
+        return (
+            status_code in (429, 503)
+            or "resource_exhausted" in status_name.lower()
+            or "quota" in message
+            or "rate limit" in message
+            or "429" in message
+            or "403" in message
+            or "permission denied" in message
+            or "consumer_suspended" in message
+            or "api key not valid" in message
+        )
+
+    def _set_current_key(self, key_index):
+        with self.lock:
+            self.current_key_index = key_index % len(self.api_keys)
+
+    def generate_content(self, *args, **kwargs):
+        last_error = None
+        total_keys = len(self.api_keys)
+
+        with self.lock:
+            start_key_index = self.current_key_index
+
+        if args:
+            contents = args[0]
+            if len(args) > 1:
+                raise TypeError("generate_content accepts one positional contents argument")
+        else:
+            contents = kwargs.pop("contents")
+
+        for attempt in range(total_keys):
+            key_index = (start_key_index + attempt) % total_keys
+            api_key = self.api_keys[key_index]
+
+            client = genai.Client(api_key=api_key)
+
+            try:
+                response = client.models.generate_content(
+                    model=self._normalized_model_name(),
+                    contents=contents,
+                    **kwargs
+                )
+                self._set_current_key(key_index)
+                return response
+            except Exception as error:
+                last_error = error
+                if total_keys == 1 or not self._is_limit_error(error):
+                    raise
+
+                self._set_current_key(key_index + 1)
+
+        raise last_error
+
+
+GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "models/gemini-2.5-flash")
+GOOGLE_API_KEYS = get_google_api_keys()
+model = RotatingGeminiModel(GEMINI_MODEL, GOOGLE_API_KEYS)
 analysis_model = model
 
 
@@ -1507,9 +1681,14 @@ def expert_login():
             experts = []
 
         # Kiểm tra đăng nhập
+        def expert_password_matches(stored_password, input_password):
+            if stored_password.startswith(('pbkdf2:', 'scrypt:', 'bcrypt:')):
+                return check_password_hash(stored_password, input_password)
+            return stored_password == input_password
+
         expert = next(
             (e for e in experts
-             if e['username'] == username and e['password'] == password), None)
+             if e['username'] == username and expert_password_matches(e['password'], password)), None)
 
         if expert:
             session['expert_logged_in'] = True

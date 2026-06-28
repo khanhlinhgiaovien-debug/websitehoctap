@@ -5,7 +5,10 @@
     <title>Game Toán & HDTN</title>
     <style>
         body {
-            background: linear-gradient(135deg, #e0f2f1, #b2dfdb);
+            background:
+                linear-gradient(90deg, rgba(37, 99, 235, 0.42) 2px, transparent 2px) 0 0 / 68px 68px,
+                linear-gradient(rgba(37, 99, 235, 0.42) 2px, transparent 2px) 0 0 / 68px 40px,
+                #ffffff;
             color: #2c3e50;
             font-family: 'Segoe UI', sans-serif;
             text-align: center;
@@ -16,16 +19,17 @@
         #game-container {
             max-width: 700px;
             margin: auto;
-            background-color: white;
+            background-color: rgba(255, 255, 255, 0.94);
             padding: 30px;
-            border-radius: 16px;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+            border: 2px solid #2563eb;
+            border-radius: 8px;
+            box-shadow: 0 14px 36px rgba(37, 99, 235, 0.16);
         }
 
         h2 {
             margin-bottom: 20px;
             font-size: 28px;
-            color: #00796b;
+            color: #123a7a;
         }
 
         #timer {
@@ -50,7 +54,7 @@
         }
 
         .option {
-            background-color: #2196f3;
+            background-color: #2563eb;
             color: white;
             padding: 15px;
             border-radius: 8px;
@@ -62,7 +66,7 @@
         }
 
         .option:hover {
-            background-color: #1976d2;
+            background-color: #1d4ed8;
             transform: translateY(-3px);
         }
 
@@ -70,14 +74,14 @@
             margin-top: 20px;
             font-size: 18px;
             font-weight: bold;
-            color: #00796b;
+            color: #123a7a;
         }
 
         .back-btn {
             display: inline-block;
             margin-top: 20px;
             padding: 10px 18px;
-            background-color: #ff7043;
+            background-color: #2563eb;
             color: white;
             text-decoration: none;
             border-radius: 8px;
@@ -86,7 +90,7 @@
         }
 
         .back-btn:hover {
-            background-color: #e64a19;
+            background-color: #1d4ed8;
         }
     </style>
 </head>

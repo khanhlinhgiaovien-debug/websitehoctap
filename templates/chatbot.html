@@ -13,7 +13,10 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
-            background: #343541;
+            background:
+                linear-gradient(90deg, rgba(37, 99, 235, 0.42) 2px, transparent 2px) 0 0 / 68px 68px,
+                linear-gradient(rgba(37, 99, 235, 0.42) 2px, transparent 2px) 0 0 / 68px 40px,
+                #ffffff;
             height: 100vh;
             overflow: hidden;
         }
@@ -26,12 +29,13 @@
         }
 
         .chat-header {
-            background: #343541;
-            border-bottom: 1px solid #565869;
+            background: rgba(255, 255, 255, 0.94);
+            border-bottom: 2px solid #2563eb;
             padding: 12px 16px;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            box-shadow: 0 8px 24px rgba(37, 99, 235, 0.12);
         }
 
         .header-left {
@@ -41,9 +45,9 @@
         }
 
         .new-chat-btn {
-            background: transparent;
-            border: 1px solid #565869;
-            color: #ececf1;
+            background: #ffffff;
+            border: 1px solid #7fb3ff;
+            color: #123a7a;
             padding: 8px 16px;
             border-radius: 6px;
             cursor: pointer;
@@ -55,11 +59,11 @@
         }
 
         .new-chat-btn:hover {
-            background: #40414f;
+            background: #eef6ff;
         }
 
         .header-title {
-            color: #ececf1;
+            color: #123a7a;
             font-size: 14px;
             font-weight: 600;
         }
@@ -70,9 +74,9 @@
         }
 
         .header-btn {
-            background: transparent;
-            border: 1px solid #565869;
-            color: #ececf1;
+            background: #2563eb;
+            border: 1px solid #2563eb;
+            color: #ffffff;
             padding: 8px 16px;
             border-radius: 6px;
             cursor: pointer;
@@ -82,13 +86,13 @@
         }
 
         .header-btn:hover {
-            background: #40414f;
+            background: #1d4ed8;
         }
 
         .chat-messages {
             flex: 1;
             overflow-y: auto;
-            background: #343541;
+            background: transparent;
         }
 
         .chat-messages::-webkit-scrollbar {
@@ -100,12 +104,12 @@
         }
 
         .chat-messages::-webkit-scrollbar-thumb {
-            background: #565869;
+            background: #7fb3ff;
             border-radius: 4px;
         }
 
         .chat-messages::-webkit-scrollbar-thumb:hover {
-            background: #6e6e80;
+            background: #2563eb;
         }
 
         .message {
@@ -125,13 +129,13 @@
         }
 
         .message-user {
-            background: #343541;
-            border-bottom: 1px solid #565869;
+            background: rgba(255, 255, 255, 0.74);
+            border-bottom: 1px solid rgba(37, 99, 235, 0.24);
         }
 
         .message-bot {
-            background: #444654;
-            border-bottom: 1px solid #565869;
+            background: rgba(238, 246, 255, 0.78);
+            border-bottom: 1px solid rgba(37, 99, 235, 0.24);
         }
 
         .message-wrapper {
@@ -154,16 +158,18 @@
         }
 
         .avatar-user {
-            background: #5436da;
+            background: #2563eb;
+            color: #ffffff;
         }
 
         .avatar-bot {
-            background: #19c37d;
+            background: #123a7a;
+            color: #ffffff;
         }
 
         .message-content {
             flex: 1;
-            color: #ececf1;
+            color: #13233a;
             line-height: 1.7;
             font-size: 16px;
             white-space: pre-wrap;
@@ -178,7 +184,7 @@
         }
 
         .welcome-title {
-            color: #ececf1;
+            color: #123a7a;
             font-size: 32px;
             font-weight: 600;
             margin-bottom: 48px;
@@ -192,8 +198,8 @@
         }
 
         .example-card {
-            background: #444654;
-            border: 1px solid #565869;
+            background: rgba(255, 255, 255, 0.94);
+            border: 1px solid rgba(37, 99, 235, 0.3);
             padding: 16px;
             border-radius: 8px;
             text-align: left;
@@ -202,11 +208,12 @@
         }
 
         .example-card:hover {
-            background: #4a4b5a;
+            background: #eef6ff;
+            box-shadow: 0 10px 24px rgba(37, 99, 235, 0.14);
         }
 
         .example-title {
-            color: #ececf1;
+            color: #123a7a;
             font-size: 14px;
             font-weight: 600;
             margin-bottom: 8px;
@@ -216,12 +223,13 @@
         }
 
         .example-text {
-            color: #c5c5d2;
+            color: #3a5f93;
             font-size: 13px;
         }
 
         .chat-input-container {
-            background: #343541;
+            background: rgba(255, 255, 255, 0.94);
+            border-top: 2px solid #2563eb;
             padding: 12px 0 24px 0;
         }
 
@@ -232,8 +240,8 @@
         }
 
         .file-preview-area {
-            background: #40414f;
-            border: 1px solid #565869;
+            background: #eef6ff;
+            border: 1px solid #7fb3ff;
             border-radius: 8px;
             padding: 12px;
             margin-bottom: 12px;
@@ -248,14 +256,14 @@
 
         .file-info {
             flex: 1;
-            color: #ececf1;
+            color: #13233a;
             font-size: 14px;
         }
 
         .remove-file-btn {
             background: transparent;
             border: none;
-            color: #c5c5d2;
+            color: #3a5f93;
             cursor: pointer;
             padding: 4px 8px;
             border-radius: 4px;
@@ -263,30 +271,31 @@
         }
 
         .remove-file-btn:hover {
-            background: #565869;
-            color: #ececf1;
+            background: #dbeafe;
+            color: #123a7a;
         }
 
         .input-box {
-            background: #40414f;
-            border: 1px solid #565869;
-            border-radius: 12px;
+            background: #ffffff;
+            border: 1px solid #7fb3ff;
+            border-bottom: 3px solid #2563eb;
+            border-radius: 8px;
             display: flex;
             align-items: flex-end;
             padding: 12px;
             gap: 12px;
-            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 10px 24px rgba(37, 99, 235, 0.14);
         }
 
         .input-box:focus-within {
-            border-color: #ececf1;
-            box-shadow: 0 0 0 1px #ececf1;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.14);
         }
 
         .attach-btn {
             background: transparent;
             border: none;
-            color: #ececf1;
+            color: #1d4ed8;
             cursor: pointer;
             font-size: 20px;
             padding: 8px;
@@ -299,7 +308,7 @@
         }
 
         .attach-btn:hover {
-            background: #565869;
+            background: #eef6ff;
         }
 
         .attach-btn input[type="file"] {
@@ -314,7 +323,7 @@
             flex: 1;
             background: transparent;
             border: none;
-            color: #ececf1;
+            color: #13233a;
             font-size: 16px;
             font-family: inherit;
             resize: none;
@@ -324,11 +333,11 @@
         }
 
         .message-textarea::placeholder {
-            color: #8e8ea0;
+            color: #6b89b8;
         }
 
         .send-button {
-            background: #19c37d;
+            background: #2563eb;
             border: none;
             color: white;
             width: 32px;
@@ -343,18 +352,18 @@
         }
 
         .send-button:hover:not(:disabled) {
-            background: #1a9f6a;
+            background: #1d4ed8;
         }
 
         .send-button:disabled {
-            background: #565869;
+            background: #7fb3ff;
             cursor: not-allowed;
             opacity: 0.5;
         }
 
         .powered-by {
             text-align: center;
-            color: #8e8ea0;
+            color: #4f6f9f;
             font-size: 12px;
             margin-top: 12px;
             padding: 0 16px;

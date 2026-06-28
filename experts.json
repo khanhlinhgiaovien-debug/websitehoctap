@@ -1,13 +1,13 @@
 [
   {
     "username": "bsnga",
-    "password": "123456",
+    "password": "scrypt:32768:8:1$6UfKI1GbynCB7EQW$31730d6d598b9ba97c8cc55a2ae3f4d8e1fb53181d84eb3f0b6c388d47dd5892ab2eb6d2fc645a6d8fc3eedbae0045b7c9714807b226b2816fd639649b8ee5ee",
     "name": "BS. Nguyễn Văn A",
     "specialty": "Sức khỏe tâm lý"
   },
   {
     "username": "bshue",
-    "password": "123456",
+    "password": "scrypt:32768:8:1$6UfKI1GbynCB7EQW$31730d6d598b9ba97c8cc55a2ae3f4d8e1fb53181d84eb3f0b6c388d47dd5892ab2eb6d2fc645a6d8fc3eedbae0045b7c9714807b226b2816fd639649b8ee5ee",
     "name": "BS. Trần Thị B",
     "specialty": "Dinh dưỡng"
   }

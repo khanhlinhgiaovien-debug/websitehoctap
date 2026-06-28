@@ -1,7 +1,7 @@
 Flask
 Pillow
 PyMuPDF
-google-generativeai
+google-genai
 gunicorn
-dotenv
+python-dotenv
 mammoth

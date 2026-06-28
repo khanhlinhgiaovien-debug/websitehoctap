@@ -13,46 +13,118 @@
         
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background:
+                linear-gradient(90deg, rgba(37, 99, 235, 0.28) 2px, transparent 2px) 54px 0 / 54px 100%,
+                repeating-linear-gradient(
+                    to bottom,
+                    #ffffff 0,
+                    #ffffff 30px,
+                    rgba(37, 99, 235, 0.32) 32px
+                );
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
             padding: 20px;
+            color: #13233a;
         }
         
         .login-container {
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-            padding: 40px;
+            position: relative;
+            overflow: hidden;
+            background:
+                linear-gradient(90deg, rgba(37, 99, 235, 0.9) 2px, transparent 2px) 58px 0 / 58px 100%,
+                repeating-linear-gradient(
+                    to bottom,
+                    #ffffff 0,
+                    #ffffff 30px,
+                    rgba(37, 99, 235, 0.25) 32px
+                );
+            border: 2px solid #2563eb;
+            border-radius: 8px;
+            box-shadow: 0 18px 40px rgba(37, 99, 235, 0.18);
+            padding: 48px 48px 40px 78px;
             width: 100%;
-            max-width: 450px;
+            max-width: 520px;
+            min-height: 610px;
+        }
+
+        .login-container::before {
+            content: "";
+            position: absolute;
+            top: 28px;
+            left: 22px;
+            width: 16px;
+            height: calc(100% - 56px);
+            background:
+                radial-gradient(circle, #ffffff 0 5px, #2563eb 6px 7px, transparent 8px)
+                center top / 16px 48px repeat-y;
+        }
+
+        .login-container::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 58px;
+            width: 2px;
+            background: rgba(37, 99, 235, 0.7);
+        }
+
+        .home-link {
+            position: relative;
+            z-index: 1;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            height: 36px;
+            padding: 0 12px;
+            margin-bottom: 18px;
+            color: #1d4ed8;
+            background: rgba(255, 255, 255, 0.78);
+            border: 1px solid #7fb3ff;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
+        }
+
+        .home-link:hover {
+            background: #ffffff;
+            transform: translateY(-1px);
+            box-shadow: 0 8px 18px rgba(37, 99, 235, 0.16);
         }
         
         .login-header {
+            position: relative;
+            z-index: 1;
             text-align: center;
-            margin-bottom: 30px;
+            margin-bottom: 34px;
+            padding-top: 7px;
         }
         
         .login-header h1 {
-            color: #333;
-            font-size: 28px;
+            color: #123a7a;
+            font-size: 30px;
             margin-bottom: 10px;
+            line-height: 1.2;
         }
         
         .login-header p {
-            color: #666;
-            font-size: 14px;
+            color: #3a5f93;
+            font-size: 15px;
         }
         
         .form-group {
-            margin-bottom: 20px;
+            position: relative;
+            z-index: 1;
+            margin-bottom: 24px;
         }
         
         .form-group label {
             display: block;
-            color: #333;
+            color: #123a7a;
             font-weight: 600;
             margin-bottom: 8px;
             font-size: 14px;
@@ -60,45 +132,57 @@
         
         .form-group input {
             width: 100%;
-            padding: 12px 15px;
-            border: 2px solid #e0e0e0;
-            border-radius: 10px;
-            font-size: 14px;
-            transition: all 0.3s;
+            height: 48px;
+            padding: 10px 12px;
+            border: 1px solid #7fb3ff;
+            border-bottom: 3px solid #2563eb;
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.72);
+            color: #13233a;
+            font-size: 16px;
+            transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
         }
         
         .form-group input:focus {
             outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            border-color: #1d4ed8;
+            background: #ffffff;
+            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.13);
         }
         
         .btn-submit {
+            position: relative;
+            z-index: 1;
             width: 100%;
-            padding: 14px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            height: 52px;
+            padding: 0 16px;
+            background: #2563eb;
             color: white;
             border: none;
-            border-radius: 10px;
+            border-radius: 6px;
             font-size: 16px;
             font-weight: 600;
             cursor: pointer;
-            transition: transform 0.2s;
+            transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
         }
         
         .btn-submit:hover {
+            background: #1d4ed8;
             transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+            box-shadow: 0 10px 22px rgba(37, 99, 235, 0.28);
         }
         
         .links {
+            position: relative;
+            z-index: 1;
             text-align: center;
-            margin-top: 20px;
+            margin-top: 22px;
             font-size: 14px;
+            color: #13233a;
         }
         
         .links a {
-            color: #667eea;
+            color: #1d4ed8;
             text-decoration: none;
             font-weight: 600;
         }
@@ -108,34 +192,63 @@
         }
         
         .alert {
+            position: relative;
+            z-index: 1;
             padding: 12px 15px;
-            border-radius: 10px;
-            margin-bottom: 20px;
+            border-radius: 6px;
+            margin-bottom: 22px;
             font-size: 14px;
         }
         
         .alert-success {
-            background: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
+            background: #eef6ff;
+            color: #123a7a;
+            border: 1px solid #7fb3ff;
         }
         
         .alert-error {
-            background: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
+            background: #fff5f5;
+            color: #9f1239;
+            border: 1px solid #fecdd3;
         }
         
         .divider {
+            position: relative;
+            z-index: 1;
             text-align: center;
-            margin: 20px 0;
-            color: #999;
+            margin: 22px 0;
+            color: #4f6f9f;
             font-size: 13px;
+        }
+
+        @media (max-width: 560px) {
+            body {
+                padding: 12px;
+            }
+
+            .login-container {
+                min-height: auto;
+                padding: 38px 24px 32px 58px;
+            }
+
+            .login-container::before {
+                left: 16px;
+            }
+
+            .login-container::after {
+                left: 46px;
+            }
+
+            .login-header h1 {
+                font-size: 25px;
+            }
         }
     </style>
 </head>
 <body>
     <div class="login-container">
+        <a href="{{ url_for('home') }}" class="home-link">← Trang chủ</a>
+
         <div class="login-header">
             <h1>🎓 Đăng nhập học sinh</h1>
             <p>Chào mừng bạn trở lại!</p>
