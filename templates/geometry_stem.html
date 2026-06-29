@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Xưởng sáng tác</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: "Segoe UI", Arial, sans-serif;
+            min-height: 100vh;
+            background:
+                linear-gradient(90deg, rgba(37, 99, 235, 0.42) 2px, transparent 2px) 0 0 / 68px 68px,
+                linear-gradient(rgba(37, 99, 235, 0.42) 2px, transparent 2px) 0 0 / 68px 40px,
+                #ffffff;
+            color: #172033;
+            padding: 22px;
+        }
+        .shell {
+            width: min(1180px, 100%);
+            margin: 0 auto;
+        }
+        .topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 14px;
+            margin-bottom: 18px;
+        }
+        .back-link, .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 42px;
+            padding: 0 16px;
+            border-radius: 8px;
+            border: 1px solid #2563eb;
+            background: #2563eb;
+            color: #ffffff;
+            font-weight: 750;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .back-link, .btn.secondary {
+            background: #ffffff;
+            color: #1d4ed8;
+        }
+        h1 {
+            color: #123a7a;
+            font-size: clamp(1.55rem, 3vw, 2.45rem);
+            line-height: 1.15;
+        }
+        .subtitle {
+            color: #3f587d;
+            margin-top: 8px;
+            max-width: 760px;
+            line-height: 1.55;
+            font-weight: 600;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: minmax(320px, 0.95fr) minmax(360px, 1.25fr);
+            gap: 18px;
+            align-items: start;
+        }
+        .panel, .problem-card {
+            background: rgba(255, 255, 255, 0.94);
+            border: 2px solid rgba(37, 99, 235, 0.85);
+            border-radius: 8px;
+            box-shadow: 0 16px 38px rgba(37, 99, 235, 0.14);
+            padding: 22px;
+        }
+        .panel h2, .list-title {
+            color: #123a7a;
+            font-size: 1.25rem;
+            margin-bottom: 14px;
+        }
+        label {
+            display: block;
+            color: #24324a;
+            font-weight: 750;
+            margin: 13px 0 7px;
+        }
+        input, textarea, select {
+            width: 100%;
+            border: 1px solid rgba(37, 99, 235, 0.35);
+            border-radius: 8px;
+            padding: 11px 12px;
+            font: inherit;
+            background: #ffffff;
+            color: #111827;
+        }
+        textarea {
+            min-height: 96px;
+            resize: vertical;
+            line-height: 1.45;
+        }
+        .hint {
+            color: #5b6f90;
+            font-size: 0.92rem;
+            margin-top: 6px;
+            line-height: 1.45;
+        }
+        .actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 16px;
+        }
+        .flash {
+            background: #eff6ff;
+            border: 1px solid #93c5fd;
+            color: #1e3a8a;
+            border-radius: 8px;
+            padding: 12px 14px;
+            margin: 14px 0;
+            font-weight: 700;
+        }
+        .problem-list {
+            display: grid;
+            gap: 16px;
+        }
+        .problem-card.focus {
+            border-color: #f97316;
+            box-shadow: 0 18px 42px rgba(249, 115, 22, 0.18);
+        }
+        .meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin: 10px 0 14px;
+        }
+        .tag {
+            display: inline-flex;
+            align-items: center;
+            min-height: 28px;
+            padding: 0 10px;
+            border-radius: 999px;
+            background: #eff6ff;
+            color: #1d4ed8;
+            border: 1px solid #bfdbfe;
+            font-size: 0.9rem;
+            font-weight: 750;
+        }
+        .tag.published {
+            background: #ecfdf5;
+            color: #047857;
+            border-color: #a7f3d0;
+        }
+        .problem-title {
+            color: #172033;
+            font-size: 1.22rem;
+            margin-bottom: 8px;
+        }
+        .section {
+            margin-top: 14px;
+        }
+        .section strong {
+            color: #123a7a;
+        }
+        .text-box {
+            margin-top: 7px;
+            padding: 12px;
+            background: #f8fbff;
+            border: 1px solid rgba(37, 99, 235, 0.18);
+            border-radius: 8px;
+            white-space: pre-wrap;
+            line-height: 1.5;
+        }
+        .review {
+            background: #fff7ed;
+            border-color: #fed7aa;
+        }
+        .rating-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(110px, 1fr));
+            gap: 10px;
+            margin-top: 8px;
+        }
+        .rating-grid label {
+            margin-top: 0;
+            font-size: 0.9rem;
+        }
+        .rating-grid input {
+            margin-top: 6px;
+        }
+        .score-line {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+        .comment {
+            background: #ffffff;
+            border-left: 4px solid #2563eb;
+            padding: 10px 12px;
+            border-radius: 8px;
+            margin-top: 10px;
+        }
+        .empty {
+            color: #5b6f90;
+            background: rgba(255,255,255,0.8);
+            border: 1px dashed #93c5fd;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            font-weight: 650;
+        }
+        @media (max-width: 900px) {
+            .grid { grid-template-columns: 1fr; }
+            .rating-grid { grid-template-columns: 1fr 1fr; }
+            .topbar { align-items: flex-start; flex-direction: column; }
+        }
+        @media (max-width: 560px) {
+            body { padding: 14px; }
+            .panel, .problem-card { padding: 16px; }
+            .rating-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <main class="shell">
+        <div class="topbar">
+            <div>
+                <h1>Xưởng sáng tác</h1>
+            </div>
+            <a href="{{ url_for('projects') }}" class="back-link">Quay lại CLB 4T</a>
+        </div>
+
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="flash">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div class="grid">
+            <section class="panel">
+                <h2>Nhập bản nháp đề bài</h2>
+                <form action="{{ url_for('geometry_stem_review') }}" method="POST">
+                    <label for="author">Tác giả / nhóm</label>
+                    <input id="author" name="author" placeholder="Ví dụ: Nhóm 2" required>
+
+                    <label for="title">Tiêu đề đề bài</label>
+                    <input id="title" name="title" placeholder="Ví dụ: Cầu vòm trong công viên" required>
+
+                    <label for="context">Bối cảnh thực tiễn</label>
+                    <select id="context" name="context" required>
+                        <option value="">Chọn bối cảnh</option>
+                        <option>Cầu vòm</option>
+                        <option>Băng chuyền mỏ than</option>
+                        <option>Bánh đai cơ khí</option>
+                        <option>Mái nhà / khung kèo</option>
+                        <option>Bồn nước / ống trụ</option>
+                        <option>Cầu giàn tam giác</option>
+                        <option>Tự nhập trong nội dung đề</option>
+                    </select>
+
+                    <label for="geometry_element">Yếu tố Hình học chính</label>
+                    <input id="geometry_element" name="geometry_element" placeholder="Ví dụ: tam giác vuông, parabol, đường tròn, tiếp tuyến..." required>
+
+                    <label for="data_points">Số liệu và đơn vị đang có</label>
+                    <textarea id="data_points" name="data_points" placeholder="Ví dụ: cầu dài 12m, cao 3m, xe 2 tấn, khoảng cách hai trụ 10m..."></textarea>
+
+                    <label for="problem_text">Nội dung đề bài bản nháp</label>
+                    <textarea id="problem_text" name="problem_text" placeholder="Viết đề bài thực tiễn mà em tự sáng tác..." required></textarea>
+
+                    <label for="question">Câu hỏi muốn cả lớp giải</label>
+                    <textarea id="question" name="question" placeholder="Ví dụ: Tính chiều cao tại điểm cách chân cầu 4m."></textarea>
+
+                    <p class="hint">AI chỉ phản biện và gợi ý chỉnh sửa, không giải bài thay học sinh.</p>
+                    <div class="actions">
+                        <button type="submit" class="btn">AI phản biện Hình học</button>
+                    </div>
+                </form>
+            </section>
+
+            <section>
+                <h2 class="list-title">Kho đề Hình học STEM của lớp</h2>
+                <div class="problem-list">
+                    {% if problems %}
+                        {% for problem in problems %}
+                            <article class="problem-card {% if focus_id == problem.id %}focus{% endif %}" id="problem-{{ problem.id }}">
+                                <h3 class="problem-title">{{ problem.title }}</h3>
+                                <div class="meta">
+                                    <span class="tag">{{ problem.author }}</span>
+                                    <span class="tag">{{ problem.context }}</span>
+                                    <span class="tag">{{ problem.geometry_element }}</span>
+                                    {% if problem.status == 'published' %}
+                                        <span class="tag published">Đã đăng lớp</span>
+                                    {% else %}
+                                        <span class="tag">Bản đã phản biện</span>
+                                    {% endif %}
+                                </div>
+
+                                <div class="section">
+                                    <strong>Số liệu:</strong>
+                                    <div class="text-box">{{ problem.data_points or 'Chưa ghi số liệu cụ thể.' }}</div>
+                                </div>
+
+                                <div class="section">
+                                    <strong>Đề bài học sinh sáng tác:</strong>
+                                    <div class="text-box">{{ problem.problem_text }}</div>
+                                </div>
+
+                                {% if problem.question %}
+                                    <div class="section">
+                                        <strong>Câu hỏi cho cả lớp:</strong>
+                                        <div class="text-box">{{ problem.question }}</div>
+                                    </div>
+                                {% endif %}
+
+                                <div class="section">
+                                    <strong>Tri-hand phản biện:</strong>
+                                    <div class="text-box review">{{ problem.ai_review }}</div>
+                                </div>
+
+                                {% if problem.status != 'published' %}
+                                    <form action="{{ url_for('geometry_stem_publish', problem_id=problem.id) }}" method="POST" class="actions">
+                                        <button type="submit" class="btn">Đăng cho cả lớp giải</button>
+                                    </form>
+                                {% else %}
+                                    <div class="section">
+                                        <strong>Điểm đánh giá lớp:</strong>
+                                        <div class="score-line">
+                                            <span class="tag published">TB: {{ problem.average_score if problem.average_score is not none else 'Chưa có' }}</span>
+                                            {% if problem.average_breakdown %}
+                                                <span class="tag">Độc đáo: {{ problem.average_breakdown.originality }}</span>
+                                                <span class="tag">Ứng dụng: {{ problem.average_breakdown.application }}</span>
+                                                <span class="tag">Rõ ràng: {{ problem.average_breakdown.clarity }}</span>
+                                                <span class="tag">Liêm chính: {{ problem.average_breakdown.integrity }}</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+
+                                    <div class="section">
+                                        <strong>Đánh giá đề bài này</strong>
+                                        <form action="{{ url_for('geometry_stem_rate', problem_id=problem.id) }}" method="POST">
+                                            <label>Tên học sinh</label>
+                                            <input name="student_name" placeholder="Tên của em" required>
+                                            <div class="rating-grid">
+                                                <label>Độ hay / độc đáo
+                                                    <input type="number" name="originality" min="0" max="10" step="0.1" required>
+                                                </label>
+                                                <label>Tính ứng dụng
+                                                    <input type="number" name="application" min="0" max="10" step="0.1" required>
+                                                </label>
+                                                <label>Độ rõ ràng
+                                                    <input type="number" name="clarity" min="0" max="10" step="0.1" required>
+                                                </label>
+                                                <label>Liêm chính học thuật
+                                                    <input type="number" name="integrity" min="0" max="10" step="0.1" required>
+                                                </label>
+                                            </div>
+                                            <label>Nhận xét</label>
+                                            <textarea name="comment_text" placeholder="Đề bài hay ở đâu? Có ứng dụng thực tế không? Có cần sửa gì không?" required></textarea>
+                                            <div class="actions">
+                                                <button type="submit" class="btn secondary">Gửi đánh giá</button>
+                                            </div>
+                                        </form>
+                                    </div>
+
+                                    {% if problem.ratings %}
+                                        <div class="section">
+                                            <strong>Nhận xét của lớp</strong>
+                                            {% for rating in problem.ratings %}
+                                                <div class="comment">
+                                                    <strong>{{ rating.student_name }}</strong>
+                                                    <span class="tag">TB {{ rating.average }}</span>
+                                                    <div>{{ rating.comment_text }}</div>
+                                                </div>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                {% endif %}
+                            </article>
+                        {% endfor %}
+                    {% else %}
+                        <div class="empty">Chưa có đề bài nào. Hãy tạo bản nháp đầu tiên và mời Tri-hand phản biện.</div>
+                    {% endif %}
+                </div>
+            </section>
+        </div>
+    </main>
+</body>
+</html>

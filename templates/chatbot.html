@@ -138,6 +138,11 @@
             border-bottom: 1px solid rgba(37, 99, 235, 0.24);
         }
 
+        .message-pending .message-content {
+            color: #4f6f9f;
+            font-style: italic;
+        }
+
         .message-wrapper {
             max-width: 768px;
             margin: 0 auto;
@@ -174,6 +179,18 @@
             font-size: 16px;
             white-space: pre-wrap;
             word-wrap: break-word;
+            overflow-x: auto;
+        }
+
+        .message-content mjx-container[jax="SVG"][display="true"] {
+            margin: 18px auto;
+            padding: 10px 0;
+            overflow-x: auto;
+            overflow-y: hidden;
+        }
+
+        .message-content mjx-container {
+            color: #0f172a;
         }
 
         .welcome-screen {
@@ -369,6 +386,46 @@
             padding: 0 16px;
         }
 
+        .mindmap-tools {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 10px;
+            margin-top: 12px;
+        }
+
+        .mindmap-topic {
+            min-width: 0;
+            height: 42px;
+            padding: 0 12px;
+            border: 1px solid #7fb3ff;
+            border-bottom: 3px solid #2563eb;
+            border-radius: 8px;
+            color: #13233a;
+            font: inherit;
+            background: #ffffff;
+            outline: none;
+        }
+
+        .mindmap-topic:focus {
+            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.14);
+        }
+
+        .mindmap-button {
+            height: 42px;
+            padding: 0 16px;
+            border: 1px solid #0f766e;
+            border-radius: 8px;
+            background: #0f766e;
+            color: #ffffff;
+            font-weight: 700;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .mindmap-button:hover {
+            background: #0d9488;
+        }
+
         @media (max-width: 768px) {
             .message-wrapper {
                 padding: 0 12px;
@@ -399,8 +456,25 @@
                 padding: 6px 12px;
                 font-size: 13px;
             }
+
+            .mindmap-tools {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['\\(', '\\)'], ['$', '$']],
+                displayMath: [['\\[', '\\]'], ['$$', '$$']],
+                processEscapes: true
+            },
+            svg: {
+                fontCache: 'global'
+            }
+        };
+    </script>
+    <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
 </head>
 <body>
     <div class="chat-container">
@@ -503,6 +577,16 @@
                         </button>
                     </div>
                 </form>
+
+                <form method="POST" action="{{ url_for('create_chatbot_mindmap') }}" class="mindmap-tools" target="_blank">
+                    <input
+                        type="text"
+                        name="mindmap_topic"
+                        class="mindmap-topic"
+                        placeholder="Chủ đề sơ đồ (bỏ trống để dùng cuộc trò chuyện)"
+                    >
+                    <button type="submit" class="mindmap-button">Tạo sơ đồ tư duy</button>
+                </form>
                 
                 <div class="powered-by">
                     Trợ lý AI có thể mắc lỗi. Hãy kiểm tra thông tin quan trọng.
@@ -552,12 +636,59 @@
                 const fileInput = document.getElementById('fileInput');
                 
                 if (messageInput.value.trim() !== '' || fileInput.files.length > 0) {
-                    form.submit();
+                    form.requestSubmit();
                 }
             }
         }
 
-        document.getElementById('chatForm').addEventListener('submit', function(e) {
+        function removeWelcomeScreen() {
+            const welcomeScreen = document.querySelector('.welcome-screen');
+            if (welcomeScreen) {
+                welcomeScreen.remove();
+            }
+        }
+
+        function createMessage(role, text, pending = false) {
+            const chatMessages = document.getElementById('chatMessages');
+            const message = document.createElement('div');
+            message.className = `message message-${role}${pending ? ' message-pending' : ''}`;
+
+            const wrapper = document.createElement('div');
+            wrapper.className = 'message-wrapper';
+
+            const avatar = document.createElement('div');
+            avatar.className = `message-avatar avatar-${role === 'user' ? 'user' : 'bot'}`;
+            avatar.textContent = role === 'user' ? '👤' : '🤖';
+
+            const content = document.createElement('div');
+            content.className = 'message-content';
+            content.textContent = text;
+
+            wrapper.appendChild(avatar);
+            wrapper.appendChild(content);
+            message.appendChild(wrapper);
+            chatMessages.appendChild(message);
+            scrollToBottom();
+
+            if (window.MathJax && window.MathJax.typesetPromise) {
+                window.MathJax.typesetPromise([content]);
+            }
+
+            return { message, content };
+        }
+
+        function resetChatForm() {
+            const messageInput = document.getElementById('messageInput');
+            const fileInput = document.getElementById('fileInput');
+            const filePreviewArea = document.getElementById('filePreviewArea');
+
+            messageInput.value = '';
+            messageInput.style.height = 'auto';
+            fileInput.value = '';
+            filePreviewArea.classList.remove('active');
+        }
+
+        document.getElementById('chatForm').addEventListener('submit', async function(e) {
             const messageInput = document.getElementById('messageInput');
             const fileInput = document.getElementById('fileInput');
             const sendBtn = document.getElementById('sendBtn');
@@ -566,8 +697,41 @@
                 e.preventDefault();
                 return;
             }
-            
+
+            e.preventDefault();
+
+            const formData = new FormData(this);
+            const userText = messageInput.value.trim() || `[Đã gửi file: ${fileInput.files[0]?.name || 'tệp đính kèm'}]`;
+
+            removeWelcomeScreen();
+            createMessage('user', userText);
+            const pendingBot = createMessage('bot', 'Tri-hand đang suy nghĩ...', true);
+            resetChatForm();
             sendBtn.disabled = true;
+
+            try {
+                const response = await fetch(this.action || window.location.href, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+
+                const data = await response.json();
+                pendingBot.message.classList.remove('message-pending');
+                pendingBot.content.textContent = data.bot || 'Tri-hand chưa nhận được phản hồi.';
+
+                if (window.MathJax && window.MathJax.typesetPromise) {
+                    window.MathJax.typesetPromise([pendingBot.content]);
+                }
+            } catch (error) {
+                pendingBot.message.classList.remove('message-pending');
+                pendingBot.content.textContent = 'Có lỗi khi gửi tin nhắn. Em thử gửi lại giúp Tri-hand nhé.';
+            } finally {
+                sendBtn.disabled = false;
+                scrollToBottom();
+            }
         });
 
         messageInput.addEventListener('input', function() {

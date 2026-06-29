@@ -74,6 +74,27 @@
             box-shadow: 0 6px 15px rgba(37, 99, 235, 0.28);
         }
 
+        .bridge-link {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 48px;
+            margin-top: 14px;
+            padding: 12px 14px;
+            border-radius: 6px;
+            border: 2px solid #f97316;
+            background: #fff7ed;
+            color: #9a3412;
+            font-weight: 800;
+            text-decoration: none;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .bridge-link:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 18px rgba(249, 115, 22, 0.22);
+        }
+
         .home-link {
             position: fixed;
             top: 16px;
@@ -120,6 +141,7 @@
             </select>
             <button type="submit"> Bắt đầu</button>
         </form>
+        <a href="/bridge_game" class="bridge-link">Game xây cầu</a>
     </div>
 </body>
 </html>

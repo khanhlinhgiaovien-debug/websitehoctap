@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for
-import json, os, re, unicodedata
+import json, os, re, unicodedata, math, time
+import html as html_lib
 from PIL import Image
 from google import genai
 import uuid
@@ -126,11 +127,26 @@ def get_google_api_keys():
     return keys
 
 
+def sanitize_gemini_error(error):
+    message = str(error).replace('\n', ' ')
+    for key in GOOGLE_API_KEYS if 'GOOGLE_API_KEYS' in globals() else []:
+        if key:
+            message = message.replace(key, '[REDACTED_API_KEY]')
+    message = re.sub(r"api_key:[^'\"\s]+", "api_key:[REDACTED_API_KEY]", message)
+    message = re.sub(r"AIza[0-9A-Za-z_-]+", "[REDACTED_API_KEY]", message)
+    return message[:500]
+
+
+class GeminiKeyRotationError(Exception):
+    pass
+
+
 class RotatingGeminiModel:
     def __init__(self, model_name, api_keys):
         self.model_name = model_name
         self.api_keys = api_keys
         self.current_key_index = 0
+        self.key_blocked_until = [0] * len(api_keys)
         self.lock = Lock()
 
     def _normalized_model_name(self):
@@ -144,20 +160,54 @@ class RotatingGeminiModel:
         message = str(error).lower()
 
         return (
-            status_code in (429, 503)
+            status_code in (403, 429, 503)
+            or str(status_code) in ("403", "429", "503")
             or "resource_exhausted" in status_name.lower()
+            or "permission_denied" in status_name.lower()
             or "quota" in message
             or "rate limit" in message
             or "429" in message
             or "403" in message
             or "permission denied" in message
+            or "permission_denied" in message
+            or "suspended" in message
             or "consumer_suspended" in message
             or "api key not valid" in message
+            or "api_key_invalid" in message
+            or "invalid api key" in message
+            or "invalid_argument" in message
         )
 
     def _set_current_key(self, key_index):
         with self.lock:
             self.current_key_index = key_index % len(self.api_keys)
+
+    def _block_key_after_error(self, key_index, error):
+        message = str(error).lower()
+        status_name = str(getattr(error, "status", "")).lower()
+        now = time.time()
+
+        if (
+            "consumer_suspended" in message
+            or "suspended" in message
+            or "api key not valid" in message
+            or "api_key_invalid" in message
+            or "invalid api key" in message
+        ):
+            block_seconds = 24 * 60 * 60
+        elif "quota" in message or "rate limit" in message or "resource_exhausted" in status_name or "429" in message:
+            block_seconds = 90
+        else:
+            block_seconds = 30
+
+        with self.lock:
+            self.key_blocked_until[key_index] = now + block_seconds
+
+    def _available_key_indices(self, start_key_index):
+        now = time.time()
+        indices = [(start_key_index + attempt) % len(self.api_keys) for attempt in range(len(self.api_keys))]
+        available = [index for index in indices if self.key_blocked_until[index] <= now]
+        return available or indices
 
     def generate_content(self, *args, **kwargs):
         last_error = None
@@ -173,8 +223,7 @@ class RotatingGeminiModel:
         else:
             contents = kwargs.pop("contents")
 
-        for attempt in range(total_keys):
-            key_index = (start_key_index + attempt) % total_keys
+        for key_index in self._available_key_indices(start_key_index):
             api_key = self.api_keys[key_index]
 
             client = genai.Client(api_key=api_key)
@@ -185,16 +234,20 @@ class RotatingGeminiModel:
                     contents=contents,
                     **kwargs
                 )
-                self._set_current_key(key_index)
+                self._set_current_key(key_index + 1)
                 return response
             except Exception as error:
                 last_error = error
                 if total_keys == 1 or not self._is_limit_error(error):
                     raise
 
+                self._block_key_after_error(key_index, error)
                 self._set_current_key(key_index + 1)
 
-        raise last_error
+        raise GeminiKeyRotationError(
+            "Tri-hand chua goi duoc Gemini vi tat ca API key hien co dang het quota, "
+            "bi khoa/suspended hoac khong hop le. Hay doi quota reset hoac them API key moi vao GOOGLE_API_KEYS trong .env."
+        )
 
 
 GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "models/gemini-2.5-flash")
@@ -1507,6 +1560,727 @@ def delete_class_activity(activity_id):
 ###############
 ###
 #
+MINDMAP_DIR = os.path.join('static', 'chatbot_mindmaps')
+
+TUTOR_PERSONA_PROMPT = """
+
+Ban la Tri-hand, mot gia su Toan than thien cho hoc sinh THCS/THPT.
+- Ban khong phai cong cu dua dap an. Ban la gia su giup hoc sinh tu suy nghi.
+- Noi tieng Viet tu nhien, gan gui, goi hoc sinh la "em".
+- Giai thich cham rai, ro tung y, khong viet dai qua muc can thiet.
+- Uu tien Toan hoc. Neu hoc sinh hoi mon khac, van giu phong cach gia su goi mo.
+- Neu hoc sinh gui de nhung chua co bai lam: KHONG dua loi giai hoan chinh.
+- Chi neu dang bai, kien thuc can dung, cong thuc, dinh ly, huong tiep can va cau hoi goi mo.
+- Neu hoc sinh da thu lam: kiem tra dung/sai, chi loi, giai thich ngan, goi y cach sua.
+- Hinh hoc/chung minh: dung phan tich nguoc: ket luan -> dieu can co -> dinh ly/can cu -> gia thiet; sau do yeu cau em viet loi giai thuan.
+- Cau truc mac dinh: nhan dien dang bai -> cong thuc/kien thuc -> goi y buoc dau -> dat 1 cau hoi cho em lam tiep.
+"""
+
+MATH_FORMAT_RULES = """
+
+QUY TAC HIEN THI CONG THUC TOAN:
+- Tri-hand uu tien phuc vu mon Toan, nen cong thuc phai hien thi dung va dep.
+- Viet cong thuc bang LaTeX de MathJax render tren giao dien.
+- Cong thuc ngan dat trong \\( ... \\), vi du: \\(x^2 + 2x + 1\\).
+- Cong thuc quan trong hoac can canh giua dat trong \\[ ... \\].
+- Dung \\frac{}{}, ^{}, _{}, \\sqrt{}, \\lim, \\sin, \\cos, \\tan, \\ln, \\to cho phan so, luy thua, can, gioi han, luong giac, logarit.
+- Khong viet cong thuc dang text tho neu co the viet LaTeX.
+"""
+
+
+def strip_json_fences(text):
+    text = (text or '').strip()
+    text = re.sub(r'^```(?:json)?\s*', '', text, flags=re.IGNORECASE)
+    text = re.sub(r'\s*```$', '', text)
+    match = re.search(r'\{.*\}', text, re.DOTALL)
+    return match.group(0) if match else text
+
+
+def load_mindmap_json(raw_json):
+    try:
+        return json.loads(raw_json)
+    except json.JSONDecodeError:
+        escaped_latex = re.sub(r'\\(?!["\\/bfnrtu])', r'\\\\', raw_json)
+        return json.loads(escaped_latex)
+
+
+def safe_text(value, fallback=''):
+    value = str(value or fallback).strip()
+    return value[:180]
+
+
+def safe_formula(value):
+    formula = str(value or '').strip()
+    if not formula:
+        return ''
+    formula = formula.replace('`', '')
+    while '\\\\' in formula:
+        formula = formula.replace('\\\\', '\\')
+    formula = re.sub(r'\s+', ' ', formula)
+
+    delimited = (
+        re.search(r'\\\((.*?)\\\)', formula)
+        or re.search(r'\\\[(.*?)\\\]', formula)
+        or re.search(r'\$\$(.*?)\$\$', formula)
+        or re.search(r'\$(.*?)\$', formula)
+    )
+    if delimited:
+        formula = delimited.group(1).strip()
+
+    if formula.startswith('\\[') and formula.endswith('\\]'):
+        formula = f"\\({formula[2:-2].strip()}\\)"
+    elif formula.startswith('$$') and formula.endswith('$$'):
+        formula = f"\\({formula[2:-2].strip()}\\)"
+    elif formula.startswith('$') and formula.endswith('$'):
+        formula = f"\\({formula[1:-1].strip()}\\)"
+    formula = formula[:260]
+    if formula.startswith('\\('):
+        return formula
+    return f'\\({formula}\\)'
+
+
+def normalize_mindmap_child(child):
+    if isinstance(child, dict):
+        title = safe_text(child.get('title') or child.get('text') or child.get('label'), '')
+        formula = safe_formula(child.get('formula') or child.get('math'))
+    else:
+        title = safe_text(child, '')
+        formula = ''
+
+    if not title and formula:
+        title = 'Cong thuc'
+
+    return {'title': title, 'formula': formula}
+
+
+def normalize_mindmap_data(raw_data, source_text):
+    title = safe_text(raw_data.get('title'), 'So do tu duy')
+    summary = safe_text(raw_data.get('summary'), 'Tom tat kien thuc chinh')
+    branches = raw_data.get('branches') if isinstance(raw_data.get('branches'), list) else []
+
+    normalized = []
+    for index, branch in enumerate(branches[:7]):
+        if not isinstance(branch, dict):
+            continue
+        children = branch.get('children') if isinstance(branch.get('children'), list) else []
+        normalized_children = []
+        for child in children[:3]:
+            normalized_child = normalize_mindmap_child(child)
+            if normalized_child['title']:
+                normalized_children.append(normalized_child)
+
+        normalized.append({
+            'title': safe_text(branch.get('title'), f'Y {index + 1}'),
+            'note': safe_text(branch.get('note'), ''),
+            'formula': safe_formula(branch.get('formula') or branch.get('math')),
+            'children': normalized_children
+        })
+
+    if not normalized:
+        sentences = [s.strip() for s in re.split(r'[.\n]+', source_text) if s.strip()]
+        for index, sentence in enumerate(sentences[:5]):
+            normalized.append({
+                'title': sentence[:42],
+                'note': '',
+                'formula': '',
+                'children': []
+            })
+
+    return {
+        'title': title,
+        'summary': summary,
+        'branches': normalized
+    }
+
+
+def get_mindmap_variant(data):
+    seed_text = data['title'] + '|' + '|'.join(branch['title'] for branch in data['branches'])
+    seed = int(hashlib.sha256(seed_text.encode('utf-8')).hexdigest()[:8], 16)
+    variants = ['orbit', 'split', 'cascade', 'constellation', 'ribbon', 'radial']
+    palettes = [
+        ['#2563eb', '#f97316', '#16a34a', '#e11d48', '#7c3aed', '#0891b2', '#ca8a04'],
+        ['#0f766e', '#db2777', '#ea580c', '#4f46e5', '#65a30d', '#0284c7', '#be123c'],
+        ['#1d4ed8', '#9333ea', '#dc2626', '#059669', '#d97706', '#0e7490', '#be185d'],
+        ['#0369a1', '#b45309', '#15803d', '#c026d3', '#b91c1c', '#047857', '#4338ca']
+    ]
+    return variants[seed % len(variants)], palettes[(seed // 7) % len(palettes)], seed
+
+
+def wrap_svg_text(text, max_chars):
+    words = html_lib.escape(str(text)).split()
+    lines = []
+    current = ''
+    for word in words:
+        candidate = f'{current} {word}'.strip()
+        if len(candidate) > max_chars and current:
+            lines.append(current)
+            current = word
+        else:
+            current = candidate
+    if current:
+        lines.append(current)
+    return lines[:4]
+
+
+def render_node(x, y, w, h, text, fill, stroke, text_color='#0f172a', shape='rect', subtitle='', formula=''):
+    if shape == 'pill':
+        body = f'<rect x="{x - w / 2:.1f}" y="{y - h / 2:.1f}" width="{w}" height="{h}" rx="{h / 2:.1f}" fill="{fill}" stroke="{stroke}" stroke-width="3"/>'
+    elif shape == 'circle':
+        body = f'<ellipse cx="{x:.1f}" cy="{y:.1f}" rx="{w / 2:.1f}" ry="{h / 2:.1f}" fill="{fill}" stroke="{stroke}" stroke-width="3"/>'
+    else:
+        body = f'<rect x="{x - w / 2:.1f}" y="{y - h / 2:.1f}" width="{w}" height="{h}" rx="18" fill="{fill}" stroke="{stroke}" stroke-width="3"/>'
+
+    subtitle_html = f'<div class="node-subtitle">{html_lib.escape(subtitle)}</div>' if subtitle else ''
+    display_formula = safe_formula(formula).replace('\\\\', '\\') if formula else ''
+    formula_html = f'<div class="node-formula">{html_lib.escape(display_formula)}</div>' if display_formula else ''
+
+    return f'''
+    <g class="node">
+        {body}
+        <foreignObject x="{x - w / 2 + 12:.1f}" y="{y - h / 2 + 10:.1f}" width="{w - 24}" height="{h - 20}">
+            <div xmlns="http://www.w3.org/1999/xhtml" class="node-content" style="color:{text_color};">
+                <div class="node-title">{html_lib.escape(text)}</div>
+                {subtitle_html}
+                {formula_html}
+            </div>
+        </foreignObject>
+    </g>
+    '''
+
+
+def get_branch_positions(count, variant):
+    if count <= 0:
+        return []
+
+    if count >= 5:
+        radius_x = 590
+        radius_y = 520
+        start_offsets = {
+            'orbit': -math.pi / 2,
+            'radial': -math.pi / 2 + 0.16,
+            'constellation': -math.pi / 2 - 0.16,
+            'ribbon': -math.pi / 2,
+            'cascade': -math.pi / 2 + 0.10,
+            'split': -math.pi / 2 - 0.10,
+        }
+        offset = start_offsets.get(variant, -math.pi / 2)
+        return [
+            (radius_x * math.cos(offset + 2 * math.pi * i / count),
+             radius_y * math.sin(offset + 2 * math.pi * i / count))
+            for i in range(count)
+        ]
+
+    if variant == 'split':
+        left = [(-560, -300), (-610, -20), (-520, 300)]
+        right = [(560, -300), (610, -20), (520, 300), (120, 390)]
+        return (left + right)[:count]
+
+    if variant == 'cascade':
+        return [(-620 + i * (1240 / max(count - 1, 1)), -320 + (i % 3) * 300) for i in range(count)]
+
+    if variant == 'ribbon':
+        return [(-640 + i * (1280 / max(count - 1, 1)), 310 * math.sin(i * 1.2)) for i in range(count)]
+
+    if variant == 'constellation':
+        base = [(-570, -300), (-180, -360), (310, -330), (620, -40), (390, 370), (-230, 390), (-640, 40)]
+        return base[:count]
+
+    radius_x = 620 if variant == 'orbit' else 570
+    radius_y = 350 if variant == 'orbit' else 330
+    offset = -math.pi / 2
+    return [
+        (radius_x * math.cos(offset + 2 * math.pi * i / count),
+         radius_y * math.sin(offset + 2 * math.pi * i / count))
+        for i in range(count)
+    ]
+
+
+def clamp(value, low, high):
+    return max(low, min(high, value))
+
+
+def get_child_position(parent_x, parent_y, center_x, center_y, child_index, total_children, width, height):
+    dx = parent_x - center_x
+    dy = parent_y - center_y
+    distance = math.hypot(dx, dy) or 1
+    ux, uy = dx / distance, dy / distance
+    px, py = -uy, ux
+    if abs(ux) < 0.42:
+        spread_step = 330
+    elif abs(uy) < 0.42:
+        spread_step = 155
+    else:
+        spread_step = 260
+    spread = (child_index - (total_children - 1) / 2) * spread_step
+    outward = 270 + min(total_children, 4) * 20
+    child_x = parent_x + ux * outward + px * spread
+    child_y = parent_y + uy * outward + py * spread
+    return clamp(child_x, 155, width - 155), clamp(child_y, 130, height - 130)
+
+
+def render_mindmap_html(data):
+    variant, palette, seed = get_mindmap_variant(data)
+    branches = data['branches']
+    width, height = 2200, 1900
+    cx, cy = width / 2, height / 2
+    positions = get_branch_positions(len(branches), variant)
+    shapes = ['rect', 'pill', 'rect', 'pill', 'circle']
+
+    links = []
+    nodes = []
+    child_nodes = []
+
+    center_fill = '#eff6ff'
+    nodes.append(render_node(cx, cy, 360, 136, data['title'], center_fill, '#1d4ed8', '#123a7a', 'pill', data.get('summary', '')))
+
+    for index, branch in enumerate(branches):
+        dx, dy = positions[index]
+        x, y = cx + dx, cy + dy
+        color = palette[index % len(palette)]
+        branch_fill = '#ffffff'
+        curve = 80 if dx >= 0 else -80
+        links.append(f'<path d="M {cx:.1f} {cy:.1f} C {cx + curve:.1f} {cy:.1f}, {x - curve:.1f} {y:.1f}, {x:.1f} {y:.1f}" fill="none" stroke="{color}" stroke-width="6" stroke-linecap="round" opacity="0.82"/>')
+        branch_height = 166 if branch.get('formula') else 104
+        nodes.append(render_node(x, y, 330, branch_height, branch['title'], branch_fill, color, '#0f172a', shapes[(seed + index) % len(shapes)], branch.get('note', ''), branch.get('formula', '')))
+
+        children = branch.get('children', [])
+        for child_index, child in enumerate(children):
+            child_x, child_y = get_child_position(x, y, cx, cy, child_index, len(children), width, height)
+            control_y = (y + child_y) / 2 - (35 if child_y >= y else -35)
+            links.append(f'<path d="M {x:.1f} {y:.1f} Q {(x + child_x) / 2:.1f} {control_y:.1f}, {child_x:.1f} {child_y:.1f}" fill="none" stroke="{color}" stroke-width="3.5" stroke-linecap="round" opacity="0.58"/>')
+            child_height = 132 if child.get('formula') else 78
+            child_nodes.append(render_node(child_x, child_y, 300, child_height, child['title'], '#f8fbff', color, '#13233a', 'pill', '', child.get('formula', '')))
+
+    decorative = []
+    for i, color in enumerate(palette[:5]):
+        decorative.append(f'<circle cx="{115 + i * 75}" cy="{105 + (i % 2) * 34}" r="{14 + (i % 3) * 4}" fill="{color}" opacity="0.16"/>')
+        decorative.append(f'<path d="M {1390 - i * 62} {840 + (i % 2) * 34} l 18 -18 m -18 18 l -18 -18" stroke="{color}" stroke-width="5" stroke-linecap="round" opacity="0.18"/>')
+
+    svg = f'''
+    <svg id="mindmap-svg" xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" viewBox="0 0 {width} {height}">
+        <defs>
+            <style>
+                <![CDATA[
+                .node-content {{
+                    width: 100%;
+                    height: 100%;
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 4px;
+                    padding: 2px 4px;
+                    text-align: center;
+                    font-family: "Segoe UI", Arial, sans-serif;
+                    line-height: 1.18;
+                    overflow: hidden;
+                }}
+                .node-title {{
+                    max-width: 100%;
+                    font-size: 16px;
+                    font-weight: 800;
+                    overflow-wrap: anywhere;
+                }}
+                .node-subtitle {{
+                    max-width: 100%;
+                    font-size: 13px;
+                    font-weight: 700;
+                    opacity: 0.72;
+                    overflow-wrap: anywhere;
+                }}
+                .node-formula {{
+                    max-width: 100%;
+                    font-size: 14px;
+                    font-weight: 700;
+                    color: #0f172a;
+                    overflow: hidden;
+                }}
+                .node-formula mjx-container {{
+                    margin: 0 !important;
+                    max-width: 100%;
+                }}
+                ]]>
+            </style>
+            <pattern id="notebook" width="68" height="40" patternUnits="userSpaceOnUse">
+                <rect width="68" height="40" fill="#ffffff"/>
+                <path d="M 0 0 H 68 M 0 0 V 40" stroke="rgba(37,99,235,0.32)" stroke-width="2"/>
+            </pattern>
+            <filter id="softShadow" x="-20%" y="-20%" width="140%" height="140%">
+                <feDropShadow dx="0" dy="10" stdDeviation="10" flood-color="#1d4ed8" flood-opacity="0.16"/>
+            </filter>
+        </defs>
+        <rect width="100%" height="100%" fill="url(#notebook)"/>
+        <g filter="url(#softShadow)">
+            {''.join(decorative)}
+            {''.join(links)}
+            {''.join(child_nodes)}
+            {''.join(nodes)}
+        </g>
+        <text x="80" y="930" font-family="Segoe UI, Arial, sans-serif" font-size="18" fill="#3a5f93" font-weight="700">Tri-hand Mindmap</text>
+    </svg>
+    '''
+
+    return f'''<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sơ đồ tư duy - {html_lib.escape(data['title'])}</title>
+    <script>
+        window.MathJax = {{
+            tex: {{
+                inlineMath: [['\\\\(', '\\\\)'], ['$', '$']],
+                displayMath: [['\\\\[', '\\\\]']]
+            }},
+            svg: {{ fontCache: 'none' }},
+            startup: {{ typeset: false }}
+        }};
+    </script>
+    <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        * {{ box-sizing: border-box; }}
+        body {{
+            margin: 0;
+            font-family: "Segoe UI", Arial, sans-serif;
+            background:
+                linear-gradient(90deg, rgba(37, 99, 235, 0.42) 2px, transparent 2px) 0 0 / 68px 68px,
+                linear-gradient(rgba(37, 99, 235, 0.42) 2px, transparent 2px) 0 0 / 68px 40px,
+                #ffffff;
+            color: #123a7a;
+        }}
+        .toolbar {{
+            position: sticky;
+            top: 0;
+            z-index: 5;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 18px;
+            background: rgba(255, 255, 255, 0.94);
+            border-bottom: 2px solid #2563eb;
+            box-shadow: 0 10px 24px rgba(37,99,235,0.14);
+        }}
+        .toolbar-title {{ font-weight: 800; }}
+        .actions {{ display: flex; gap: 10px; flex-wrap: wrap; }}
+        .btn {{
+            border: 1px solid #2563eb;
+            background: #2563eb;
+            color: white;
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-weight: 700;
+            cursor: pointer;
+            text-decoration: none;
+        }}
+        .btn.secondary {{ background: white; color: #1d4ed8; }}
+        .canvas-wrap {{
+            width: min(1900px, calc(100vw - 28px));
+            margin: 18px auto;
+            background: #ffffff;
+            border: 2px solid #2563eb;
+            border-radius: 12px;
+            overflow: auto;
+            box-shadow: 0 16px 38px rgba(37,99,235,0.16);
+        }}
+        #mindmap-svg {{ display: block; width: 100%; min-width: 1180px; height: auto; }}
+        .node-content {{
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            padding: 2px 4px;
+            text-align: center;
+            font-family: "Segoe UI", Arial, sans-serif;
+            line-height: 1.14;
+            overflow: hidden;
+        }}
+        .node-title {{
+            max-width: 100%;
+            font-size: 15px;
+            font-weight: 800;
+            overflow-wrap: anywhere;
+        }}
+        .node-subtitle {{
+            max-width: 100%;
+            font-size: 12px;
+            font-weight: 700;
+            opacity: 0.72;
+            overflow-wrap: anywhere;
+        }}
+        .node-formula {{
+            width: 100%;
+            max-width: 100%;
+            min-height: 34px;
+            max-height: 56px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            color: #0f172a;
+        }}
+        .node-formula mjx-container {{
+            margin: 0 !important;
+            max-width: 100% !important;
+            font-size: 110% !important;
+            line-height: 1 !important;
+            overflow: hidden !important;
+        }}
+        .node-formula mjx-container svg {{
+            max-width: 100% !important;
+            max-height: 52px !important;
+            overflow: hidden !important;
+        }}
+        .node-formula.math-fallback {{
+            font-size: 13px;
+            font-weight: 700;
+            white-space: normal;
+            overflow-wrap: anywhere;
+        }}
+    </style>
+</head>
+<body>
+    <div class="toolbar">
+        <div class="toolbar-title">Sơ đồ tư duy: {html_lib.escape(data['title'])}</div>
+        <div class="actions">
+            <a href="/chatbot" class="btn secondary">← Quay lại chatbot</a>
+            <button class="btn" onclick="downloadPng()">Tải PNG</button>
+        </div>
+    </div>
+    <div class="canvas-wrap">{svg}</div>
+    <script>
+        function normalizeFormulaText() {{
+            document.querySelectorAll('.node-formula').forEach((holder) => {{
+                holder.childNodes.forEach((node) => {{
+                    if (node.nodeType !== Node.TEXT_NODE) return;
+                    node.textContent = node.textContent
+                        .replace(/\\\\\\\\/g, '\\\\')
+                        .replace(/\\\\\\(/g, '\\\\(')
+                        .replace(/\\\\\\)/g, '\\\\)');
+                }});
+            }});
+        }}
+
+        async function renderMindmapMath() {{
+            normalizeFormulaText();
+            if (window.MathJax && window.MathJax.startup && window.MathJax.startup.promise) {{
+                await window.MathJax.startup.promise;
+                if (window.MathJax.typesetPromise) {{
+                    for (const holder of document.querySelectorAll('.node-formula')) {{
+                        try {{
+                            await window.MathJax.typesetPromise([holder]);
+                        }} catch (error) {{
+                            holder.classList.add('math-fallback');
+                        }}
+                    }}
+                }}
+            }}
+            fitMindmapFormulas();
+            setTimeout(fitMindmapFormulas, 120);
+        }}
+
+        function fitMindmapFormulas() {{
+            document.querySelectorAll('.node-formula mjx-container').forEach((math) => {{
+                math.style.transform = '';
+                math.style.transformOrigin = 'center center';
+                const holder = math.closest('.node-formula');
+                if (!holder) return;
+                const holderBox = holder.getBoundingClientRect();
+                const mathBox = math.getBoundingClientRect();
+                if (!holderBox.width || !holderBox.height || !mathBox.width || !mathBox.height) return;
+                const scale = Math.min(1, holderBox.width / mathBox.width, holderBox.height / mathBox.height);
+                if (scale < 1) {{
+                    math.style.transform = `scale(${{Math.max(scale, 0.62)}})`;
+                }}
+            }});
+        }}
+
+        window.addEventListener('DOMContentLoaded', renderMindmapMath);
+
+        function saveCanvasAsPng(canvas) {{
+            const link = document.createElement('a');
+            link.download = 'tri-hand-so-do-tu-duy.png';
+            link.href = canvas.toDataURL('image/png');
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+        }}
+
+        function downloadSvgFallback() {{
+            return new Promise((resolve, reject) => {{
+                const svg = document.getElementById('mindmap-svg');
+                const serializer = new XMLSerializer();
+                const svgText = serializer.serializeToString(svg);
+                const blob = new Blob([svgText], {{ type: 'image/svg+xml;charset=utf-8' }});
+                const url = URL.createObjectURL(blob);
+                const image = new Image();
+                const timer = setTimeout(() => {{
+                    URL.revokeObjectURL(url);
+                    reject(new Error('SVG render timeout'));
+                }}, 6000);
+
+                image.onload = function() {{
+                    clearTimeout(timer);
+                    const canvas = document.createElement('canvas');
+                    canvas.width = svg.viewBox.baseVal.width;
+                    canvas.height = svg.viewBox.baseVal.height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    ctx.drawImage(image, 0, 0);
+                    URL.revokeObjectURL(url);
+                    saveCanvasAsPng(canvas);
+                    resolve();
+                }};
+
+                image.onerror = function() {{
+                    clearTimeout(timer);
+                    URL.revokeObjectURL(url);
+                    reject(new Error('Khong ve duoc SVG len canvas'));
+                }};
+
+                image.src = url;
+            }});
+        }}
+
+        async function downloadPng() {{
+            const button = document.querySelector('button[onclick="downloadPng()"]');
+            const oldText = button ? button.textContent : '';
+            if (button) {{
+                button.disabled = true;
+                button.textContent = 'Đang tải...';
+            }}
+
+            await renderMindmapMath();
+
+            try {{
+                if (window.html2canvas) {{
+                    const element = document.querySelector('.canvas-wrap');
+                    const previousWidth = element.style.width;
+                    const previousOverflow = element.style.overflow;
+                    element.style.width = `${{element.scrollWidth}}px`;
+                    element.style.overflow = 'visible';
+
+                    const canvas = await html2canvas(element, {{
+                        backgroundColor: '#ffffff',
+                        scale: 2,
+                        useCORS: true,
+                        logging: false,
+                        width: element.scrollWidth,
+                        height: element.scrollHeight,
+                        windowWidth: element.scrollWidth + 40,
+                        windowHeight: element.scrollHeight + 40
+                    }});
+
+                    element.style.width = previousWidth;
+                    element.style.overflow = previousOverflow;
+                    saveCanvasAsPng(canvas);
+                }} else {{
+                    await downloadSvgFallback();
+                }}
+            }} catch (error) {{
+                console.error(error);
+                try {{
+                    await downloadSvgFallback();
+                }} catch (fallbackError) {{
+                    console.error(fallbackError);
+                    alert('Chưa tải được PNG. Em thử tải lại sau khi trang render xong hoặc tạo sơ đồ mới nhé.');
+                }}
+            }} finally {{
+                if (button) {{
+                    button.disabled = false;
+                    button.textContent = oldText || 'Tải PNG';
+                }}
+            }}
+        }}
+    </script>
+</body>
+</html>'''
+
+
+@app.route('/chatbot/create_mindmap', methods=['POST'])
+def create_chatbot_mindmap():
+    chat_history = session.get('chat_history', [])
+    topic = request.form.get('mindmap_topic', '').strip()
+
+    history_text = '\n'.join(
+        f"Hoc sinh: {item.get('user', '')}\nAI: {item.get('bot', '')}"
+        for item in chat_history[-6:]
+    )
+    source_text = topic or history_text
+
+    if not source_text.strip():
+        session['chat_history'] = [{
+            'user': '[Tao so do tu duy]',
+            'bot': 'Em hay hoi hoac trao doi mot noi dung truoc, sau do bam Tao so do.',
+            'timestamp': datetime.now().strftime("%H:%M")
+        }]
+        session.modified = True
+        return redirect(url_for('chatbot'))
+
+    prompt = f"""
+Hay tao du lieu JSON cho mot SO DO TU DUY hoc tap tu noi dung sau.
+Chi tra ve JSON hop le, khong markdown.
+
+Yeu cau su pham:
+- Tom tat dung kien thuc da trao doi, khong them dap an giai hoan chinh neu la bai tap.
+- Moi nhanh ngan gon, ro y, dung tieng Viet.
+- Tao 4 den 6 nhanh chinh, moi nhanh co 2 den 3 y con de so do thoang, khong roi.
+- Dat title ngan, summary mot cau.
+- Neu noi dung co cong thuc Toan, BAT BUOC dua cong thuc quan trong vao truong "formula".
+- Cong thuc phai viet bang LaTeX MathJax dang INLINE \\(...\\), khong dung \\[...\\] trong so do vi o nho.
+- Vi dang tra ve JSON, moi dau backslash trong LaTeX nen viet thanh \\\\, vi du "\\\\frac{{a}}{{b}}".
+- Voi cac muc nhu trung binh cong, tong, xac suat, dao ham, tich phan, hinh hoc... hay uu tien chen cong thuc vao nhanh phu hop.
+- Co the goi y visual_style/palette nhung khong bat buoc.
+
+Schema:
+{{
+  "title": "...",
+  "summary": "...",
+  "branches": [
+    {{
+      "title": "...",
+      "note": "...",
+      "formula": "\\\\(cong thuc neu co\\\\)",
+      "children": [
+        {{"title": "...", "formula": "\\\\(cong thuc neu co\\\\)"}},
+        {{"title": "...", "formula": ""}}
+      ]
+    }}
+  ]
+}}
+
+NOI DUNG:
+{source_text[:6000]}
+"""
+
+    try:
+        ai_response = model.generate_content(prompt)
+        raw_json = strip_json_fences(ai_response.text)
+        raw_data = load_mindmap_json(raw_json)
+    except Exception:
+        raw_data = {
+            'title': topic or 'So do tu duy',
+            'summary': 'Tom tat tu noi dung trao doi',
+            'branches': []
+        }
+
+    mindmap_data = normalize_mindmap_data(raw_data, source_text)
+    html_content = render_mindmap_html(mindmap_data)
+
+    os.makedirs(MINDMAP_DIR, exist_ok=True)
+    filename = f"mindmap_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{uuid.uuid4().hex[:8]}.html"
+    file_path = os.path.join(MINDMAP_DIR, filename)
+    with open(file_path, 'w', encoding='utf-8') as f:
+        f.write(html_content)
+
+    return redirect(url_for('static', filename=f'chatbot_mindmaps/{filename}'))
+
+
 # Route cho chatbot
 @app.route('/chatbot', methods=['GET', 'POST'])
 def chatbot():
@@ -1518,6 +2292,8 @@ def chatbot():
     if request.method == 'POST':
         user_message = request.form.get('message', '').strip()
         uploaded_file = request.files.get('file')
+        is_ajax_request = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+        user_display = user_message if user_message else '[Da gui file]'
 
         # Đọc dữ liệu từ data.txt
         knowledge_base = ""
@@ -1588,6 +2364,12 @@ LƯU Ý:
 
 Hãy ưu tiên sử dụng thông tin từ KIẾN THỨC CƠ SỞ khi trả lời các câu hỏi liên quan.
 """
+        system_prompt = (
+            TUTOR_PERSONA_PROMPT
+            + MATH_FORMAT_RULES
+            + "\nKien thuc co so ngan gon:\n"
+            + knowledge_base[:800]
+        )
 
         try:
             # Xử lý nếu có file đính kèm
@@ -1648,7 +2430,15 @@ Hãy ưu tiên sử dụng thông tin từ KIẾN THỨC CƠ SỞ khi trả lờ
             session.modified = True
 
         except Exception as e:
-            response_text = f"Lỗi: {str(e)}"
+            response_text = f"Lỗi: {sanitize_gemini_error(e)}"
+
+    if request.method == 'POST' and locals().get('is_ajax_request'):
+        return jsonify({
+            'success': not str(response_text).lower().startswith(('loi:', 'lỗi:')),
+            'user': locals().get('user_display', ''),
+            'bot': response_text,
+            'timestamp': datetime.now().strftime("%H:%M")
+        })
 
     return render_template('chatbot.html',
                            chat_history=session.get('chat_history', []),
@@ -2189,6 +2979,11 @@ def game():
     return render_template("game.html")
 
 
+@app.route("/bridge_game")
+def bridge_game():
+    return render_template("bridge_game.html")
+
+
 @app.route("/get_questions")
 def get_questions():
     bai = session.get("bai", "bai_1")
@@ -2280,6 +3075,8 @@ EXAM_FILE = os.path.join(DATA_FOLDER, 'exam_data.json')
 PROJECTS_FILE = os.path.join(DATA_FOLDER, 'projects.json')
 PROJECT_IMAGES_FILE = os.path.join(DATA_FOLDER, 'project_images.json')
 GENERAL_IMAGES_FILE = os.path.join(DATA_FOLDER, 'data.json')
+GEOMETRY_STEM_FILE = os.path.join(DATA_FOLDER, 'geometry_stem_problems.json')
+GEOMETRY_STEM_PROMPT_FILE = os.path.join(DATA_FOLDER, 'geometry_stem_critic_prompt.txt')
 
 
 def load_exam(de_id):
@@ -2328,6 +3125,56 @@ def save_general_images(data):
         json.dump(data, f, ensure_ascii=False, indent=2)
 
 
+def load_geometry_stem_problems():
+    try:
+        with open(GEOMETRY_STEM_FILE, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+            return data if isinstance(data, list) else []
+    except:
+        return []
+
+
+def save_geometry_stem_problems(data):
+    with open(GEOMETRY_STEM_FILE, 'w', encoding='utf-8') as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+
+
+def load_geometry_stem_prompt():
+    try:
+        with open(GEOMETRY_STEM_PROMPT_FILE, 'r', encoding='utf-8') as f:
+            return f.read()
+    except:
+        return (
+            "Bạn là Tri-hand, chuyên gia phản biện đề bài Hình học STEM. "
+            "Không giải bài, chỉ kiểm tra yếu tố Hình học, số liệu vật lý, "
+            "dữ kiện còn thiếu và gợi ý học sinh tự chỉnh sửa."
+        )
+
+
+def parse_rating(value):
+    score = float(value)
+    if score < 0 or score > 10:
+        raise ValueError("score out of range")
+    return score
+
+
+def update_geometry_stem_average(problem):
+    ratings = problem.get('ratings', [])
+    if not ratings:
+        problem['average_score'] = None
+        problem['average_breakdown'] = {}
+        return
+
+    keys = ['originality', 'application', 'clarity', 'integrity']
+    problem['average_score'] = round(
+        sum(r.get('average', 0) for r in ratings) / len(ratings), 2
+    )
+    problem['average_breakdown'] = {
+        key: round(sum(r.get(key, 0) for r in ratings) / len(ratings), 2)
+        for key in keys
+    }
+
+
 @app.route('/exam/<de_id>')
 def exam(de_id):
     questions = load_exam(de_id)
@@ -2340,6 +3187,133 @@ def exam(de_id):
 def projects():
     project_list = load_projects()
     return render_template('projects.html', projects=project_list)
+
+
+@app.route('/geometry_stem')
+def geometry_stem():
+    problems = load_geometry_stem_problems()
+    problems = sorted(problems, key=lambda item: item.get('created_at', ''), reverse=True)
+    return render_template(
+        'geometry_stem.html',
+        problems=problems,
+        focus_id=request.args.get('focus', '')
+    )
+
+
+@app.route('/geometry_stem/review', methods=['POST'])
+def geometry_stem_review():
+    author = request.form.get('author', '').strip()
+    title = request.form.get('title', '').strip()
+    context = request.form.get('context', '').strip()
+    geometry_element = request.form.get('geometry_element', '').strip()
+    data_points = request.form.get('data_points', '').strip()
+    problem_text = request.form.get('problem_text', '').strip()
+    question = request.form.get('question', '').strip()
+
+    if not author or not title or not context or not geometry_element or not problem_text:
+        flash("Vui lòng nhập đủ tên, tiêu đề, bối cảnh, yếu tố Hình học và nội dung đề bài.")
+        return redirect(url_for('geometry_stem'))
+
+    critic_prompt = load_geometry_stem_prompt()
+    full_prompt = f"""{critic_prompt}
+
+THÔNG TIN ĐỀ BÀI HỌC SINH GỬI:
+- Tác giả/nhóm: {author}
+- Tiêu đề: {title}
+- Bối cảnh thực tiễn: {context}
+- Yếu tố Hình học dự kiến: {geometry_element}
+- Số liệu/đơn vị đã có: {data_points}
+- Nội dung đề bài nháp: {problem_text}
+- Câu hỏi muốn cả lớp giải: {question}
+
+Hãy phản biện theo đúng vai trò chuyên gia Hình học STEM. Không giải bài, không đưa đáp án cuối.
+"""
+
+    try:
+        response = model.generate_content([full_prompt])
+        ai_review = clean_ai_output(response.text)
+    except Exception as e:
+        ai_review = f"Lỗi AI phản biện: {sanitize_gemini_error(e)}"
+
+    problems = load_geometry_stem_problems()
+    problem_id = str(uuid.uuid4())
+    problems.append({
+        "id": problem_id,
+        "author": author,
+        "title": title,
+        "context": context,
+        "geometry_element": geometry_element,
+        "data_points": data_points,
+        "problem_text": problem_text,
+        "question": question,
+        "ai_review": ai_review,
+        "status": "reviewed",
+        "ratings": [],
+        "average_score": None,
+        "average_breakdown": {},
+        "created_at": datetime.now().strftime("%Y-%m-%d %H:%M")
+    })
+    save_geometry_stem_problems(problems)
+    flash("AI đã phản biện bản nháp. Nếu thấy ổn, em có thể đăng đề cho cả lớp.")
+    return redirect(url_for('geometry_stem', focus=problem_id))
+
+
+@app.route('/geometry_stem/<problem_id>/publish', methods=['POST'])
+def geometry_stem_publish(problem_id):
+    problems = load_geometry_stem_problems()
+    for problem in problems:
+        if problem.get('id') == problem_id:
+            problem['status'] = 'published'
+            problem['published_at'] = datetime.now().strftime("%Y-%m-%d %H:%M")
+            save_geometry_stem_problems(problems)
+            flash("Đã đăng đề bài cho cả lớp cùng giải và đánh giá.")
+            return redirect(url_for('geometry_stem', focus=problem_id))
+
+    flash("Không tìm thấy đề bài.")
+    return redirect(url_for('geometry_stem'))
+
+
+@app.route('/geometry_stem/<problem_id>/rate', methods=['POST'])
+def geometry_stem_rate(problem_id):
+    student_name = request.form.get('student_name', '').strip()
+    comment_text = request.form.get('comment_text', '').strip()
+
+    if not student_name or not comment_text:
+        flash("Vui lòng nhập tên và nhận xét.")
+        return redirect(url_for('geometry_stem', focus=problem_id))
+
+    try:
+        rating = {
+            "student_name": student_name,
+            "comment_text": comment_text,
+            "originality": parse_rating(request.form.get('originality', '')),
+            "application": parse_rating(request.form.get('application', '')),
+            "clarity": parse_rating(request.form.get('clarity', '')),
+            "integrity": parse_rating(request.form.get('integrity', '')),
+            "created_at": datetime.now().strftime("%Y-%m-%d %H:%M")
+        }
+    except:
+        flash("Điểm đánh giá phải nằm trong khoảng 0 - 10.")
+        return redirect(url_for('geometry_stem', focus=problem_id))
+
+    rating['average'] = round((
+        rating['originality'] + rating['application'] + rating['clarity'] + rating['integrity']
+    ) / 4, 2)
+
+    problems = load_geometry_stem_problems()
+    for problem in problems:
+        if problem.get('id') == problem_id:
+            if problem.get('status') != 'published':
+                flash("Đề bài này chưa được đăng cho lớp đánh giá.")
+                return redirect(url_for('geometry_stem', focus=problem_id))
+            problem.setdefault('ratings', []).append(rating)
+            update_geometry_stem_average(problem)
+            save_geometry_stem_problems(problems)
+            flash("Đã ghi nhận đánh giá của em.")
+            return redirect(url_for('geometry_stem', focus=problem_id))
+
+    flash("Không tìm thấy đề bài.")
+    return redirect(url_for('geometry_stem'))
 
 
 @app.route('/submit/<de_id>', methods=['GET', 'POST'])

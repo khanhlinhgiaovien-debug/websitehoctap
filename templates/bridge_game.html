@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game xây cầu</title>
+    <script src="https://cdn.jsdelivr.net/npm/matter-js@0.20.0/build/matter.min.js"></script>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: "Segoe UI", Arial, sans-serif;
+            background: #eaf7ff;
+            color: #172033;
+            overflow: hidden;
+        }
+        .game-shell {
+            width: 100vw;
+            height: 100vh;
+            display: grid;
+            grid-template-rows: auto 1fr auto;
+            background: linear-gradient(#7ed4f4 0%, #d9f6ff 58%, #dbd651 58%, #d7ce47 100%);
+        }
+        .topbar {
+            position: relative;
+            z-index: 3;
+            min-height: 72px;
+            padding: 12px 18px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            pointer-events: none;
+        }
+        .nav-left, .nav-right, .level-badge {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            pointer-events: auto;
+        }
+        .btn {
+            height: 44px;
+            border: 2px solid rgba(255,255,255,0.75);
+            border-radius: 8px;
+            padding: 0 16px;
+            background: #ef4444;
+            color: #ffffff;
+            font-weight: 800;
+            cursor: pointer;
+            box-shadow: 0 5px 0 rgba(127,29,29,0.45);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            white-space: nowrap;
+        }
+        .btn:hover { filter: brightness(1.04); transform: translateY(-1px); }
+        .btn.primary { background: #f97316; box-shadow: 0 5px 0 rgba(154,52,18,0.48); }
+        .btn.blue { background: #2563eb; box-shadow: 0 5px 0 rgba(30,64,175,0.48); }
+        .level-badge {
+            height: 54px;
+            min-width: 190px;
+            justify-content: center;
+            color: #ffffff;
+            background: linear-gradient(180deg, #ffbe55, #f97316);
+            border: 3px solid rgba(255,255,255,0.78);
+            border-radius: 8px;
+            box-shadow: 0 6px 0 rgba(154,52,18,0.32);
+            font-size: 1.25rem;
+            font-weight: 900;
+            text-transform: uppercase;
+        }
+        .stage-wrap {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 0;
+        }
+        #gameCanvas {
+            width: min(100vw, 1280px);
+            height: min(calc(100vh - 170px), 720px);
+            display: block;
+            border-radius: 0;
+            touch-action: none;
+        }
+        .hud {
+            position: absolute;
+            left: 18px;
+            bottom: 18px;
+            z-index: 4;
+            display: grid;
+            gap: 8px;
+            pointer-events: none;
+        }
+        .pill {
+            width: max-content;
+            min-height: 34px;
+            padding: 7px 12px;
+            border-radius: 8px;
+            background: rgba(255,255,255,0.92);
+            border: 1px solid rgba(37,99,235,0.28);
+            color: #123a7a;
+            font-weight: 800;
+            box-shadow: 0 8px 20px rgba(15,23,42,0.12);
+        }
+        .materials {
+            position: relative;
+            z-index: 5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 12px 16px 16px;
+            background: rgba(255,255,255,0.76);
+            border-top: 2px solid rgba(37,99,235,0.24);
+            backdrop-filter: blur(10px);
+        }
+        .tool {
+            min-width: 138px;
+            height: 56px;
+            border: 2px solid #bfdbfe;
+            border-radius: 8px;
+            background: #ffffff;
+            color: #123a7a;
+            font-weight: 850;
+            cursor: pointer;
+            display: grid;
+            align-content: center;
+            justify-items: center;
+            gap: 2px;
+        }
+        .tool span {
+            font-size: 0.75rem;
+            color: #4b658a;
+            font-weight: 800;
+        }
+        .tool.active {
+            border-color: #f97316;
+            color: #9a3412;
+            box-shadow: 0 0 0 4px rgba(249,115,22,0.18);
+        }
+        .result {
+            position: absolute;
+            z-index: 8;
+            inset: 0;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            background: rgba(15,23,42,0.22);
+        }
+        .result.show { display: flex; }
+        .result-card {
+            width: min(460px, calc(100vw - 28px));
+            border-radius: 8px;
+            border: 3px solid #ffffff;
+            background: #ffffff;
+            box-shadow: 0 24px 60px rgba(15,23,42,0.28);
+            padding: 26px;
+            text-align: center;
+        }
+        .result-card h2 {
+            color: #123a7a;
+            margin: 0 0 10px;
+            font-size: 2rem;
+        }
+        .result-card p {
+            color: #3f587d;
+            font-weight: 700;
+            line-height: 1.45;
+            margin: 0 0 18px;
+        }
+        .result-actions {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        @media (max-width: 720px) {
+            body { overflow: auto; }
+            .game-shell { min-height: 100vh; height: auto; }
+            .topbar { flex-wrap: wrap; justify-content: center; }
+            .level-badge { order: -1; width: 100%; }
+            #gameCanvas { height: 520px; }
+            .materials { flex-wrap: wrap; }
+            .tool { flex: 1 1 140px; }
+        }
+    </style>
+</head>
+<body>
+    <main class="game-shell">
+        <div class="topbar">
+            <div class="nav-left">
+                <a href="/enter_nickname" class="btn">Quay lại</a>
+                <button class="btn blue" id="resetBtn" type="button">Làm lại</button>
+            </div>
+            <div class="level-badge" id="levelLabel">Level 1</div>
+            <div class="nav-right">
+                <button class="btn primary" id="runBtn" type="button">Chạy xe</button>
+                <button class="btn blue" id="nextBtn" type="button">Level tiếp</button>
+            </div>
+        </div>
+
+        <section class="stage-wrap">
+            <canvas id="gameCanvas" width="1200" height="680"></canvas>
+            <div class="hud">
+                <div class="pill" id="budgetText">Ngân sách: 0 / 100</div>
+                <div class="pill" id="statusText">Chọn vật liệu rồi bấm vào các điểm trắng để ghép cầu.</div>
+            </div>
+            <div class="result" id="resultBox">
+                <div class="result-card">
+                    <h2 id="resultTitle">Chiến thắng</h2>
+                    <p id="resultText">Xe đã qua cầu.</p>
+                    <div class="result-actions">
+                        <button class="btn primary" id="resultNextBtn" type="button">Level tiếp</button>
+                        <button class="btn blue" id="resultResetBtn" type="button">Chơi lại</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <div class="materials">
+            <button class="tool active" data-tool="straight" type="button">Thanh gỗ thẳng <span>2 điểm, chắc vừa</span></button>
+            <button class="tool" data-tool="triangle" type="button">Thanh tam giác <span>tạo giàn chịu lực</span></button>
+            <button class="tool" data-tool="parabola" type="button">Thanh parabol <span>vòm cầu</span></button>
+            <button class="tool" data-tool="square" type="button">Khối gỗ vuông <span>1 điểm, làm trụ</span></button>
+        </div>
+    </main>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const runBtn = document.getElementById('runBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const levelLabel = document.getElementById('levelLabel');
+        const budgetText = document.getElementById('budgetText');
+        const statusText = document.getElementById('statusText');
+        const resultBox = document.getElementById('resultBox');
+        const resultTitle = document.getElementById('resultTitle');
+        const resultText = document.getElementById('resultText');
+
+        if (!window.Matter) {
+            statusText.textContent = 'Chưa tải được Matter.js. Hãy kiểm tra mạng rồi tải lại trang.';
+            throw new Error('Matter.js not loaded');
+        }
+
+        const { Engine, World, Bodies, Body, Composite } = Matter;
+
+        const W = canvas.width;
+        const H = canvas.height;
+        const tools = {
+            straight: { cost: 10, color: '#b87931', width: 18, strength: 14 },
+            triangle: { cost: 18, color: '#d49342', width: 15, strength: 30 },
+            parabola: { cost: 24, color: '#c75a3d', width: 16, strength: 34 },
+            square: { cost: 12, color: '#8b5a2b', width: 52, strength: 16 }
+        };
+        const levels = [
+            { name: 'Level 1', budget: 100, weight: 1.0, required: 55, anchors: [[390,455],[500,455],[610,370],[610,455],[720,455],[830,455]] },
+            { name: 'Level 2', budget: 115, weight: 1.25, required: 84, anchors: [[370,455],[480,455],[565,385],[650,385],[760,455],[870,455],[565,505],[650,505]] },
+            { name: 'Level 3', budget: 130, weight: 1.55, required: 106, anchors: [[360,455],[470,455],[570,355],[650,355],[760,455],[880,455],[515,515],[700,515]] }
+        ];
+
+        let engine;
+        let currentLevel = 0;
+        let selectedTool = 'straight';
+        let selectedAnchor = null;
+        let pieces = [];
+        let staticBodies = [];
+        let car = null;
+        let running = false;
+        let failedByStructure = false;
+        let collapseTriggered = false;
+        let resultShown = false;
+        let lastTime = performance.now();
+
+        document.querySelectorAll('.tool').forEach(button => {
+            button.addEventListener('click', () => {
+                if (running) return;
+                selectedTool = button.dataset.tool;
+                selectedAnchor = null;
+                document.querySelectorAll('.tool').forEach(item => item.classList.remove('active'));
+                button.classList.add('active');
+                setStatus(selectedTool === 'square' ? 'Bấm một điểm trắng để đặt khối gỗ vuông.' : 'Bấm hai điểm trắng để đặt thanh gỗ.');
+            });
+        });
+
+        resetBtn.addEventListener('click', () => resetLevel());
+        nextBtn.addEventListener('click', () => nextLevel());
+        document.getElementById('resultResetBtn').addEventListener('click', () => resetLevel());
+        document.getElementById('resultNextBtn').addEventListener('click', () => nextLevel());
+        runBtn.addEventListener('click', runBridgeTest);
+
+        function setStatus(text) {
+            statusText.textContent = text;
+        }
+
+        function initEngine() {
+            engine = Engine.create();
+            engine.gravity.y = 1.05;
+            World.add(engine.world, [
+                Bodies.rectangle(180, 524, 420, 138, { isStatic: true, label: 'leftGround' }),
+                Bodies.rectangle(1020, 524, 430, 138, { isStatic: true, label: 'rightGround' }),
+                Bodies.rectangle(600, 706, 1320, 40, { isStatic: true, label: 'floor' })
+            ]);
+        }
+
+        function resetLevel() {
+            if (engine) Composite.clear(engine.world, false);
+            initEngine();
+            selectedAnchor = null;
+            pieces = [];
+            staticBodies = [];
+            car = null;
+            running = false;
+            failedByStructure = false;
+            collapseTriggered = false;
+            resultShown = false;
+            resultBox.classList.remove('show');
+            levelLabel.textContent = levels[currentLevel].name;
+            setStatus('Chọn vật liệu rồi bấm vào các điểm trắng để ghép cầu.');
+            updateBudget();
+        }
+
+        function nextLevel() {
+            currentLevel = (currentLevel + 1) % levels.length;
+            resetLevel();
+        }
+
+        function level() {
+            return levels[currentLevel];
+        }
+
+        function getBudgetUsed() {
+            return pieces.reduce((sum, piece) => sum + piece.cost, 0);
+        }
+
+        function updateBudget() {
+            const used = getBudgetUsed();
+            budgetText.textContent = `Ngân sách: ${used} / ${level().budget}`;
+            budgetText.style.color = used > level().budget ? '#b91c1c' : '#123a7a';
+        }
+
+        function nearestAnchor(x, y) {
+            let best = null;
+            let bestDistance = 34;
+            for (const point of level().anchors) {
+                const distance = Math.hypot(point[0] - x, point[1] - y);
+                if (distance < bestDistance) {
+                    best = point;
+                    bestDistance = distance;
+                }
+            }
+            return best;
+        }
+
+        function addBody(body) {
+            staticBodies.push(body);
+            World.add(engine.world, body);
+        }
+
+        function createSegment(a, b, width, color, type) {
+            const mx = (a[0] + b[0]) / 2;
+            const my = (a[1] + b[1]) / 2;
+            const length = Math.hypot(b[0] - a[0], b[1] - a[1]);
+            const angle = Math.atan2(b[1] - a[1], b[0] - a[0]);
+            const body = Bodies.rectangle(mx, my, length, width, {
+                isStatic: true,
+                friction: 0.86,
+                restitution: 0.02,
+                label: type,
+                renderData: { color, type, length, angle }
+            });
+            Body.setAngle(body, angle);
+            addBody(body);
+            return body;
+        }
+
+        function addStraight(a, b) {
+            const body = createSegment(a, b, tools.straight.width, tools.straight.color, 'straight');
+            pieces.push({ type: 'straight', endpoints: [a, b], bodies: [body], cost: tools.straight.cost, strength: tools.straight.strength });
+        }
+
+        function addTriangle(a, b) {
+            const dx = b[0] - a[0];
+            const dy = b[1] - a[1];
+            const length = Math.hypot(dx, dy);
+            const apex = [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2 - Math.max(72, Math.min(128, length * 0.48))];
+            const bodies = [
+                createSegment(a, b, tools.triangle.width, tools.triangle.color, 'triangle'),
+                createSegment(a, apex, tools.triangle.width, tools.triangle.color, 'triangle'),
+                createSegment(apex, b, tools.triangle.width, tools.triangle.color, 'triangle')
+            ];
+            pieces.push({ type: 'triangle', endpoints: [a, b], extra: [apex], bodies, cost: tools.triangle.cost, strength: tools.triangle.strength });
+        }
+
+        function addParabola(a, b) {
+            const bodies = [];
+            const length = Math.hypot(b[0] - a[0], b[1] - a[1]);
+            const arch = Math.max(82, Math.min(150, length * 0.32));
+            let prev = a;
+            for (let i = 1; i <= 6; i++) {
+                const t = i / 6;
+                const x = a[0] + (b[0] - a[0]) * t;
+                const y = a[1] + (b[1] - a[1]) * t - arch * 4 * t * (1 - t);
+                const point = [x, y];
+                bodies.push(createSegment(prev, point, tools.parabola.width, tools.parabola.color, 'parabola'));
+                prev = point;
+            }
+            pieces.push({ type: 'parabola', endpoints: [a, b], bodies, cost: tools.parabola.cost, strength: tools.parabola.strength });
+        }
+
+        function addSquare(a) {
+            const body = Bodies.rectangle(a[0], a[1] - 30, tools.square.width, tools.square.width, {
+                isStatic: true,
+                friction: 0.9,
+                label: 'square',
+                renderData: { color: tools.square.color, type: 'square' }
+            });
+            addBody(body);
+            pieces.push({ type: 'square', endpoints: [a], bodies: [body], cost: tools.square.cost, strength: tools.square.strength });
+        }
+
+        function tryPlace(anchor) {
+            if (!anchor || running) return;
+            if (selectedTool === 'square') {
+                if (getBudgetUsed() + tools.square.cost > level().budget + 20) {
+                    setStatus('Ngân sách đã quá cao, hãy làm lại hoặc dùng ít vật liệu hơn.');
+                    return;
+                }
+                addSquare(anchor);
+                updateBudget();
+                setStatus('Đã đặt khối gỗ vuông.');
+                return;
+            }
+
+            if (!selectedAnchor) {
+                selectedAnchor = anchor;
+                setStatus('Đã chọn điểm đầu. Bấm điểm thứ hai để nối thanh.');
+                return;
+            }
+
+            if (selectedAnchor === anchor) {
+                selectedAnchor = null;
+                setStatus('Đã bỏ chọn điểm đầu.');
+                return;
+            }
+
+            const tool = tools[selectedTool];
+            if (getBudgetUsed() + tool.cost > level().budget + 20) {
+                selectedAnchor = null;
+                setStatus('Ngân sách đã quá cao, hãy làm lại hoặc dùng ít vật liệu hơn.');
+                return;
+            }
+
+            if (selectedTool === 'straight') addStraight(selectedAnchor, anchor);
+            if (selectedTool === 'triangle') addTriangle(selectedAnchor, anchor);
+            if (selectedTool === 'parabola') addParabola(selectedAnchor, anchor);
+            selectedAnchor = null;
+            updateBudget();
+            setStatus('Đã ghép thanh. Có thể bấm Chạy xe để thử cầu.');
+        }
+
+        canvas.addEventListener('pointerdown', event => {
+            const rect = canvas.getBoundingClientRect();
+            const x = (event.clientX - rect.left) * (canvas.width / rect.width);
+            const y = (event.clientY - rect.top) * (canvas.height / rect.height);
+            tryPlace(nearestAnchor(x, y));
+        });
+
+        function anchorKey(point) {
+            return `${Math.round(point[0])},${Math.round(point[1])}`;
+        }
+
+        function hasContinuousBridge() {
+            const leftKeys = new Set(level().anchors.filter(p => p[0] <= 505).map(anchorKey));
+            const rightKeys = new Set(level().anchors.filter(p => p[0] >= 715).map(anchorKey));
+            const graph = new Map();
+            function connect(a, b) {
+                const ka = anchorKey(a);
+                const kb = anchorKey(b);
+                if (!graph.has(ka)) graph.set(ka, new Set());
+                if (!graph.has(kb)) graph.set(kb, new Set());
+                graph.get(ka).add(kb);
+                graph.get(kb).add(ka);
+            }
+            pieces.forEach(piece => {
+                if (piece.endpoints.length === 2) connect(piece.endpoints[0], piece.endpoints[1]);
+            });
+            const queue = [...leftKeys].filter(key => graph.has(key));
+            const seen = new Set(queue);
+            while (queue.length) {
+                const key = queue.shift();
+                if (rightKeys.has(key)) return true;
+                for (const next of graph.get(key) || []) {
+                    if (!seen.has(next)) {
+                        seen.add(next);
+                        queue.push(next);
+                    }
+                }
+            }
+            return false;
+        }
+
+        function hasEnoughDeck() {
+            const deckPieces = pieces.filter(piece => {
+                if (piece.endpoints.length !== 2) return false;
+                const [a, b] = piece.endpoints;
+                const slope = Math.abs(a[1] - b[1]) / Math.max(Math.abs(a[0] - b[0]), 1);
+                return slope < 0.35 && Math.min(a[1], b[1]) < 485 && Math.max(a[1], b[1]) > 345;
+            });
+            const spans = deckPieces.map(piece => [Math.min(piece.endpoints[0][0], piece.endpoints[1][0]), Math.max(piece.endpoints[0][0], piece.endpoints[1][0])]).sort((a, b) => a[0] - b[0]);
+            let reach = 370;
+            for (const [start, end] of spans) {
+                if (start <= reach + 28) reach = Math.max(reach, end);
+                if (reach >= 830) return true;
+            }
+            return false;
+        }
+
+        function structureScore() {
+            const base = pieces.reduce((sum, piece) => sum + piece.strength, 0);
+            const triangleBonus = pieces.filter(piece => piece.type === 'triangle').length * 13;
+            const archBonus = pieces.filter(piece => piece.type === 'parabola').length * 11;
+            const supportBonus = pieces.filter(piece => piece.type === 'square').length * 7;
+            const budgetPenalty = Math.max(0, getBudgetUsed() - level().budget) * 1.8;
+            return base + triangleBonus + archBonus + supportBonus - budgetPenalty;
+        }
+
+        function evaluateBridge() {
+            if (!hasContinuousBridge()) return { ok: false, reason: 'Cầu chưa nối thông từ bờ trái sang bờ phải.' };
+            if (!hasEnoughDeck()) return { ok: false, reason: 'Xe chưa có mặt cầu đủ liền để chạy qua.' };
+            const score = structureScore();
+            if (score < level().required * level().weight) {
+                return { ok: false, reason: 'Kết cấu còn yếu, nên thêm tam giác hoặc vòm parabol.' };
+            }
+            return { ok: true, reason: 'Kết cấu đủ ổn để thử xe.' };
+        }
+
+        function createCar() {
+            const body = Bodies.rectangle(205, 430, 88, 34, {
+                friction: 0.55,
+                frictionAir: 0.02,
+                density: 0.004 * level().weight,
+                label: 'car',
+                renderData: { color: '#f6c24a', type: 'car' }
+            });
+            car = body;
+            World.add(engine.world, body);
+        }
+
+        function runBridgeTest() {
+            if (running) return;
+            if (!pieces.length) {
+                setStatus('Hãy ghép cầu trước khi chạy xe.');
+                return;
+            }
+            const evaluation = evaluateBridge();
+            failedByStructure = !evaluation.ok;
+            collapseTriggered = false;
+            running = true;
+            resultShown = false;
+            selectedAnchor = null;
+            createCar();
+            setStatus(evaluation.ok ? 'Xe đang chạy qua cầu.' : evaluation.reason);
+        }
+
+        function collapseBridge() {
+            if (collapseTriggered) return;
+            collapseTriggered = true;
+            staticBodies.forEach(body => {
+                Body.setStatic(body, false);
+                Body.setAngularVelocity(body, (Math.random() - 0.5) * 0.1);
+            });
+            setStatus('Cầu sập rồi. Hãy thử thêm tam giác, trụ hoặc vòm parabol.');
+        }
+
+        function showResult(win, text) {
+            if (resultShown) return;
+            resultShown = true;
+            running = false;
+            resultTitle.textContent = win ? 'Thắng rồi!' : 'Cầu sập!';
+            resultText.textContent = text;
+            resultBox.classList.add('show');
+        }
+
+        function drawBackground() {
+            ctx.clearRect(0, 0, W, H);
+            const sky = ctx.createLinearGradient(0, 0, 0, H * 0.62);
+            sky.addColorStop(0, '#69c7ec');
+            sky.addColorStop(1, '#d9f6ff');
+            ctx.fillStyle = sky;
+            ctx.fillRect(0, 0, W, H);
+
+            ctx.fillStyle = 'rgba(255,255,255,0.55)';
+            drawCloud(180, 96, 78);
+            drawCloud(720, 82, 120);
+            drawSun(990, 92);
+
+            drawMountain(0, 340, 180, 120, 360, 340, '#6cb2ce');
+            drawMountain(230, 340, 365, 150, 540, 340, '#76bdd7');
+            drawMountain(500, 340, 760, 115, 1050, 340, '#88c9dd');
+            drawMountain(765, 340, 1030, 145, 1220, 340, '#70b4cf');
+
+            ctx.fillStyle = '#82c66f';
+            ctx.beginPath();
+            ctx.moveTo(0, 380);
+            ctx.quadraticCurveTo(230, 310, 430, 375);
+            ctx.quadraticCurveTo(610, 430, 840, 372);
+            ctx.quadraticCurveTo(1040, 320, 1200, 378);
+            ctx.lineTo(1200, 520);
+            ctx.lineTo(0, 520);
+            ctx.closePath();
+            ctx.fill();
+
+            ctx.fillStyle = '#d7d34b';
+            ctx.fillRect(0, 455, 350, 225);
+            ctx.fillRect(850, 455, 350, 225);
+
+            ctx.fillStyle = '#74bde2';
+            ctx.fillRect(350, 535, 500, 145);
+            ctx.fillStyle = 'rgba(255,255,255,0.28)';
+            for (let x = 365; x < 840; x += 48) {
+                ctx.fillRect(x, 565 + Math.sin(x) * 5, 30, 3);
+            }
+
+            drawGrassTexture(0, 455, 350, 225);
+            drawGrassTexture(850, 455, 350, 225);
+            drawTrees();
+            drawFinish();
+            drawWindmills();
+        }
+
+        function drawCloud(x, y, scale) {
+            ctx.beginPath();
+            ctx.ellipse(x, y, scale * 0.45, scale * 0.16, 0, 0, Math.PI * 2);
+            ctx.ellipse(x + scale * 0.28, y - scale * 0.04, scale * 0.26, scale * 0.14, 0, 0, Math.PI * 2);
+            ctx.ellipse(x - scale * 0.26, y + scale * 0.02, scale * 0.25, scale * 0.12, 0, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        function drawSun(x, y) {
+            const glow = ctx.createRadialGradient(x, y, 10, x, y, 90);
+            glow.addColorStop(0, 'rgba(255,255,255,0.95)');
+            glow.addColorStop(1, 'rgba(255,255,255,0)');
+            ctx.fillStyle = glow;
+            ctx.beginPath();
+            ctx.arc(x, y, 92, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.arc(x, y, 26, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        function drawMountain(x1, y1, x2, y2, x3, y3, color) {
+            ctx.fillStyle = color;
+            ctx.beginPath();
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2);
+            ctx.lineTo(x3, y3);
+            ctx.closePath();
+            ctx.fill();
+            ctx.fillStyle = 'rgba(255,255,255,0.18)';
+            ctx.beginPath();
+            ctx.moveTo(x2, y2);
+            ctx.lineTo(x2 - 55, y2 + 90);
+            ctx.lineTo(x2 + 55, y2 + 90);
+            ctx.closePath();
+            ctx.fill();
+        }
+
+        function drawGrassTexture(x, y, w, h) {
+            ctx.strokeStyle = 'rgba(164,146,31,0.18)';
+            ctx.lineWidth = 2;
+            for (let px = x + 26; px < x + w - 18; px += 44) {
+                for (let py = y + 24; py < y + h - 18; py += 46) {
+                    ctx.beginPath();
+                    ctx.moveTo(px, py);
+                    ctx.lineTo(px + 6, py + 12);
+                    ctx.lineTo(px + 12, py);
+                    ctx.stroke();
+                }
+            }
+        }
+
+        function drawTrees() {
+            const trees = [[115,420],[145,405],[520,430],[675,425],[915,425],[1110,420]];
+            trees.forEach(([x, y]) => {
+                ctx.fillStyle = '#72522d';
+                ctx.fillRect(x - 4, y + 20, 8, 35);
+                ctx.fillStyle = '#18827d';
+                ctx.beginPath();
+                ctx.moveTo(x, y);
+                ctx.lineTo(x - 22, y + 58);
+                ctx.lineTo(x + 22, y + 58);
+                ctx.closePath();
+                ctx.fill();
+            });
+        }
+
+        function drawWindmills() {
+            [[190,390],[245,390]].forEach(([x, y]) => {
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = 4;
+                ctx.beginPath();
+                ctx.moveTo(x, y + 58);
+                ctx.lineTo(x, y);
+                ctx.stroke();
+                for (let i = 0; i < 3; i++) {
+                    const a = i * Math.PI * 2 / 3 + performance.now() / 1200;
+                    ctx.beginPath();
+                    ctx.moveTo(x, y);
+                    ctx.lineTo(x + Math.cos(a) * 28, y + Math.sin(a) * 28);
+                    ctx.stroke();
+                }
+            });
+        }
+
+        function drawFinish() {
+            ctx.fillStyle = '#6b4a29';
+            ctx.fillRect(985, 390, 8, 64);
+            ctx.fillStyle = '#7c2d12';
+            ctx.fillRect(993, 397, 58, 34);
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 13px Segoe UI';
+            ctx.fillText('Finish', 1003, 419);
+        }
+
+        function drawAnchorPoints() {
+            level().anchors.forEach(point => {
+                ctx.fillStyle = selectedAnchor === point ? '#f97316' : '#ffffff';
+                ctx.strokeStyle = '#d1d5db';
+                ctx.lineWidth = 4;
+                ctx.beginPath();
+                ctx.arc(point[0], point[1], 12, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.stroke();
+            });
+        }
+
+        function drawBody(body) {
+            const vertices = body.vertices;
+            const data = body.renderData || {};
+            ctx.fillStyle = data.color || '#b87931';
+            ctx.strokeStyle = 'rgba(91,56,20,0.65)';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(vertices[0].x, vertices[0].y);
+            for (let i = 1; i < vertices.length; i++) ctx.lineTo(vertices[i].x, vertices[i].y);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+        }
+
+        function drawCar() {
+            if (!car) {
+                ctx.fillStyle = '#f6c24a';
+                ctx.fillRect(168, 416, 92, 34);
+                ctx.fillStyle = '#324155';
+                ctx.fillRect(220, 398, 36, 20);
+                ctx.fillStyle = '#172033';
+                ctx.beginPath(); ctx.arc(190, 454, 12, 0, Math.PI * 2); ctx.fill();
+                ctx.beginPath(); ctx.arc(245, 454, 12, 0, Math.PI * 2); ctx.fill();
+                return;
+            }
+            const x = car.position.x;
+            const y = car.position.y;
+            ctx.save();
+            ctx.translate(x, y);
+            ctx.rotate(car.angle);
+            ctx.fillStyle = '#f6c24a';
+            ctx.fillRect(-46, -17, 92, 34);
+            ctx.fillStyle = '#324155';
+            ctx.fillRect(6, -36, 36, 20);
+            ctx.fillStyle = '#172033';
+            ctx.beginPath(); ctx.arc(-27, 22, 12, 0, Math.PI * 2); ctx.fill();
+            ctx.beginPath(); ctx.arc(28, 22, 12, 0, Math.PI * 2); ctx.fill();
+            ctx.restore();
+        }
+
+        function drawPieces() {
+            staticBodies.forEach(drawBody);
+        }
+
+        function tick(now) {
+            const delta = Math.min(now - lastTime, 33);
+            lastTime = now;
+
+            if (running && car) {
+                Body.setVelocity(car, { x: Math.max(car.velocity.x, 2.75), y: car.velocity.y });
+                if (failedByStructure && car.position.x > 520 && !collapseTriggered) collapseBridge();
+                if (car.position.y > 620) showResult(false, 'Xe rơi xuống vực. Hãy gia cố mặt cầu bằng tam giác, trụ hoặc vòm.');
+                if (car.position.x > 1010 && car.position.y < 520) showResult(true, `Xe đã qua cầu. Điểm kết cấu: ${Math.round(structureScore())}, chi phí: ${getBudgetUsed()}/${level().budget}.`);
+                if (car.position.x > 1100 && !resultShown) showResult(true, 'Xe đã qua cầu an toàn.');
+            }
+
+            Engine.update(engine, delta);
+            drawBackground();
+            drawPieces();
+            drawAnchorPoints();
+            drawCar();
+            requestAnimationFrame(tick);
+        }
+
+        resetLevel();
+        requestAnimationFrame(tick);
+    </script>
+</body>
+</html>

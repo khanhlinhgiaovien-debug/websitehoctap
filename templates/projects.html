@@ -3,155 +3,338 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Danh sách đề bài sản phẩm</title>
+    <title>CLB 4T - Không gian đề bài</title>
     <style>
         * {
+            box-sizing: border-box;
             margin: 0;
             padding: 0;
-            box-sizing: border-box;
+        }
+
+        :root {
+            --blue: #2563eb;
+            --blue-dark: #123a7a;
+            --blue-soft: #eff6ff;
+            --ink: #172033;
+            --muted: #52657f;
+            --line: rgba(37, 99, 235, 0.42);
+            --border: rgba(37, 99, 235, 0.24);
+            --green: #059669;
+            --orange: #ea580c;
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background:
-                linear-gradient(90deg, rgba(37, 99, 235, 0.42) 2px, transparent 2px) 0 0 / 68px 68px,
-                linear-gradient(rgba(37, 99, 235, 0.42) 2px, transparent 2px) 0 0 / 68px 40px,
-                #ffffff;
             min-height: 100vh;
-            padding: 20px;
+            font-family: "Segoe UI", Arial, sans-serif;
+            color: var(--ink);
+            background:
+                linear-gradient(90deg, var(--line) 2px, transparent 2px) 0 0 / 68px 68px,
+                linear-gradient(var(--line) 2px, transparent 2px) 0 0 / 68px 40px,
+                #ffffff;
         }
 
-        .container {
-            max-width: 900px;
+        .page {
+            width: min(1180px, calc(100vw - 32px));
             margin: 0 auto;
-            background: rgba(255, 255, 255, 0.92);
-            border: 2px solid #2563eb;
+            padding: 24px 0 42px;
+        }
+
+        .topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 22px;
+        }
+
+        h1 {
+            color: var(--blue-dark);
+            font-size: clamp(2.8rem, 7vw, 5.4rem);
+            line-height: 1.12;
+            margin-bottom: 0;
+            font-weight: 900;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 42px;
+            padding: 0 16px;
+            border: 1px solid var(--blue);
             border-radius: 8px;
-            box-shadow: 0 18px 44px rgba(37, 99, 235, 0.16);
-            padding: 40px;
-            animation: fadeIn 0.5s ease-in;
+            background: var(--blue);
+            color: #ffffff;
+            font: inherit;
+            font-weight: 750;
+            text-decoration: none;
+            cursor: pointer;
+            white-space: nowrap;
+            box-shadow: 0 10px 24px rgba(37, 99, 235, 0.18);
         }
 
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(-20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+        .btn.secondary {
+            background: #ffffff;
+            color: #1d4ed8;
+            box-shadow: none;
         }
 
-        h2 {
-            color: #123a7a;
-            text-align: center;
-            margin-bottom: 40px;
-            font-size: 2.5em;
-            text-shadow: none;
+        .toolbar {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .overview {
+            display: grid;
+            grid-template-columns: minmax(320px, 1.35fr) minmax(260px, 0.65fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .workshop {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 18px;
+            align-items: center;
+            padding: 24px;
+            border: 2px solid rgba(37, 99, 235, 0.62);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.96);
+            box-shadow: 0 18px 38px rgba(37, 99, 235, 0.14);
+            color: inherit;
+            text-decoration: none;
+        }
+
+        .workshop * {
+            text-decoration: none;
+        }
+
+        .workshop h2 {
+            color: var(--blue-dark);
+            font-size: 1.28rem;
+            margin-bottom: 8px;
+        }
+
+        .workshop p {
+            color: var(--muted);
+            line-height: 1.55;
+            font-weight: 600;
+        }
+
+        .status-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+        }
+
+        .status-card {
+            min-height: 96px;
+            padding: 16px;
+            border: 1px solid var(--border);
+            border-left: 5px solid var(--blue);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.94);
+            box-shadow: 0 12px 28px rgba(37, 99, 235, 0.1);
+        }
+
+        .status-card:nth-child(2) {
+            border-left-color: var(--green);
+        }
+
+        .status-value {
+            display: block;
+            color: var(--blue-dark);
+            font-size: 1.9rem;
+            font-weight: 850;
+            line-height: 1;
+            margin-bottom: 8px;
+        }
+
+        .status-label {
+            color: var(--muted);
+            font-weight: 700;
+            line-height: 1.35;
+        }
+
+        .section-head {
+            display: flex;
+            align-items: end;
+            justify-content: space-between;
+            gap: 14px;
+            margin: 20px 0 12px;
+        }
+
+        .section-head h2 {
+            color: var(--blue-dark);
+            font-size: 1.32rem;
+        }
+
+        .section-note {
+            color: var(--muted);
+            font-size: 0.95rem;
+            font-weight: 650;
         }
 
         .projects-list {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 14px;
             list-style: none;
         }
 
         .project-item {
-            background: #ffffff;
+            min-height: 154px;
+            border: 1px solid var(--border);
+            border-left: 5px solid var(--blue);
             border-radius: 8px;
-            padding: 25px;
-            margin-bottom: 20px;
-            transition: all 0.3s ease;
-            border: 1px solid rgba(37, 99, 235, 0.25);
-            border-left: 5px solid #2563eb;
+            background: rgba(255, 255, 255, 0.96);
+            box-shadow: 0 12px 28px rgba(37, 99, 235, 0.1);
+            transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+        }
+
+        .project-item:nth-child(3n + 2) {
+            border-left-color: var(--green);
+        }
+
+        .project-item:nth-child(3n) {
+            border-left-color: var(--orange);
         }
 
         .project-item:hover {
-            transform: translateX(10px);
-            box-shadow: 0 10px 30px rgba(37, 99, 235, 0.22);
-            border-left-color: #1d4ed8;
+            transform: translateY(-3px);
+            box-shadow: 0 18px 34px rgba(37, 99, 235, 0.16);
+            border-color: rgba(37, 99, 235, 0.42);
         }
 
         .project-link {
-            text-decoration: none;
+            display: grid;
+            grid-template-rows: auto 1fr auto;
+            min-height: 154px;
+            padding: 18px;
             color: inherit;
-            display: block;
+            text-decoration: none;
         }
 
         .project-title {
-            color: #2d3748;
-            font-size: 1.5em;
-            font-weight: bold;
+            color: #172033;
+            font-size: 1.14rem;
+            font-weight: 820;
+            line-height: 1.28;
             margin-bottom: 10px;
-            transition: color 0.3s ease;
-        }
-
-        .project-item:hover .project-title {
-            color: #1d4ed8;
         }
 
         .project-description {
-            color: #4a5568;
-            font-size: 1.1em;
-            line-height: 1.6;
-            font-style: italic;
+            color: var(--muted);
+            font-size: 0.98rem;
+            line-height: 1.55;
+            font-weight: 600;
         }
 
-        .back-button {
-            display: inline-block;
-            margin-top: 30px;
-            padding: 15px 30px;
-            background: #2563eb;
-            color: white;
-            text-decoration: none;
-            border-radius: 8px;
-            font-weight: bold;
-            font-size: 1.1em;
-            transition: all 0.3s ease;
-            box-shadow: 0 5px 15px rgba(37, 99, 235, 0.28);
-        }
-
-        .back-button:hover {
-            transform: translateY(-3px);
-            background: #1d4ed8;
-            box-shadow: 0 10px 25px rgba(37, 99, 235, 0.34);
+        .project-action {
+            display: inline-flex;
+            align-items: center;
+            justify-content: flex-start;
+            color: var(--blue);
+            font-weight: 800;
+            margin-top: 16px;
         }
 
         .empty-state {
+            padding: 34px 24px;
+            border: 1px dashed #93c5fd;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.9);
+            color: var(--muted);
             text-align: center;
-            padding: 60px 20px;
-            color: #718096;
+            font-weight: 700;
         }
 
-        .empty-state svg {
-            width: 120px;
-            height: 120px;
-            margin-bottom: 20px;
-            opacity: 0.5;
+        @media (max-width: 860px) {
+            .topbar {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            .overview {
+                grid-template-columns: 1fr;
+            }
+
+            .workshop {
+                grid-template-columns: 1fr;
+            }
+
+            .projects-list {
+                grid-template-columns: 1fr;
+            }
         }
 
-        @media (max-width: 768px) {
-            .container {
-                padding: 25px;
+        @media (max-width: 560px) {
+            .page {
+                width: min(100vw - 22px, 1180px);
+                padding-top: 16px;
             }
 
-            h2 {
-                font-size: 2em;
+            .toolbar {
+                width: 100%;
             }
 
-            .project-item {
-                padding: 20px;
+            .btn {
+                width: 100%;
             }
 
-            .project-title {
-                font-size: 1.3em;
+            .workshop,
+            .project-link,
+            .status-card {
+                padding: 16px;
+            }
+
+            .section-head {
+                align-items: flex-start;
+                flex-direction: column;
             }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h2>📚 Danh sách đề bài sản phẩm</h2>
-        
+    <main class="page">
+        <div class="topbar">
+            <div>
+                <h1>CLB 4T</h1>
+            </div>
+            <div class="toolbar">
+                <a href="/" class="btn secondary back-button">Về trang chủ</a>
+                <a href="{{ url_for('geometry_stem') }}" class="btn">Xưởng STEM</a>
+            </div>
+        </div>
+
+        <section class="overview">
+            <a href="{{ url_for('geometry_stem') }}" class="workshop">
+                <div>
+                    <h2>Xưởng sáng tác đề Hình học STEM</h2>
+                    <p>Học sinh tự tạo bài toán thực tiễn, Tri-hand phản biện số liệu và cả lớp đánh giá độ hay, tính ứng dụng, độ rõ ràng, liêm chính học thuật.</p>
+                </div>
+                <span class="btn">Mở xưởng</span>
+            </a>
+
+            <div class="status-grid">
+                <div class="status-card">
+                    <span class="status-value">{{ projects|length }}</span>
+                    <span class="status-label">Đề bài sản phẩm đang mở</span>
+                </div>
+                <div class="status-card">
+                    <span class="status-value">4</span>
+                    <span class="status-label">Tiêu chí đánh giá đề STEM</span>
+                </div>
+            </div>
+        </section>
+
+        <div class="section-head">
+            <div>
+                <h2>Danh sách đề bài sản phẩm</h2>
+            </div>
+        </div>
+
         {% if projects %}
         <ul class="projects-list">
             {% for project in projects %}
@@ -159,20 +342,14 @@
                 <a href="{{ url_for('project', project_id=project.id) }}" class="project-link">
                     <div class="project-title">{{ project.title }}</div>
                     <div class="project-description">{{ project.description }}</div>
+                    <div class="project-action">Xem đề và nộp bài</div>
                 </a>
             </li>
             {% endfor %}
         </ul>
         {% else %}
-        <div class="empty-state">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-            <p style="font-size: 1.3em;">Chưa có đề bài nào</p>
-        </div>
+        <div class="empty-state">Chưa có đề bài nào trong CLB.</div>
         {% endif %}
-        
-        <a href="/" class="back-button">⬅️ Quay về trang chính</a>
-    </div>
+    </main>
 </body>
 </html>
