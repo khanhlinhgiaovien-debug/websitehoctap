@@ -426,6 +426,91 @@
             background: #0d9488;
         }
 
+        .mindmap-viewer {
+            display: none;
+            flex: 1;
+            min-height: 0;
+            background: #f8fbff;
+            flex-direction: column;
+        }
+
+        .chat-container.mindmap-mode .chat-messages,
+        .chat-container.mindmap-mode .chat-input-container {
+            display: none;
+        }
+
+        .chat-container.mindmap-mode .mindmap-viewer {
+            display: flex;
+        }
+
+        .mindmap-viewer-toolbar {
+            background: #ffffff;
+            border-bottom: 1px solid #bfdbfe;
+            padding: 10px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .mindmap-viewer-title {
+            min-width: 0;
+            color: #123a7a;
+            font-size: 15px;
+            font-weight: 700;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .mindmap-viewer-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
+        .mindmap-viewer-btn {
+            height: 36px;
+            padding: 0 12px;
+            border: 1px solid #7fb3ff;
+            border-radius: 6px;
+            background: #ffffff;
+            color: #123a7a;
+            cursor: pointer;
+            font: inherit;
+            font-size: 14px;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            white-space: nowrap;
+        }
+
+        .mindmap-viewer-btn:hover {
+            background: #eef6ff;
+        }
+
+        .mindmap-viewer-btn:disabled {
+            opacity: 0.55;
+            cursor: not-allowed;
+        }
+
+        .mindmap-viewer-btn.primary {
+            background: #2563eb;
+            border-color: #2563eb;
+            color: #ffffff;
+        }
+
+        .mindmap-viewer-frame {
+            width: 100%;
+            flex: 1;
+            min-height: 0;
+            border: 0;
+            background: #ffffff;
+        }
+
         @media (max-width: 768px) {
             .message-wrapper {
                 padding: 0 12px;
@@ -459,6 +544,16 @@
 
             .mindmap-tools {
                 grid-template-columns: 1fr;
+            }
+
+            .mindmap-viewer-toolbar {
+                align-items: stretch;
+                flex-direction: column;
+            }
+
+            .mindmap-viewer-actions {
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
             }
         }
     </style>
@@ -547,6 +642,18 @@
             {% endif %}
         </div>
 
+        <div class="mindmap-viewer" id="mindmapViewer" hidden>
+            <div class="mindmap-viewer-toolbar">
+                <div class="mindmap-viewer-title" id="mindmapViewerTitle">Sơ đồ tư duy</div>
+                <div class="mindmap-viewer-actions">
+                    <button type="button" class="mindmap-viewer-btn" id="mindmapBackBtn">Quay lại</button>
+                    <button type="button" class="mindmap-viewer-btn primary" id="mindmapPngBtn">Tải PNG</button>
+                    <a class="mindmap-viewer-btn" id="mindmapDownloadBtn" href="#" download>Tải HTML</a>
+                </div>
+            </div>
+            <iframe class="mindmap-viewer-frame" id="mindmapFrame" title="Sơ đồ tư duy"></iframe>
+        </div>
+
         <div class="chat-input-container">
             <div class="chat-input-wrapper">
                 <form method="POST" enctype="multipart/form-data" id="chatForm">
@@ -578,14 +685,14 @@
                     </div>
                 </form>
 
-                <form method="POST" action="{{ url_for('create_chatbot_mindmap') }}" class="mindmap-tools" target="_blank">
+                <form method="POST" action="{{ url_for('create_chatbot_mindmap') }}" class="mindmap-tools" id="mindmapForm">
                     <input
                         type="text"
                         name="mindmap_topic"
                         class="mindmap-topic"
                         placeholder="Chủ đề sơ đồ (bỏ trống để dùng cuộc trò chuyện)"
                     >
-                    <button type="submit" class="mindmap-button">Tạo sơ đồ tư duy</button>
+                    <button type="submit" class="mindmap-button" id="mindmapSubmitBtn">Tạo sơ đồ tư duy</button>
                 </form>
                 
                 <div class="powered-by">
@@ -687,6 +794,79 @@
             fileInput.value = '';
             filePreviewArea.classList.remove('active');
         }
+
+        const chatContainer = document.querySelector('.chat-container');
+        const mindmapViewer = document.getElementById('mindmapViewer');
+        const mindmapFrame = document.getElementById('mindmapFrame');
+        const mindmapViewerTitle = document.getElementById('mindmapViewerTitle');
+        const mindmapDownloadBtn = document.getElementById('mindmapDownloadBtn');
+        const mindmapPngBtn = document.getElementById('mindmapPngBtn');
+        const mindmapBackBtn = document.getElementById('mindmapBackBtn');
+        const mindmapForm = document.getElementById('mindmapForm');
+        const mindmapSubmitBtn = document.getElementById('mindmapSubmitBtn');
+
+        function showMindmap(url, title, filename) {
+            mindmapViewer.hidden = false;
+            mindmapViewerTitle.textContent = title || 'Sơ đồ tư duy';
+            mindmapDownloadBtn.href = url;
+            mindmapDownloadBtn.download = filename || 'so-do-tu-duy.html';
+            mindmapPngBtn.disabled = true;
+            mindmapFrame.src = url;
+            chatContainer.classList.add('mindmap-mode');
+        }
+
+        function hideMindmap() {
+            chatContainer.classList.remove('mindmap-mode');
+            mindmapFrame.src = 'about:blank';
+            mindmapViewer.hidden = true;
+            scrollToBottom();
+        }
+
+        mindmapBackBtn.addEventListener('click', hideMindmap);
+        mindmapFrame.addEventListener('load', function() {
+            mindmapPngBtn.disabled = false;
+        });
+
+        mindmapPngBtn.addEventListener('click', function() {
+            const frameWindow = mindmapFrame.contentWindow;
+            if (frameWindow && typeof frameWindow.downloadPng === 'function') {
+                frameWindow.downloadPng();
+            }
+        });
+
+        mindmapForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const formData = new FormData(this);
+            const originalText = mindmapSubmitBtn.textContent;
+            mindmapSubmitBtn.disabled = true;
+            mindmapSubmitBtn.textContent = 'Đang tạo...';
+
+            try {
+                const response = await fetch(this.action, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+                const data = await response.json();
+
+                if (!response.ok || !data.success) {
+                    removeWelcomeScreen();
+                    createMessage('bot', data.bot || 'Chưa có nội dung để tạo sơ đồ tư duy.');
+                    return;
+                }
+
+                showMindmap(data.url, data.title, data.filename);
+            } catch (error) {
+                removeWelcomeScreen();
+                createMessage('bot', 'Có lỗi khi tạo sơ đồ tư duy. Em thử lại giúp Tri-hand nhé.');
+            } finally {
+                mindmapSubmitBtn.disabled = false;
+                mindmapSubmitBtn.textContent = originalText;
+            }
+        });
 
         document.getElementById('chatForm').addEventListener('submit', async function(e) {
             const messageInput = document.getElementById('messageInput');

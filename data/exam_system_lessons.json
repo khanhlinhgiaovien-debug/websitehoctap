@@ -1,1 +1,26 @@
-[]
+[
+  {
+    "id": "lesson_skk46p_seed_phuong_trinh_can_01",
+    "title": "Phương trình chứa căn thức và lỗi thường gặp",
+    "description": "Bài giảng bổ sung sau khi giáo viên xem thống kê bài làm: tập trung vào điều kiện xác định, rút gọn căn thức và thử lại nghiệm.",
+    "content": "1. Khi gặp sqrt(A), luôn ghi điều kiện A >= 0.\n2. Với phương trình sqrt(A) = B, cần có B >= 0 trước khi bình phương.\n3. Sau khi tìm được nghiệm, thay lại vào đề để loại nghiệm ngoại lai.\n4. Các lỗi thường gặp: quên điều kiện, nhầm sqrt(a^2) = a thay vì |a|, rút gọn sai thừa số chính phương.",
+    "attachments": [],
+    "teacher_id": "teacher_003",
+    "class_id": "806fe426-5835-40ee-b194-5d6ceff7802b",
+    "created_at": "20/07/2026 21:26",
+    "subject": "Toán",
+    "grade": "8A4"
+  },
+  {
+    "id": "lesson_skk46p_can_bac_hai_01",
+    "title": "Căn bậc hai và hằng đẳng thức cơ bản",
+    "description": "Bài giảng ôn tập căn bậc hai số học, điều kiện xác định và các phép biến đổi căn thức lớp 8.",
+    "content": "1. Căn bậc hai số học\nVới a >= 0, căn bậc hai số học của a là số x >= 0 sao cho x^2 = a. Kí hiệu là sqrt(a).\nVí dụ: sqrt(16) = 4, sqrt(0) = 0.\n\n2. Điều kiện xác định\nBiểu thức sqrt(A) xác định khi A >= 0.\nVí dụ: sqrt(x - 3) xác định khi x >= 3.\n\n3. Hằng đẳng thức quan trọng\nsqrt(a^2) = |a| với mọi số thực a.\nNếu a >= 0 thì sqrt(a^2) = a; nếu a < 0 thì sqrt(a^2) = -a.\n\n4. Rút gọn căn thức\nTách thừa số chính phương ra ngoài dấu căn.\nVí dụ: sqrt(50) = sqrt(25 * 2) = 5sqrt(2).\n\n5. Lưu ý khi làm bài\nLuôn kiểm tra điều kiện xác định trước khi biến đổi. Khi bình phương hai vế, cần thử lại nghiệm nếu bài toán là phương trình.",
+    "attachments": [],
+    "teacher_id": "teacher_003",
+    "class_id": "806fe426-5835-40ee-b194-5d6ceff7802b",
+    "created_at": "22/07/2026 16:18",
+    "subject": "Toán",
+    "grade": "8A4"
+  }
+]

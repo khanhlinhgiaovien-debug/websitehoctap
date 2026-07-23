@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cổng thông tin học tập</title>
+    <script defer src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { min-height: 100vh; background: #f5f7fa; color: #1f2937; font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif; }
+        .navbar {
+            background: #123a7a;
+            color: white;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .navbar-brand { font-size: 22px; font-weight: 800; }
+        .navbar-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+        .nav-link {
+            color: white;
+            text-decoration: none;
+            border: 1px solid rgba(255,255,255,0.35);
+            border-radius: 8px;
+            padding: 8px 14px;
+            background: rgba(255,255,255,0.12);
+            font-size: 14px;
+            font-weight: 700;
+        }
+        .container { max-width: 1220px; margin: 0 auto; padding: 28px 20px; }
+        .panel {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 22px;
+            margin-bottom: 22px;
+            box-shadow: 0 8px 22px rgba(15, 23, 42, 0.06);
+        }
+        .header-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 18px; flex-wrap: wrap; }
+        h1, h2, h3 { color: #123a7a; }
+        h1 { font-size: 34px; margin-bottom: 8px; }
+        h2 { font-size: 22px; margin-bottom: 16px; }
+        h3 { font-size: 17px; margin-bottom: 8px; }
+        .muted { color: #64748b; line-height: 1.6; }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(130px, 1fr));
+            gap: 12px;
+            margin-top: 18px;
+        }
+        .stat {
+            background: #f8fafc;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 14px;
+        }
+        .stat strong { display: block; color: #123a7a; font-size: 28px; line-height: 1.1; }
+        .stat span { color: #64748b; font-size: 13px; font-weight: 700; }
+        .badge-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+        .badge { display: inline-flex; border-radius: 999px; padding: 6px 10px; background: #e0f2fe; color: #075985; font-size: 12px; font-weight: 800; }
+        .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+        .chart-box { height: 330px; position: relative; }
+        .note-list { display: grid; gap: 10px; }
+        .note {
+            border: 1px solid #dbe3ef;
+            border-left: 4px solid #2563eb;
+            border-radius: 8px;
+            padding: 14px;
+            background: #fff;
+            line-height: 1.6;
+        }
+        .table-wrap { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { border-bottom: 1px solid #e5e7eb; padding: 11px 10px; text-align: left; vertical-align: top; }
+        th { color: #123a7a; font-size: 13px; white-space: nowrap; background: #f8fafc; }
+        .score { font-weight: 900; }
+        .score.good { color: #15803d; }
+        .score.mid { color: #ca8a04; }
+        .score.low { color: #dc2626; }
+        .empty { color: #64748b; text-align: center; padding: 30px 10px; border: 1px dashed #cbd5e1; border-radius: 8px; background: #f8fafc; }
+        .action-link { color: #1d4ed8; font-weight: 800; text-decoration: none; }
+        .action-link:hover { text-decoration: underline; }
+        @media (max-width: 860px) {
+            .grid { grid-template-columns: 1fr; }
+            .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            h1 { font-size: 27px; }
+        }
+        @media (max-width: 520px) {
+            .navbar { padding: 14px 18px; }
+            .container { padding: 20px 12px; }
+            .stats { grid-template-columns: 1fr; }
+            .panel { padding: 18px; }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-brand">
+            {% if viewer_type == 'parent' %}Cổng thông tin phụ huynh{% else %}Cổng học tập cá nhân{% endif %}
+        </div>
+        <div class="navbar-actions">
+            {% if viewer_type == 'parent' %}
+                <span>Xin chào, <strong>{{ parent.full_name }}</strong></span>
+                <a class="nav-link" href="{{ url_for('exam_logout') }}">Đăng xuất</a>
+            {% else %}
+                {% if selected_class %}
+                    <a class="nav-link" href="{{ url_for('student_class_detail', class_id=selected_class.id) }}">Quay lại lớp</a>
+                {% else %}
+                    <a class="nav-link" href="{{ url_for('student_dashboard') }}">Quay lại Dashboard</a>
+                {% endif %}
+                <a class="nav-link" href="{{ url_for('exam_logout') }}">Đăng xuất</a>
+            {% endif %}
+        </div>
+    </nav>
+
+    <main class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="panel">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <section class="panel">
+            <div class="header-row">
+                <div>
+                    <h1>{{ student.full_name if student else 'Học sinh' }}</h1>
+                    <p class="muted">
+                        {% if selected_class %}
+                            Báo cáo học tập trong lớp {{ selected_class.name }}.
+                        {% else %}
+                            Báo cáo học tập tổng hợp từ các lớp đã tham gia.
+                        {% endif %}
+                    </p>
+                    <div class="badge-row">
+                        {% if selected_class %}
+                            <span class="badge">{{ selected_class.class_code }}</span>
+                            <span class="badge">{{ selected_class.subject }}</span>
+                            <span class="badge">Lớp {{ selected_class.grade }}</span>
+                        {% else %}
+                            {% for class_obj in profile.classes %}
+                                <span class="badge">{{ class_obj.name }}</span>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
+                </div>
+                {% if viewer_type == 'student' and not selected_class %}
+                    <a class="nav-link" style="background:#2563eb" href="{{ url_for('student_my_submissions') }}">Bài làm của tôi</a>
+                {% endif %}
+            </div>
+            <div class="stats">
+                <div class="stat"><strong>{% if profile.avg_score is none %}-{% else %}{{ "%.2f"|format(profile.avg_score) }}{% endif %}</strong><span>Điểm trung bình</span></div>
+                <div class="stat"><strong>{% if profile.latest_score is none %}-{% else %}{{ "%.2f"|format(profile.latest_score) }}{% endif %}</strong><span>Điểm gần nhất</span></div>
+                <div class="stat"><strong>{% if profile.best_score is none %}-{% else %}{{ "%.2f"|format(profile.best_score) }}{% endif %}</strong><span>Điểm cao nhất</span></div>
+                <div class="stat"><strong>{% if profile.improvement is none %}-{% elif profile.improvement > 0 %}+{{ "%.2f"|format(profile.improvement) }}{% else %}{{ "%.2f"|format(profile.improvement) }}{% endif %}</strong><span>Tiến bộ</span></div>
+            </div>
+        </section>
+
+        <div class="grid">
+            <section class="panel">
+                <h2>Radar kỹ năng Toán</h2>
+                <div class="chart-box"><canvas id="radarChart"></canvas></div>
+            </section>
+            <section class="panel">
+                <h2>Đường tiến bộ</h2>
+                <div class="chart-box"><canvas id="progressChart"></canvas></div>
+            </section>
+        </div>
+
+        <section class="panel">
+            <h2>Nhận xét cá nhân</h2>
+            <div class="note">{{ profile.ai_comment }}</div>
+        </section>
+
+        <div class="grid">
+            <section class="panel">
+                <h2>Gợi ý ôn tập</h2>
+                <div class="note-list">
+                    {% for item in profile.recommendations %}
+                        <div class="note">{{ item }}</div>
+                    {% endfor %}
+                </div>
+            </section>
+            <section class="panel">
+                <h2>Nhận xét giáo viên đã công bố</h2>
+                {% if profile.published_reviews %}
+                    <div class="note-list">
+                        {% for review in profile.published_reviews %}
+                            <div class="note">
+                                <h3>{{ review.class.name }}</h3>
+                                <p>{{ review.comment }}</p>
+                                {% if review.updated_at %}<p class="muted">{{ review.updated_at }}</p>{% endif %}
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="empty">Chưa có nhận xét nào được giáo viên công bố.</div>
+                {% endif %}
+            </section>
+        </div>
+
+        <section class="panel">
+            <h2>Lịch sử bài kiểm tra</h2>
+            {% if profile.progress_points %}
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr><th>Bài kiểm tra</th><th>Thời gian nộp</th><th>Điểm</th><th>Chi tiết</th></tr></thead>
+                        <tbody>
+                            {% for point in profile.progress_points|reverse %}
+                                <tr>
+                                    <td>{{ point.exam_title }}</td>
+                                    <td>{{ point.submitted_at }}</td>
+                                    <td>
+                                        <span class="score {% if point.score >= 8 %}good{% elif point.score >= 5 %}mid{% else %}low{% endif %}">
+                                            {{ "%.2f"|format(point.score) }}/10
+                                        </span>
+                                    </td>
+                                    <td>
+                                        {% if viewer_type == 'student' %}
+                                            <a class="action-link" href="{{ url_for('student_view_result', submission_id=point.submission_id) }}">Xem kết quả</a>
+                                        {% else %}
+                                            Theo dõi
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="empty">Chưa có bài kiểm tra nào được nộp trong phạm vi này.</div>
+            {% endif %}
+        </section>
+    </main>
+
+    <script>
+        window.addEventListener('DOMContentLoaded', function() {
+            if (!window.Chart) return;
+            const radarLabels = {{ profile.radar_labels | tojson }};
+            const radarValues = {{ profile.radar_values | tojson }};
+            const progressLabels = {{ profile.progress_labels | tojson }};
+            const progressScores = {{ profile.progress_scores | tojson }};
+
+            new Chart(document.getElementById('radarChart'), {
+                type: 'radar',
+                data: {
+                    labels: radarLabels,
+                    datasets: [{
+                        label: 'Tỉ lệ đúng',
+                        data: radarValues,
+                        backgroundColor: 'rgba(37, 99, 235, 0.18)',
+                        borderColor: '#2563eb',
+                        pointBackgroundColor: '#0f766e'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: { r: { min: 0, max: 100, ticks: { stepSize: 20 } } }
+                }
+            });
+
+            new Chart(document.getElementById('progressChart'), {
+                type: 'line',
+                data: {
+                    labels: progressLabels.length ? progressLabels : ['Chưa có dữ liệu'],
+                    datasets: [{
+                        label: 'Điểm',
+                        data: progressScores.length ? progressScores : [0],
+                        borderColor: '#0f766e',
+                        backgroundColor: 'rgba(15, 118, 110, 0.12)',
+                        tension: 0.25,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: { y: { min: 0, max: 10 } }
+                }
+            });
+        });
+    </script>
+</body>
+</html>

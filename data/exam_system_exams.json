@@ -1,1 +1,257 @@
-[]
+[
+  {
+    "id": "exam_skk46p_seed_tu_luan_can_thuc_03q",
+    "title": "Tự luận: Rút gọn và phương trình căn",
+    "description": "Đề tự luận ngắn giúp giáo viên xem cách trình bày và lập luận của học sinh.",
+    "type": "essay",
+    "teacher_id": "teacher_003",
+    "class_id": "806fe426-5835-40ee-b194-5d6ceff7802b",
+    "created_at": "22/07/2026 03:26",
+    "time_limit": 20,
+    "subject": "Toán",
+    "grade": "8A4",
+    "status": "active",
+    "essay_questions": [
+      {
+        "id": 1,
+        "question": "Tìm điều kiện xác định của biểu thức sqrt(3x - 9) và giải thích.",
+        "points": 3,
+        "suggested_answer": "3x - 9 >= 0 nên x >= 3."
+      },
+      {
+        "id": 2,
+        "question": "Rút gọn sqrt(72) + sqrt(18).",
+        "points": 3,
+        "suggested_answer": "sqrt(72) = 6sqrt(2), sqrt(18) = 3sqrt(2), tổng bằng 9sqrt(2)."
+      },
+      {
+        "id": 3,
+        "question": "Giải phương trình sqrt(x - 2) = 5 và thử lại nghiệm.",
+        "points": 4,
+        "suggested_answer": "x - 2 = 25 nên x = 27; thử lại sqrt(25) = 5, nhận x = 27."
+      }
+    ]
+  },
+  {
+    "id": "exam_skk46p_seed_luyen_tap_can_thuc_06q",
+    "title": "Luyện tập nhanh: Căn thức và điều kiện",
+    "description": "Đề trắc nghiệm 6 câu do giáo viên tạo để kiểm tra nhanh sau bài học.",
+    "type": "multiple_choice",
+    "teacher_id": "teacher_003",
+    "class_id": "806fe426-5835-40ee-b194-5d6ceff7802b",
+    "created_at": "21/07/2026 18:26",
+    "time_limit": 12,
+    "subject": "Toán",
+    "grade": "8A4",
+    "status": "active",
+    "questions": [
+      {
+        "id": 1,
+        "question": "Điều kiện xác định của sqrt(2x - 6) là gì?",
+        "options": [
+          "A. x >= 3",
+          "B. x > 3",
+          "C. x <= 3",
+          "D. x < 3"
+        ],
+        "correct_answer": "A",
+        "explanation": "Cần 2x - 6 >= 0 nên x >= 3."
+      },
+      {
+        "id": 2,
+        "question": "Rút gọn sqrt(98) được kết quả nào?",
+        "options": [
+          "A. 7sqrt(2)",
+          "B. 14sqrt(2)",
+          "C. 2sqrt(7)",
+          "D. 49sqrt(2)"
+        ],
+        "correct_answer": "A",
+        "explanation": "sqrt(98) = sqrt(49 * 2) = 7sqrt(2)."
+      },
+      {
+        "id": 3,
+        "question": "sqrt((-5)^2) bằng bao nhiêu?",
+        "options": [
+          "A. -5",
+          "B. 5",
+          "C. 25",
+          "D. -25"
+        ],
+        "correct_answer": "B",
+        "explanation": "sqrt(a^2) = |a|, nên sqrt((-5)^2) = 5."
+      },
+      {
+        "id": 4,
+        "question": "Phương trình sqrt(x + 1) = 4 có nghiệm là?",
+        "options": [
+          "A. x = 3",
+          "B. x = 15",
+          "C. x = 16",
+          "D. x = -15"
+        ],
+        "correct_answer": "B",
+        "explanation": "Bình phương hai vế: x + 1 = 16 nên x = 15."
+      },
+      {
+        "id": 5,
+        "question": "Biểu thức nào không xác định trong tập số thực?",
+        "options": [
+          "A. sqrt(9)",
+          "B. sqrt(0)",
+          "C. sqrt(-4)",
+          "D. sqrt(1/4)"
+        ],
+        "correct_answer": "C",
+        "explanation": "Số dưới dấu căn bậc hai không được âm trong tập số thực."
+      },
+      {
+        "id": 6,
+        "question": "Nếu sqrt(x) = 0 thì x bằng bao nhiêu?",
+        "options": [
+          "A. 0",
+          "B. 1",
+          "C. -1",
+          "D. Kh?ng x?c ??nh"
+        ],
+        "correct_answer": "A",
+        "explanation": "sqrt(0) = 0 và x phải không âm."
+      }
+    ]
+  },
+  {
+    "id": "exam_skk46p_can_bac_hai_10q",
+    "title": "Kiểm tra 15 phút: Căn bậc hai",
+    "description": "Đề trắc nghiệm 10 câu kiểm tra kiến thức căn bậc hai, điều kiện xác định và rút gọn căn thức.",
+    "type": "multiple_choice",
+    "teacher_id": "teacher_003",
+    "class_id": "806fe426-5835-40ee-b194-5d6ceff7802b",
+    "created_at": "22/07/2026 16:18",
+    "time_limit": 15,
+    "subject": "Toán",
+    "grade": "8A4",
+    "status": "active",
+    "questions": [
+      {
+        "id": 1,
+        "question": "Căn bậc hai số học của 49 là số nào?",
+        "options": [
+          "A. 7",
+          "B. -7",
+          "C. 49",
+          "D. 14"
+        ],
+        "correct_answer": "A",
+        "explanation": "Vì 7 >= 0 và 7^2 = 49."
+      },
+      {
+        "id": 2,
+        "question": "Biểu thức sqrt(x - 5) xác định khi nào?",
+        "options": [
+          "A. x > 5",
+          "B. x >= 5",
+          "C. x <= 5",
+          "D. x < 5"
+        ],
+        "correct_answer": "B",
+        "explanation": "Điều kiện dưới dấu căn là x - 5 >= 0, nên x >= 5."
+      },
+      {
+        "id": 3,
+        "question": "Giá trị của sqrt(81) là bao nhiêu?",
+        "options": [
+          "A. 8",
+          "B. 9",
+          "C. -9",
+          "D. 18"
+        ],
+        "correct_answer": "B",
+        "explanation": "Căn bậc hai số học luôn không âm, sqrt(81) = 9."
+      },
+      {
+        "id": 4,
+        "question": "Rút gọn sqrt(50) được kết quả nào?",
+        "options": [
+          "A. 25sqrt(2)",
+          "B. 10sqrt(5)",
+          "C. 5sqrt(2)",
+          "D. 2sqrt(5)"
+        ],
+        "correct_answer": "C",
+        "explanation": "sqrt(50) = sqrt(25 * 2) = 5sqrt(2)."
+      },
+      {
+        "id": 5,
+        "question": "sqrt(a^2) bằng gì với mọi số thực a?",
+        "options": [
+          "A. a",
+          "B. -a",
+          "C. |a|",
+          "D. a^2"
+        ],
+        "correct_answer": "C",
+        "explanation": "Theo hằng đẳng thức căn bậc hai: sqrt(a^2) = |a|."
+      },
+      {
+        "id": 6,
+        "question": "Nếu x = -3 thì sqrt(x^2) bằng bao nhiêu?",
+        "options": [
+          "A. -3",
+          "B. 3",
+          "C. 9",
+          "D. -9"
+        ],
+        "correct_answer": "B",
+        "explanation": "sqrt(x^2) = |x| = |-3| = 3."
+      },
+      {
+        "id": 7,
+        "question": "Rút gọn sqrt(72) được kết quả nào?",
+        "options": [
+          "A. 6sqrt(2)",
+          "B. 8sqrt(9)",
+          "C. 3sqrt(8)",
+          "D. 2sqrt(18)"
+        ],
+        "correct_answer": "A",
+        "explanation": "sqrt(72) = sqrt(36 * 2) = 6sqrt(2)."
+      },
+      {
+        "id": 8,
+        "question": "Phương trình sqrt(x) = 6 có nghiệm là bao nhiêu?",
+        "options": [
+          "A. x = 3",
+          "B. x = 6",
+          "C. x = 12",
+          "D. x = 36"
+        ],
+        "correct_answer": "D",
+        "explanation": "Bình phương hai vế: x = 36, thỏa điều kiện x >= 0."
+      },
+      {
+        "id": 9,
+        "question": "Biểu thức nào sau đây không xác định trong tập số thực?",
+        "options": [
+          "A. sqrt(4)",
+          "B. sqrt(0)",
+          "C. sqrt(-9)",
+          "D. sqrt(2)"
+        ],
+        "correct_answer": "C",
+        "explanation": "Trong tập số thực, căn bậc hai chỉ xác định khi biểu thức dưới căn không âm."
+      },
+      {
+        "id": 10,
+        "question": "Rút gọn sqrt(12) + sqrt(27) được kết quả nào?",
+        "options": [
+          "A. 5sqrt(3)",
+          "B. 13sqrt(3)",
+          "C. 3sqrt(5)",
+          "D. sqrt(39)"
+        ],
+        "correct_answer": "A",
+        "explanation": "sqrt(12) = 2sqrt(3), sqrt(27) = 3sqrt(3), tổng là 5sqrt(3)."
+      }
+    ]
+  }
+]

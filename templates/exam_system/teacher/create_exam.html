@@ -206,7 +206,7 @@
 
             <!-- Back button -->
             <div class="text-center mt-4 mb-4">
-                <a href="{{ url_for('teacher_dashboard') }}" class="btn btn-secondary btn-lg">
+                <a href="{{ url_for('teacher_class_detail', class_id=class_obj.id) if class_obj else url_for('teacher_dashboard') }}" class="btn btn-secondary btn-lg">
                     <i class="fas fa-arrow-left"></i> Quay Lại Dashboard
                 </a>
             </div>

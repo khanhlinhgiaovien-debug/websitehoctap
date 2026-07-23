@@ -495,7 +495,7 @@
             <a href="{{ url_for('teacher_view_submissions', exam_id=exam.id) }}" class="btn btn-primary">
                 ← Quay lại danh sách
             </a>
-            <a href="{{ url_for('teacher_dashboard') }}" class="btn btn-secondary">
+            <a href="{{ url_for('teacher_class_detail', class_id=class_obj.id) if class_obj else url_for('teacher_dashboard') }}" class="btn btn-secondary">
                 🏠 Dashboard
             </a>
         </div>

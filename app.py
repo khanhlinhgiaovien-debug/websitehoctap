@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, Response
 import json, os, re, unicodedata, math, time
 import html as html_lib
 from PIL import Image
@@ -77,6 +77,9 @@ def add_global_back_button(response):
         return response
 
     if request.path == "/":
+        return response
+
+    if request.path.startswith("/exam_system/"):
         return response
 
     content_type = response.headers.get("Content-Type", "")
@@ -280,59 +283,824 @@ EXAM_USERS_FILE = os.path.join('data', 'exam_system_users.json')
 EXAM_LESSONS_FILE = os.path.join('data', 'exam_system_lessons.json')
 EXAM_EXAMS_FILE = os.path.join('data', 'exam_system_exams.json')
 EXAM_SUBMISSIONS_FILE = os.path.join('data', 'exam_system_submissions.json')
+EXAM_MATERIALS_FILE = os.path.join('data', 'exam_system_materials.json')
+EXAM_CLASSES_FILE = os.path.join('data', 'exam_system_classes.json')
+DATABASE_URL = os.environ.get("DATABASE_URL") or os.environ.get("SUPABASE_DATABASE_URL")
+DATABASE_SSLMODE = os.environ.get("DATABASE_SSLMODE", "require")
+ADMIN_USERNAME = os.environ.get("EXAM_ADMIN_USERNAME", "admin")
+ADMIN_PASSWORD_HASH = generate_password_hash(
+    os.environ.get("EXAM_ADMIN_PASSWORD", "admin2026")
+)
+
+_exam_store_initialized = False
 
 
 # Helper functions
-def load_exam_users():
+def exam_db_enabled():
+    return bool(DATABASE_URL)
+
+
+def normalize_database_url(url):
+    if url and url.startswith("postgres://"):
+        return "postgresql://" + url[len("postgres://"):]
+    return url
+
+
+def get_exam_db_connection():
     try:
-        with open(EXAM_USERS_FILE, 'r', encoding='utf-8') as f:
-            return json.load(f)
+        import psycopg2
+    except ImportError as exc:
+        raise RuntimeError(
+            "DATABASE_URL is configured but psycopg2-binary is not installed."
+        ) from exc
+
+    dsn = normalize_database_url(DATABASE_URL)
+    kwargs = {"connect_timeout": 10}
+    if "sslmode=" not in dsn:
+        kwargs["sslmode"] = DATABASE_SSLMODE
+    return psycopg2.connect(dsn, **kwargs)
+
+
+def ensure_exam_store_table():
+    global _exam_store_initialized
+    if _exam_store_initialized or not exam_db_enabled():
+        return
+
+    with get_exam_db_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                CREATE TABLE IF NOT EXISTS exam_system_store (
+                    collection TEXT PRIMARY KEY,
+                    payload JSONB NOT NULL,
+                    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+                )
+                """
+            )
+    _exam_store_initialized = True
+
+
+def read_json_file(path, fallback):
+    try:
+        with open(path, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+            return data if data is not None else fallback
     except FileNotFoundError:
-        return {"students": [], "teachers": []}
+        return fallback
+    except json.JSONDecodeError:
+        return fallback
+
+
+def write_json_file(path, data):
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, 'w', encoding='utf-8') as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+
+
+def normalize_collection_payload(data, fallback, expected_type=None):
+    if expected_type and not isinstance(data, expected_type):
+        data = fallback
+    return data
+
+
+def load_exam_collection(collection, path, fallback, expected_type=None):
+    fallback_data = read_json_file(path, fallback)
+    fallback_data = normalize_collection_payload(fallback_data, fallback, expected_type)
+    if not exam_db_enabled():
+        return fallback_data
+
+    ensure_exam_store_table()
+    with get_exam_db_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                "SELECT payload FROM exam_system_store WHERE collection = %s",
+                (collection,)
+            )
+            row = cur.fetchone()
+            if row:
+                return normalize_collection_payload(row[0], fallback, expected_type)
+
+            from psycopg2.extras import Json
+            cur.execute(
+                """
+                INSERT INTO exam_system_store (collection, payload, updated_at)
+                VALUES (%s, %s, NOW())
+                ON CONFLICT (collection)
+                DO UPDATE SET payload = EXCLUDED.payload, updated_at = NOW()
+                """,
+                (collection, Json(fallback_data))
+            )
+            return fallback_data
+
+
+def save_exam_collection(collection, path, data):
+    if not exam_db_enabled():
+        write_json_file(path, data)
+        return
+
+    ensure_exam_store_table()
+    with get_exam_db_connection() as conn:
+        with conn.cursor() as cur:
+            from psycopg2.extras import Json
+            cur.execute(
+                """
+                INSERT INTO exam_system_store (collection, payload, updated_at)
+                VALUES (%s, %s, NOW())
+                ON CONFLICT (collection)
+                DO UPDATE SET payload = EXCLUDED.payload, updated_at = NOW()
+                """,
+                (collection, Json(data))
+            )
+
+
+def load_exam_users():
+    data = load_exam_collection('users', EXAM_USERS_FILE, {}, dict)
+
+    if not isinstance(data, dict):
+        data = {}
+    data.setdefault("students", [])
+    data.setdefault("teachers", [])
+    data.setdefault("parents", [])
+    return data
 
 
 def save_exam_users(data):
-    with open(EXAM_USERS_FILE, 'w', encoding='utf-8') as f:
-        json.dump(data, f, ensure_ascii=False, indent=2)
+    save_exam_collection('users', EXAM_USERS_FILE, data)
 
 
 def load_exam_lessons():
-    try:
-        with open(EXAM_LESSONS_FILE, 'r', encoding='utf-8') as f:
-            return json.load(f)
-    except FileNotFoundError:
-        return []
+    return load_exam_collection('lessons', EXAM_LESSONS_FILE, [], list)
 
 
 def save_exam_lessons(data):
-    with open(EXAM_LESSONS_FILE, 'w', encoding='utf-8') as f:
-        json.dump(data, f, ensure_ascii=False, indent=2)
+    save_exam_collection('lessons', EXAM_LESSONS_FILE, data)
 
 
 def load_exam_exams():
-    try:
-        with open(EXAM_EXAMS_FILE, 'r', encoding='utf-8') as f:
-            return json.load(f)
-    except FileNotFoundError:
-        return []
+    return load_exam_collection('exams', EXAM_EXAMS_FILE, [], list)
 
 
 def save_exam_exams(data):
-    with open(EXAM_EXAMS_FILE, 'w', encoding='utf-8') as f:
-        json.dump(data, f, ensure_ascii=False, indent=2)
+    save_exam_collection('exams', EXAM_EXAMS_FILE, data)
 
 
 def load_exam_submissions():
-    try:
-        with open(EXAM_SUBMISSIONS_FILE, 'r', encoding='utf-8') as f:
-            return json.load(f)
-    except FileNotFoundError:
-        return []
+    return load_exam_collection('submissions', EXAM_SUBMISSIONS_FILE, [], list)
 
 
 def save_exam_submissions(data):
-    with open(EXAM_SUBMISSIONS_FILE, 'w', encoding='utf-8') as f:
-        json.dump(data, f, ensure_ascii=False, indent=2)
+    save_exam_collection('submissions', EXAM_SUBMISSIONS_FILE, data)
+
+
+def load_exam_materials():
+    return load_exam_collection('materials', EXAM_MATERIALS_FILE, [], list)
+
+
+def save_exam_materials(data):
+    save_exam_collection('materials', EXAM_MATERIALS_FILE, data)
+
+
+def load_exam_classes():
+    return load_exam_collection('classes', EXAM_CLASSES_FILE, [], list)
+
+
+def save_exam_classes(data):
+    save_exam_collection('classes', EXAM_CLASSES_FILE, data)
+
+
+def generate_class_code(classes):
+    existing_codes = {c.get('class_code') for c in classes}
+    alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
+    while True:
+        code = ''.join(random.choice(alphabet) for _ in range(6))
+        if code not in existing_codes:
+            return code
+
+
+def generate_join_password():
+    alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
+    return ''.join(random.choice(alphabet) for _ in range(6))
+
+
+def is_admin_logged_in():
+    return session.get('admin_logged_in') is True
+
+
+def require_admin():
+    if not is_admin_logged_in():
+        flash('Vui lòng đăng nhập admin!', 'error')
+        return redirect(url_for('admin_login'))
+    return None
+
+
+def require_teacher():
+    if session.get('exam_user_type') != 'teacher':
+        flash('Vui lòng đăng nhập với tư cách giáo viên!', 'error')
+        return redirect(url_for('exam_teacher_login'))
+    return None
+
+
+def require_parent():
+    if session.get('exam_user_type') != 'parent':
+        flash('Vui lòng đăng nhập với tư cách phụ huynh!', 'error')
+        return redirect(url_for('exam_parent_login'))
+    return None
+
+
+def get_teacher_class(class_id):
+    teacher_id = session.get('exam_user_id')
+    return next(
+        (
+            c for c in load_exam_classes()
+            if c.get('id') == class_id and c.get('teacher_id') == teacher_id
+        ),
+        None
+    )
+
+
+def student_in_class(class_obj, student_id):
+    return student_id in class_obj.get('student_ids', [])
+
+
+def get_student_classes(student_id):
+    return [
+        c for c in load_exam_classes()
+        if student_in_class(c, student_id)
+    ]
+
+
+def get_student_by_id(student_id):
+    users = load_exam_users()
+    return next((s for s in users.get('students', []) if s.get('id') == student_id), None)
+
+
+def get_parent_context(parent_id=None):
+    users = load_exam_users()
+    parent_id = parent_id or session.get('exam_user_id')
+    parent = next((p for p in users.get('parents', []) if p.get('id') == parent_id), None)
+    if not parent or parent.get('active', True) is False:
+        return None
+
+    class_obj = next(
+        (c for c in load_exam_classes() if c.get('id') == parent.get('class_id')),
+        None
+    )
+    student = get_student_by_id(parent.get('student_id'))
+    if not class_obj or not student or not student_in_class(class_obj, student.get('id')):
+        return None
+
+    return {
+        'parent': parent,
+        'student': student,
+        'class_obj': class_obj
+    }
+
+
+def build_class_stats(class_obj):
+    class_id = class_obj.get('id')
+    lessons = [l for l in load_exam_lessons() if l.get('class_id') == class_id]
+    exams = [e for e in load_exam_exams() if e.get('class_id') == class_id]
+    materials = [m for m in load_exam_materials() if m.get('class_id') == class_id]
+    submissions = [
+        s for s in load_exam_submissions()
+        if any(e.get('id') == s.get('exam_id') for e in exams)
+    ]
+    avg_score = None
+    if submissions:
+        avg_score = round(sum(float(s.get('score', 0)) for s in submissions) / len(submissions), 2)
+    return {
+        'student_count': len(class_obj.get('student_ids', [])),
+        'lesson_count': len(lessons),
+        'exam_count': len(exams),
+        'material_count': len(materials),
+        'submission_count': len(submissions),
+        'avg_score': avg_score
+    }
+
+
+def parse_exam_datetime(value):
+    try:
+        return datetime.strptime(value or '', "%d/%m/%Y %H:%M")
+    except ValueError:
+        return datetime.min
+
+
+def remove_vietnamese_accents(text):
+    text = unicodedata.normalize('NFD', str(text or ''))
+    return ''.join(char for char in text if unicodedata.category(char) != 'Mn')
+
+
+def classify_error_topic(text):
+    normalized = remove_vietnamese_accents(text or '').lower()
+    topic_rules = [
+        ('Điều kiện xác định', ['dieu kien', 'xac dinh']),
+        ('Căn bậc hai', ['can bac hai', 'sqrt', 'can thuc']),
+        ('Rút gọn biểu thức', ['rut gon', 'bien doi', 'hang dang thuc']),
+        ('Phương trình', ['phuong trinh', 'nghiem']),
+        ('Tính toán', ['tinh', 'gia tri', 'bang bao nhieu']),
+        ('Hình học', ['hinh hoc', 'tam giac', 'goc', 'duong tron'])
+    ]
+    for topic, keywords in topic_rules:
+        if any(keyword in normalized for keyword in keywords):
+            return topic
+    return 'Kiến thức khác'
+
+
+def build_teacher_class_analysis(class_obj, students=None, exams=None, submissions=None):
+    class_id = class_obj.get('id')
+    users = load_exam_users()
+    students = students if students is not None else [
+        s for s in users.get('students', [])
+        if s.get('id') in class_obj.get('student_ids', [])
+    ]
+    exams = exams if exams is not None else [
+        e for e in load_exam_exams()
+        if e.get('class_id') == class_id
+    ]
+    exam_lookup = {exam.get('id'): exam for exam in exams}
+    submissions = submissions if submissions is not None else [
+        sub for sub in load_exam_submissions()
+        if sub.get('exam_id') in exam_lookup
+    ]
+
+    submissions_by_student = {}
+    for sub in submissions:
+        submissions_by_student.setdefault(sub.get('student_id'), []).append(sub)
+
+    ranking_rows = []
+    for student in students:
+        student_submissions = sorted(
+            submissions_by_student.get(student.get('id'), []),
+            key=lambda sub: parse_exam_datetime(sub.get('submitted_at'))
+        )
+        scores = [float(sub.get('score', 0)) for sub in student_submissions]
+        avg_score = round(sum(scores) / len(scores), 2) if scores else None
+        improvement = round(scores[-1] - scores[0], 2) if len(scores) >= 2 else None
+        ranking_rows.append({
+            'student': student,
+            'submission_count': len(student_submissions),
+            'avg_score': avg_score,
+            'best_score': max(scores) if scores else None,
+            'latest_score': scores[-1] if scores else None,
+            'improvement': improvement
+        })
+
+    ranking_rows.sort(
+        key=lambda row: (
+            row['avg_score'] is not None,
+            row['avg_score'] if row['avg_score'] is not None else -1,
+            row['submission_count']
+        ),
+        reverse=True
+    )
+    improvement_rows = sorted(
+        [row for row in ranking_rows if row['improvement'] is not None],
+        key=lambda row: row['improvement'],
+        reverse=True
+    )
+
+    error_topics = {}
+    question_errors = {}
+    total_checked_answers = 0
+    total_wrong_answers = 0
+    for sub in submissions:
+        for result in sub.get('detailed_results', []):
+            total_checked_answers += 1
+            is_wrong = result.get('is_correct') is False
+            if 'is_correct' not in result:
+                score = float(result.get('score', 0) or 0)
+                points = float(result.get('points', 0) or 0)
+                is_wrong = points > 0 and score < points * 0.6
+            if not is_wrong:
+                continue
+
+            total_wrong_answers += 1
+            question_text = result.get('question', '')
+            topic = classify_error_topic(
+                f"{question_text} {result.get('explanation', '')} {result.get('feedback', '')}"
+            )
+            error_topics[topic] = error_topics.get(topic, 0) + 1
+            key = question_text[:140] or f"Câu {result.get('question_id', '')}"
+            question_errors[key] = question_errors.get(key, 0) + 1
+
+    error_rows = [
+        {
+            'topic': topic,
+            'wrong_count': count,
+            'percent': round((count / total_wrong_answers) * 100, 1) if total_wrong_answers else 0
+        }
+        for topic, count in error_topics.items()
+    ]
+    error_rows.sort(key=lambda row: row['wrong_count'], reverse=True)
+
+    question_error_rows = [
+        {'question': question, 'wrong_count': count}
+        for question, count in question_errors.items()
+    ]
+    question_error_rows.sort(key=lambda row: row['wrong_count'], reverse=True)
+
+    weak_students = [
+        row for row in ranking_rows
+        if row['avg_score'] is not None and row['avg_score'] < 5
+    ]
+    strong_students = [
+        row for row in ranking_rows
+        if row['avg_score'] is not None and row['avg_score'] >= 8
+    ]
+    students_without_submissions = [
+        row for row in ranking_rows
+        if row['submission_count'] == 0
+    ]
+
+    recommendations = []
+    for row in error_rows[:3]:
+        recommendations.append(
+            f"Ôn lại nhóm '{row['topic']}' vì đang chiếm {row['percent']}% lỗi sai đã ghi nhận."
+        )
+    if weak_students:
+        recommendations.append(
+            f"Tổ chức nhóm hỗ trợ cho {len(weak_students)} học sinh có điểm trung bình dưới 5."
+        )
+    if students_without_submissions:
+        recommendations.append(
+            f"Nhắc {len(students_without_submissions)} học sinh chưa có bài nộp tham gia làm bài."
+        )
+    if not recommendations:
+        recommendations.append('Chưa đủ dữ liệu bài nộp để đề xuất trọng tâm luyện tập.')
+
+    saved_reviews = class_obj.get('student_reviews', {})
+    review_rows = []
+    for row in ranking_rows:
+        student = row['student']
+        student_id = student.get('id')
+        saved = saved_reviews.get(student_id, {})
+        if row['avg_score'] is None:
+            draft = 'Em chưa có dữ liệu bài làm trong lớp. Giáo viên cần nhắc em tham gia các bài kiểm tra để theo dõi tiến bộ.'
+        elif row['avg_score'] >= 8:
+            draft = f"Em đang có kết quả tốt với điểm trung bình {row['avg_score']}/10. Cần duy trì nhịp học và thử thêm bài vận dụng."
+        elif row['avg_score'] >= 5:
+            draft = f"Em đã nắm được kiến thức cơ bản với điểm trung bình {row['avg_score']}/10. Cần luyện thêm các dạng còn sai để ổn định kết quả."
+        else:
+            draft = f"Em cần được hỗ trợ thêm vì điểm trung bình hiện là {row['avg_score']}/10. Nên ôn lại kiến thức nền và làm bài bổ trợ ngắn."
+        review_rows.append({
+            'student': student,
+            'avg_score': row['avg_score'],
+            'submission_count': row['submission_count'],
+            'comment': saved.get('comment') or draft,
+            'published': saved.get('published', False)
+        })
+
+    class_avg = None
+    scored_rows = [row for row in ranking_rows if row['avg_score'] is not None]
+    if scored_rows:
+        class_avg = round(sum(row['avg_score'] for row in scored_rows) / len(scored_rows), 2)
+
+    return {
+        'ranking_rows': ranking_rows,
+        'improvement_rows': improvement_rows,
+        'error_rows': error_rows,
+        'question_error_rows': question_error_rows,
+        'recommendations': recommendations,
+        'review_rows': review_rows,
+        'class_avg': class_avg,
+        'strong_count': len(strong_students),
+        'weak_count': len(weak_students),
+        'not_started_count': len(students_without_submissions),
+        'total_checked_answers': total_checked_answers,
+        'total_wrong_answers': total_wrong_answers
+    }
+
+
+def build_teacher_overview_report(class_rows):
+    class_count = len(class_rows)
+    classes_with_scores = [
+        row for row in class_rows
+        if row['stats'].get('avg_score') is not None
+    ]
+    total_submissions = sum(row['stats'].get('submission_count', 0) for row in class_rows)
+    total_students = sum(row['stats'].get('student_count', 0) for row in class_rows)
+    avg_score = None
+    if classes_with_scores:
+        avg_score = round(
+            sum(row['stats']['avg_score'] for row in classes_with_scores) / len(classes_with_scores),
+            2
+        )
+
+    strengths = []
+    weaknesses = []
+    actions = []
+
+    strong_classes = [
+        row for row in classes_with_scores
+        if row['stats']['avg_score'] >= 8
+    ]
+    weak_classes = [
+        row for row in classes_with_scores
+        if row['stats']['avg_score'] < 5
+    ]
+    inactive_classes = [
+        row for row in class_rows
+        if row['stats'].get('submission_count', 0) == 0
+    ]
+
+    if strong_classes:
+        names = ', '.join(row['class'].get('name', 'Lớp học') for row in strong_classes[:3])
+        strengths.append(f"Các lớp có mặt bằng điểm tốt: {names}.")
+    if total_submissions:
+        strengths.append(f"Đã ghi nhận {total_submissions} bài nộp để theo dõi chất lượng học tập.")
+    if not strengths:
+        strengths.append('Đã có cấu trúc lớp học, đề kiểm tra và học sinh để bắt đầu thu dữ liệu.')
+
+    if weak_classes:
+        names = ', '.join(row['class'].get('name', 'Lớp học') for row in weak_classes[:3])
+        weaknesses.append(f"Các lớp cần hỗ trợ thêm: {names}.")
+    if inactive_classes:
+        weaknesses.append(f"{len(inactive_classes)} lớp chưa có bài nộp nên chưa đủ dữ liệu phân tích.")
+    if not weaknesses:
+        weaknesses.append('Chưa phát hiện lớp có điểm trung bình dưới 5 từ dữ liệu hiện tại.')
+
+    if inactive_classes:
+        actions.append('Ưu tiên giao một bài kiểm tra ngắn cho các lớp chưa có dữ liệu.')
+    if weak_classes:
+        actions.append('Mở tiết luyện tập bổ trợ cho lớp có điểm trung bình thấp.')
+    actions.append('Theo dõi dashboard từng lớp sau mỗi bài kiểm tra để cập nhật lỗ hổng kiến thức.')
+
+    return {
+        'class_count': class_count,
+        'total_students': total_students,
+        'total_submissions': total_submissions,
+        'avg_score': avg_score,
+        'strengths': strengths,
+        'weaknesses': weaknesses,
+        'actions': actions
+    }
+
+
+def classify_learning_axis(text):
+    normalized = remove_vietnamese_accents(text or '').lower()
+    if any(keyword in normalized for keyword in ['hinh hoc', 'tam giac', 'goc', 'duong tron', 'dien tich']):
+        return 'Hình học'
+    if any(keyword in normalized for keyword in ['thuc te', 'van dung', 'bai toan', 'ti le', 'phan tram']):
+        return 'Toán thực tế'
+    if any(keyword in normalized for keyword in ['phuong trinh', 'bieu thuc', 'hang dang thuc', 'da thuc', 'an so']):
+        return 'Đại số'
+    if any(keyword in normalized for keyword in ['suy luan', 'chung minh', 'logic', 'lap luan']):
+        return 'Tư duy logic'
+    return 'Kỹ năng tính toán'
+
+
+def build_student_learning_profile(student_id, class_id=None):
+    users = load_exam_users()
+    student = next((s for s in users.get('students', []) if s.get('id') == student_id), None)
+    classes = get_student_classes(student_id)
+    if class_id:
+        classes = [c for c in classes if c.get('id') == class_id]
+
+    class_ids = {c.get('id') for c in classes}
+    lessons = [l for l in load_exam_lessons() if l.get('class_id') in class_ids]
+    materials = [m for m in load_exam_materials() if m.get('class_id') in class_ids]
+    exams = [e for e in load_exam_exams() if e.get('class_id') in class_ids]
+    exam_lookup = {e.get('id'): e for e in exams}
+    submissions = [
+        s for s in load_exam_submissions()
+        if s.get('student_id') == student_id and s.get('exam_id') in exam_lookup
+    ]
+    submissions.sort(key=lambda sub: parse_exam_datetime(sub.get('submitted_at')))
+
+    scores = [float(s.get('score', 0) or 0) for s in submissions]
+    avg_score = round(sum(scores) / len(scores), 2) if scores else None
+    latest_score = scores[-1] if scores else None
+    best_score = max(scores) if scores else None
+    improvement = round(scores[-1] - scores[0], 2) if len(scores) >= 2 else None
+
+    axis_order = ['Đại số', 'Hình học', 'Toán thực tế', 'Kỹ năng tính toán', 'Tư duy logic']
+    axis_data = {axis: {'correct': 0, 'total': 0} for axis in axis_order}
+    weak_topics = {}
+    for sub in submissions:
+        for result in sub.get('detailed_results', []):
+            text = ' '.join([
+                str(result.get('question', '')),
+                str(result.get('explanation', '')),
+                str(result.get('feedback', ''))
+            ])
+            axis = classify_learning_axis(text)
+            axis_data.setdefault(axis, {'correct': 0, 'total': 0})
+            axis_data[axis]['total'] += 1
+
+            if 'is_correct' in result:
+                is_correct = result.get('is_correct') is True
+            else:
+                points = float(result.get('points', 0) or 0)
+                score = float(result.get('score', 0) or 0)
+                is_correct = points > 0 and score >= points * 0.6
+
+            if is_correct:
+                axis_data[axis]['correct'] += 1
+            else:
+                weak_topics[axis] = weak_topics.get(axis, 0) + 1
+
+    radar_rows = []
+    for axis in axis_order:
+        total = axis_data.get(axis, {}).get('total', 0)
+        correct = axis_data.get(axis, {}).get('correct', 0)
+        percent = round((correct / total) * 100, 1) if total else None
+        radar_rows.append({
+            'axis': axis,
+            'correct': correct,
+            'total': total,
+            'percent': percent
+        })
+
+    if avg_score is None:
+        ai_comment = 'Chưa có dữ liệu bài làm. Học sinh nên hoàn thành ít nhất một đề kiểm tra để hệ thống bắt đầu phân tích tiến bộ.'
+    elif avg_score >= 8:
+        ai_comment = f'Học sinh đang có nền tảng tốt với điểm trung bình {avg_score}/10. Nên tiếp tục luyện bài vận dụng để giữ nhịp tiến bộ.'
+    elif avg_score >= 5:
+        ai_comment = f'Học sinh đã nắm được phần cơ bản với điểm trung bình {avg_score}/10. Cần tập trung vào nhóm kỹ năng còn sai để ổn định kết quả.'
+    else:
+        ai_comment = f'Học sinh cần được hỗ trợ thêm vì điểm trung bình hiện là {avg_score}/10. Nên ôn lại kiến thức nền và làm các bài ngắn theo từng dạng.'
+
+    weak_axes = sorted(
+        [row for row in radar_rows if row['percent'] is not None],
+        key=lambda row: row['percent']
+    )
+    recommendations = []
+    for row in weak_axes[:3]:
+        if row['percent'] < 75:
+            recommendations.append(f"Ôn lại nhóm {row['axis']} vì tỉ lệ đúng hiện khoảng {row['percent']}%.")
+    if lessons:
+        recommendations.append(f"Xem lại bài giảng gần nhất: {lessons[-1].get('title', 'Bài giảng của lớp')}.")
+    if materials:
+        recommendations.append(f"Mở học liệu bổ trợ: {materials[-1].get('title', 'Kho học liệu của lớp')}.")
+    if exams:
+        recommendations.append(f"Làm hoặc làm lại đề: {exams[-1].get('title', 'Đề kiểm tra của lớp')}.")
+    if not recommendations:
+        recommendations.append('Chưa có đủ học liệu hoặc bài kiểm tra trong lớp. Hãy theo dõi khi giáo viên cập nhật nội dung mới.')
+
+    published_reviews = []
+    for class_obj in classes:
+        saved = class_obj.get('student_reviews', {}).get(student_id)
+        if saved and saved.get('published'):
+            published_reviews.append({
+                'class': class_obj,
+                'comment': saved.get('comment', ''),
+                'updated_at': saved.get('updated_at', '')
+            })
+
+    progress_points = []
+    for sub in submissions:
+        exam = exam_lookup.get(sub.get('exam_id'), {})
+        progress_points.append({
+            'label': f"{exam.get('title', 'Bài kiểm tra')} - {sub.get('submitted_at', '')}",
+            'score': float(sub.get('score', 0) or 0),
+            'exam_title': exam.get('title', 'Bài kiểm tra'),
+            'submitted_at': sub.get('submitted_at', ''),
+            'submission_id': sub.get('id')
+        })
+
+    return {
+        'student': student,
+        'classes': classes,
+        'class_ids': list(class_ids),
+        'lessons': lessons,
+        'materials': materials,
+        'exams': exams,
+        'submissions': submissions,
+        'avg_score': avg_score,
+        'latest_score': latest_score,
+        'best_score': best_score,
+        'improvement': improvement,
+        'radar_rows': radar_rows,
+        'radar_labels': [row['axis'] for row in radar_rows],
+        'radar_values': [row['percent'] if row['percent'] is not None else 0 for row in radar_rows],
+        'progress_points': progress_points,
+        'progress_labels': [point['label'] for point in progress_points],
+        'progress_scores': [point['score'] for point in progress_points],
+        'ai_comment': ai_comment,
+        'recommendations': recommendations,
+        'published_reviews': published_reviews
+    }
+
+
+def build_admin_report_data():
+    users = load_exam_users()
+    teachers = users.get('teachers', [])
+    students = users.get('students', [])
+    parents = users.get('parents', [])
+    classes = load_exam_classes()
+
+    teacher_lookup = {teacher.get('id'): teacher for teacher in teachers}
+    student_lookup = {student.get('id'): student for student in students}
+    class_lookup = {class_obj.get('id'): class_obj for class_obj in classes}
+    class_rows = []
+    for class_obj in classes:
+        teacher = teacher_lookup.get(class_obj.get('teacher_id'), {})
+        stats = build_class_stats(class_obj)
+        class_rows.append({
+            'class': class_obj,
+            'teacher': teacher,
+            'stats': stats
+        })
+
+    teacher_rows = []
+    for teacher in teachers:
+        teacher_classes = [
+            row for row in class_rows
+            if row['class'].get('teacher_id') == teacher.get('id')
+        ]
+        teacher_rows.append({
+            'teacher': teacher,
+            'class_count': len(teacher_classes),
+            'student_count': sum(row['stats']['student_count'] for row in teacher_classes),
+            'lesson_count': sum(row['stats']['lesson_count'] for row in teacher_classes),
+            'exam_count': sum(row['stats']['exam_count'] for row in teacher_classes),
+            'submission_count': sum(row['stats']['submission_count'] for row in teacher_classes)
+        })
+
+    parent_rows = []
+    for parent in parents:
+        parent_rows.append({
+            'parent': parent,
+            'class': class_lookup.get(parent.get('class_id'), {}),
+            'student': student_lookup.get(parent.get('student_id'), {})
+        })
+
+    student_options = []
+    for class_obj in classes:
+        for student_id in class_obj.get('student_ids', []):
+            student = student_lookup.get(student_id)
+            if student:
+                student_options.append({
+                    'class_id': class_obj.get('id'),
+                    'class_name': class_obj.get('name'),
+                    'student_id': student.get('id'),
+                    'student_name': student.get('full_name'),
+                    'student_username': student.get('username')
+                })
+
+    subject_counts = {}
+    for row in class_rows:
+        subject = row['class'].get('subject') or 'Chưa phân môn'
+        subject_counts[subject] = subject_counts.get(subject, 0) + 1
+
+    summary = {
+        'teacher_count': len(teachers),
+        'active_teacher_count': len([t for t in teachers if t.get('active', True) is not False]),
+        'student_count': len(students),
+        'parent_count': len(parents),
+        'active_parent_count': len([p for p in parents if p.get('active', True) is not False]),
+        'class_count': len(classes),
+        'lesson_count': sum(row['stats']['lesson_count'] for row in class_rows),
+        'exam_count': sum(row['stats']['exam_count'] for row in class_rows),
+        'submission_count': sum(row['stats']['submission_count'] for row in class_rows),
+        'storage_backend': 'PostgreSQL/Supabase' if exam_db_enabled() else 'JSON local'
+    }
+
+    return {
+        'summary': summary,
+        'teacher_rows': teacher_rows,
+        'parent_rows': parent_rows,
+        'student_options': student_options,
+        'class_rows': class_rows,
+        'class_chart_labels': [row['class'].get('name', 'Lớp học') for row in class_rows],
+        'class_student_counts': [row['stats']['student_count'] for row in class_rows],
+        'subject_chart_labels': list(subject_counts.keys()),
+        'subject_chart_counts': list(subject_counts.values())
+    }
+
+
+def is_google_drive_url(url):
+    url = (url or '').strip()
+    return (
+        url.startswith(('https://drive.google.com/', 'http://drive.google.com/'))
+        or url.startswith(('https://docs.google.com/', 'http://docs.google.com/'))
+    )
+
+
+def get_google_embed_url(url):
+    url = (url or '').strip()
+
+    folder_match = re.search(r'drive\.google\.com/drive/folders/([^/?#]+)', url)
+    if folder_match:
+        return f"https://drive.google.com/embeddedfolderview?id={folder_match.group(1)}#list"
+
+    file_match = re.search(r'drive\.google\.com/file/d/([^/?#]+)', url)
+    if file_match:
+        return f"https://drive.google.com/file/d/{file_match.group(1)}/preview"
+
+    id_match = re.search(r'[?&]id=([^&#]+)', url)
+    if 'drive.google.com' in url and id_match:
+        return f"https://drive.google.com/file/d/{id_match.group(1)}/preview"
+
+    docs_match = re.search(
+        r'docs\.google\.com/(document|spreadsheets|presentation|forms)/d/([^/?#]+)',
+        url
+    )
+    if docs_match:
+        doc_type, doc_id = docs_match.groups()
+        return f"https://docs.google.com/{doc_type}/d/{doc_id}/preview"
+
+    return url
 
 
 # ---------------- AUTHENTICATION ----------------
@@ -405,6 +1173,10 @@ def exam_teacher_login():
             (t for t in users['teachers'] if t['username'] == username), None)
 
         if teacher:
+            if teacher.get('active', True) is False:
+                flash('Tài khoản giáo viên đã bị khóa!', 'error')
+                return render_template('exam_system/auth/teacher_login.html')
+
             # Kiểm tra xem password có phải hash không
             teacher_password = teacher['password']
 
@@ -433,43 +1205,781 @@ def exam_teacher_login():
     return render_template('exam_system/auth/teacher_login.html')
 
 
+@app.route('/exam_system/parent_login', methods=['GET', 'POST'])
+def exam_parent_login():
+    if request.method == 'POST':
+        username = request.form.get('username', '').strip()
+        password = request.form.get('password', '').strip()
+
+        users = load_exam_users()
+        parent = next(
+            (p for p in users.get('parents', []) if p.get('username') == username),
+            None
+        )
+
+        if parent:
+            if parent.get('active', True) is False:
+                flash('Tài khoản phụ huynh đã bị khóa!', 'error')
+                return render_template('exam_system/auth/parent_login.html')
+
+            parent_password = parent.get('password', '')
+            password_ok = (
+                check_password_hash(parent_password, password)
+                if parent_password.startswith(('pbkdf2:', 'scrypt:', 'bcrypt:'))
+                else parent_password == password
+            )
+            if password_ok:
+                session['exam_user_type'] = 'parent'
+                session['exam_user_id'] = parent.get('id')
+                session['exam_user_name'] = parent.get('full_name')
+                session['exam_parent_student_id'] = parent.get('student_id')
+                session['exam_parent_class_id'] = parent.get('class_id')
+                flash('Đăng nhập phụ huynh thành công!', 'success')
+                return redirect(url_for('parent_dashboard'))
+
+        flash('Sai tên đăng nhập hoặc mật khẩu phụ huynh!', 'error')
+
+    return render_template('exam_system/auth/parent_login.html')
+
+
 @app.route('/exam_system/logout')
 def exam_logout():
     session.pop('exam_user_type', None)
     session.pop('exam_user_id', None)
     session.pop('exam_user_name', None)
     session.pop('exam_subject', None)
+    session.pop('exam_parent_student_id', None)
+    session.pop('exam_parent_class_id', None)
     flash('Đã đăng xuất!', 'info')
     return redirect(url_for('exam_student_login'))
+
+
+# ---------------- ADMIN ROUTES ----------------
+@app.route('/admin/login', methods=['GET', 'POST'])
+def admin_login():
+    if request.method == 'POST':
+        username = request.form.get('username', '').strip()
+        password = request.form.get('password', '').strip()
+        if username == ADMIN_USERNAME and check_password_hash(ADMIN_PASSWORD_HASH, password):
+            session.clear()
+            session['admin_logged_in'] = True
+            session['admin_username'] = username
+            flash('Đăng nhập admin thành công!', 'success')
+            return redirect(url_for('admin_dashboard'))
+        flash('Sai tài khoản hoặc mật khẩu admin!', 'error')
+    return render_template('admin/login.html')
+
+
+@app.route('/admin/logout')
+def admin_logout():
+    session.pop('admin_logged_in', None)
+    session.pop('admin_username', None)
+    flash('Đã đăng xuất admin!', 'info')
+    return redirect(url_for('admin_login'))
+
+
+@app.route('/admin/dashboard', methods=['GET', 'POST'])
+def admin_dashboard():
+    blocked = require_admin()
+    if blocked:
+        return blocked
+
+    users = load_exam_users()
+    users.setdefault('teachers', [])
+    if request.method == 'POST':
+        username = request.form.get('username', '').strip()
+        password = request.form.get('password', '').strip()
+        full_name = request.form.get('full_name', '').strip()
+        subject = request.form.get('subject', '').strip()
+        email = request.form.get('email', '').strip()
+
+        if not all([username, password, full_name, subject]):
+            flash('Vui lòng nhập đủ tên đăng nhập, mật khẩu, họ tên và môn dạy.', 'error')
+            return redirect(url_for('admin_dashboard'))
+
+        if any(t.get('username') == username for t in users['teachers']):
+            flash('Tên đăng nhập giáo viên đã tồn tại.', 'error')
+            return redirect(url_for('admin_dashboard'))
+
+        users['teachers'].append({
+            'id': str(uuid.uuid4()),
+            'username': username,
+            'password': generate_password_hash(password),
+            'full_name': full_name,
+            'subject': subject,
+            'email': email,
+            'active': True,
+            'created_at': datetime.now().strftime("%d/%m/%Y %H:%M")
+        })
+        save_exam_users(users)
+        flash('Đã tạo tài khoản giáo viên.', 'success')
+        return redirect(url_for('admin_dashboard'))
+
+    report_data = build_admin_report_data()
+
+    return render_template('admin/dashboard.html', **report_data)
+
+
+@app.route('/admin/export_report')
+def admin_export_report():
+    blocked = require_admin()
+    if blocked:
+        return blocked
+
+    report_data = build_admin_report_data()
+    generated_at = datetime.now().strftime("%d/%m/%Y %H:%M")
+    summary = report_data['summary']
+    teacher_rows = report_data['teacher_rows']
+    parent_rows = report_data['parent_rows']
+    class_rows = report_data['class_rows']
+
+    def cell(value):
+        return html_lib.escape(str(value if value is not None else ''))
+
+    teacher_html = ''.join(
+        f"""
+        <tr>
+            <td>{cell(row['teacher'].get('full_name'))}</td>
+            <td>{cell(row['teacher'].get('username'))}</td>
+            <td>{cell(row['teacher'].get('subject'))}</td>
+            <td>{cell(row['teacher'].get('email'))}</td>
+            <td>{cell(row['class_count'])}</td>
+            <td>{cell(row['student_count'])}</td>
+            <td>{cell(row['lesson_count'])}</td>
+            <td>{cell(row['exam_count'])}</td>
+            <td>{cell(row['submission_count'])}</td>
+            <td>{'Đã khóa' if row['teacher'].get('active', True) is False else 'Đang hoạt động'}</td>
+        </tr>
+        """
+        for row in teacher_rows
+    )
+
+    class_html = ''.join(
+        f"""
+        <tr>
+            <td>{cell(row['class'].get('name'))}</td>
+            <td>{cell(row['class'].get('class_code'))}</td>
+            <td>{cell(row['class'].get('join_password_plain') or 'Cần đặt lại')}</td>
+            <td>{cell(row['class'].get('grade'))}</td>
+            <td>{cell(row['class'].get('subject'))}</td>
+            <td>{cell(row['teacher'].get('full_name', ''))}</td>
+            <td>{cell(row['stats']['student_count'])}</td>
+            <td>{cell(row['stats']['lesson_count'])}</td>
+            <td>{cell(row['stats']['exam_count'])}</td>
+            <td>{cell(row['stats']['material_count'])}</td>
+            <td>{cell(row['stats']['submission_count'])}</td>
+            <td>{cell(row['stats']['avg_score'] if row['stats']['avg_score'] is not None else 'Chưa có')}</td>
+        </tr>
+        """
+        for row in class_rows
+    )
+
+    parent_html = ''.join(
+        f"""
+        <tr>
+            <td>{cell(row['parent'].get('full_name'))}</td>
+            <td>{cell(row['parent'].get('username'))}</td>
+            <td>{cell(row['parent'].get('phone'))}</td>
+            <td>{cell(row['parent'].get('email'))}</td>
+            <td>{cell(row['student'].get('full_name', ''))}</td>
+            <td>{cell(row['student'].get('username', ''))}</td>
+            <td>{cell(row['class'].get('name', ''))}</td>
+            <td>{cell(row['class'].get('class_code', ''))}</td>
+            <td>{'Đã khóa' if row['parent'].get('active', True) is False else 'Đang hoạt động'}</td>
+        </tr>
+        """
+        for row in parent_rows
+    )
+
+    html = f"""<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        table {{ border-collapse: collapse; width: 100%; }}
+        th, td {{ border: 1px solid #999; padding: 6px; }}
+        th {{ background: #dbeafe; font-weight: bold; }}
+        h1, h2 {{ color: #123a7a; }}
+    </style>
+</head>
+<body>
+    <h1>Báo cáo admin hệ thống học tập</h1>
+    <p>Thời điểm xuất: {cell(generated_at)}</p>
+    <h2>Tổng quan</h2>
+    <table>
+        <tr><th>Giáo viên</th><th>Giáo viên hoạt động</th><th>Học sinh</th><th>Phụ huynh</th><th>Lớp</th><th>Bài giảng</th><th>Đề kiểm tra</th><th>Bài nộp</th></tr>
+        <tr>
+            <td>{summary['teacher_count']}</td>
+            <td>{summary['active_teacher_count']}</td>
+            <td>{summary['student_count']}</td>
+            <td>{summary['parent_count']}</td>
+            <td>{summary['class_count']}</td>
+            <td>{summary['lesson_count']}</td>
+            <td>{summary['exam_count']}</td>
+            <td>{summary['submission_count']}</td>
+        </tr>
+    </table>
+    <h2>Danh sách giáo viên</h2>
+    <table>
+        <tr><th>Giáo viên</th><th>Tài khoản</th><th>Môn</th><th>Email</th><th>Số lớp</th><th>Học sinh</th><th>Bài giảng</th><th>Đề kiểm tra</th><th>Bài nộp</th><th>Trạng thái</th></tr>
+        {teacher_html}
+    </table>
+    <h2>Danh sách phụ huynh</h2>
+    <table>
+        <tr><th>Phụ huynh</th><th>Tài khoản</th><th>Điện thoại</th><th>Email</th><th>Học sinh</th><th>Tài khoản học sinh</th><th>Lớp</th><th>Mã lớp</th><th>Trạng thái</th></tr>
+        {parent_html}
+    </table>
+    <h2>Danh sách lớp học</h2>
+    <table>
+        <tr><th>Lớp</th><th>Mã lớp</th><th>Mật khẩu lớp</th><th>Khối/Lớp</th><th>Môn</th><th>Giáo viên</th><th>Học sinh</th><th>Bài giảng</th><th>Đề kiểm tra</th><th>Học liệu</th><th>Bài nộp</th><th>Điểm trung bình</th></tr>
+        {class_html}
+    </table>
+</body>
+</html>"""
+
+    filename = f"bao-cao-admin-{datetime.now().strftime('%Y%m%d-%H%M')}.xls"
+    return Response(
+        html,
+        mimetype='application/vnd.ms-excel; charset=utf-8',
+        headers={'Content-Disposition': f'attachment; filename="{filename}"'}
+    )
+
+
+@app.route('/admin/teachers/<teacher_id>/toggle', methods=['POST'])
+def admin_toggle_teacher(teacher_id):
+    blocked = require_admin()
+    if blocked:
+        return blocked
+
+    users = load_exam_users()
+    teacher = next((t for t in users.get('teachers', []) if t.get('id') == teacher_id), None)
+    if not teacher:
+        flash('Không tìm thấy giáo viên.', 'error')
+        return redirect(url_for('admin_dashboard'))
+
+    teacher['active'] = not teacher.get('active', True)
+    save_exam_users(users)
+    flash('Đã cập nhật trạng thái giáo viên.', 'success')
+    return redirect(url_for('admin_dashboard'))
+
+
+@app.route('/admin/teachers/<teacher_id>/reset_password', methods=['POST'])
+def admin_reset_teacher_password(teacher_id):
+    blocked = require_admin()
+    if blocked:
+        return blocked
+
+    new_password = request.form.get('new_password', '').strip()
+    if not new_password:
+        flash('Vui lòng nhập mật khẩu mới.', 'error')
+        return redirect(url_for('admin_dashboard'))
+
+    users = load_exam_users()
+    teacher = next((t for t in users.get('teachers', []) if t.get('id') == teacher_id), None)
+    if not teacher:
+        flash('Không tìm thấy giáo viên.', 'error')
+        return redirect(url_for('admin_dashboard'))
+
+    teacher['password'] = generate_password_hash(new_password)
+    teacher['updated_at'] = datetime.now().strftime("%d/%m/%Y %H:%M")
+    save_exam_users(users)
+    flash('Đã reset mật khẩu giáo viên.', 'success')
+    return redirect(url_for('admin_dashboard'))
+
+
+@app.route('/admin/teachers/<teacher_id>/edit', methods=['POST'])
+def admin_edit_teacher(teacher_id):
+    blocked = require_admin()
+    if blocked:
+        return blocked
+
+    users = load_exam_users()
+    teacher = next((t for t in users.get('teachers', []) if t.get('id') == teacher_id), None)
+    if not teacher:
+        flash('Không tìm thấy giáo viên.', 'error')
+        return redirect(url_for('admin_dashboard'))
+
+    teacher['full_name'] = request.form.get('full_name', '').strip() or teacher.get('full_name', '')
+    teacher['subject'] = request.form.get('subject', '').strip() or teacher.get('subject', '')
+    teacher['email'] = request.form.get('email', '').strip()
+    teacher['updated_at'] = datetime.now().strftime("%d/%m/%Y %H:%M")
+    save_exam_users(users)
+    flash('Đã cập nhật thông tin giáo viên.', 'success')
+    return redirect(url_for('admin_dashboard'))
+
+
+@app.route('/admin/parents/create', methods=['POST'])
+def admin_create_parent():
+    blocked = require_admin()
+    if blocked:
+        return blocked
+
+    username = request.form.get('parent_username', '').strip()
+    password = request.form.get('parent_password', '').strip()
+    full_name = request.form.get('parent_full_name', '').strip()
+    email = request.form.get('parent_email', '').strip()
+    phone = request.form.get('parent_phone', '').strip()
+    class_id = request.form.get('parent_class_id', '').strip()
+    student_id = request.form.get('parent_student_id', '').strip()
+
+    if not all([username, password, full_name, class_id, student_id]):
+        flash('Vui lòng nhập đủ tài khoản, mật khẩu, họ tên, lớp và học sinh cho phụ huynh.', 'error')
+        return redirect(url_for('admin_dashboard'))
+
+    users = load_exam_users()
+    username_exists = (
+        any(u.get('username') == username for u in users.get('teachers', [])) or
+        any(u.get('username') == username for u in users.get('students', [])) or
+        any(u.get('username') == username for u in users.get('parents', []))
+    )
+    if username_exists:
+        flash('Tên đăng nhập đã tồn tại trong hệ thống.', 'error')
+        return redirect(url_for('admin_dashboard'))
+
+    class_obj = next((c for c in load_exam_classes() if c.get('id') == class_id), None)
+    if not class_obj or not student_in_class(class_obj, student_id):
+        flash('Học sinh không thuộc lớp đã chọn.', 'error')
+        return redirect(url_for('admin_dashboard'))
+
+    users.setdefault('parents', []).append({
+        'id': str(uuid.uuid4()),
+        'username': username,
+        'password': generate_password_hash(password),
+        'full_name': full_name,
+        'email': email,
+        'phone': phone,
+        'class_id': class_id,
+        'student_id': student_id,
+        'active': True,
+        'created_at': datetime.now().strftime("%d/%m/%Y %H:%M")
+    })
+    save_exam_users(users)
+    flash('Đã tạo tài khoản phụ huynh.', 'success')
+    return redirect(url_for('admin_dashboard'))
+
+
+@app.route('/admin/parents/<parent_id>/toggle', methods=['POST'])
+def admin_toggle_parent(parent_id):
+    blocked = require_admin()
+    if blocked:
+        return blocked
+
+    users = load_exam_users()
+    parent = next((p for p in users.get('parents', []) if p.get('id') == parent_id), None)
+    if not parent:
+        flash('Không tìm thấy tài khoản phụ huynh.', 'error')
+        return redirect(url_for('admin_dashboard'))
+
+    parent['active'] = not parent.get('active', True)
+    parent['updated_at'] = datetime.now().strftime("%d/%m/%Y %H:%M")
+    save_exam_users(users)
+    flash('Đã cập nhật trạng thái phụ huynh.', 'success')
+    return redirect(url_for('admin_dashboard'))
+
+
+@app.route('/admin/parents/<parent_id>/reset_password', methods=['POST'])
+def admin_reset_parent_password(parent_id):
+    blocked = require_admin()
+    if blocked:
+        return blocked
+
+    new_password = request.form.get('new_password', '').strip()
+    if not new_password:
+        flash('Vui lòng nhập mật khẩu mới cho phụ huynh.', 'error')
+        return redirect(url_for('admin_dashboard'))
+
+    users = load_exam_users()
+    parent = next((p for p in users.get('parents', []) if p.get('id') == parent_id), None)
+    if not parent:
+        flash('Không tìm thấy tài khoản phụ huynh.', 'error')
+        return redirect(url_for('admin_dashboard'))
+
+    parent['password'] = generate_password_hash(new_password)
+    parent['updated_at'] = datetime.now().strftime("%d/%m/%Y %H:%M")
+    save_exam_users(users)
+    flash('Đã reset mật khẩu phụ huynh.', 'success')
+    return redirect(url_for('admin_dashboard'))
 
 
 # ---------------- TEACHER ROUTES ----------------
 @app.route('/exam_system/teacher/dashboard')
 def teacher_dashboard():
-    if session.get('exam_user_type') != 'teacher':
-        flash('Vui lòng đăng nhập với tư cách giáo viên!', 'error')
-        return redirect(url_for('exam_teacher_login'))
+    blocked = require_teacher()
+    if blocked:
+        return blocked
 
     teacher_id = session.get('exam_user_id')
-    lessons = [l for l in load_exam_lessons() if l['teacher_id'] == teacher_id]
-    exams = [e for e in load_exam_exams() if e['teacher_id'] == teacher_id]
+    classes = [
+        c for c in load_exam_classes()
+        if c.get('teacher_id') == teacher_id
+    ]
+    class_rows = [
+        {'class': class_obj, 'stats': build_class_stats(class_obj)}
+        for class_obj in classes
+    ]
+    overview_report = build_teacher_overview_report(class_rows)
 
     return render_template('exam_system/teacher/dashboard.html',
+                           class_rows=class_rows,
+                           overview_report=overview_report)
+
+
+@app.route('/exam_system/teacher/classes/create', methods=['POST'])
+def teacher_create_class():
+    blocked = require_teacher()
+    if blocked:
+        return blocked
+
+    name = request.form.get('name', '').strip()
+    grade = request.form.get('grade', '').strip()
+    subject = request.form.get('subject', '').strip() or session.get('exam_subject', 'Chung')
+    join_password = request.form.get('join_password', '').strip()
+
+    if not all([name, grade]):
+        flash('Vui lòng nhập tên lớp và khối/lớp.', 'error')
+        return redirect(url_for('teacher_dashboard'))
+
+    classes = load_exam_classes()
+    join_password = join_password or generate_join_password()
+    class_obj = {
+        'id': str(uuid.uuid4()),
+        'class_code': generate_class_code(classes),
+        'join_password': generate_password_hash(join_password),
+        'join_password_plain': join_password,
+        'name': name,
+        'grade': grade,
+        'subject': subject,
+        'teacher_id': session.get('exam_user_id'),
+        'teacher_name': session.get('exam_user_name'),
+        'student_ids': [],
+        'created_at': datetime.now().strftime("%d/%m/%Y %H:%M"),
+        'updated_at': None,
+        'active': True
+    }
+    classes.insert(0, class_obj)
+    save_exam_classes(classes)
+    flash(f'Đã tạo lớp. Mã lớp: {class_obj["class_code"]} · Mật khẩu lớp: {join_password}', 'success')
+    return redirect(url_for('teacher_class_detail', class_id=class_obj['id']))
+
+
+@app.route('/exam_system/teacher/classes/<class_id>/reset_password', methods=['POST'])
+def teacher_reset_class_password(class_id):
+    blocked = require_teacher()
+    if blocked:
+        return blocked
+
+    classes = load_exam_classes()
+    class_obj = next(
+        (
+            c for c in classes
+            if c.get('id') == class_id and c.get('teacher_id') == session.get('exam_user_id')
+        ),
+        None
+    )
+    if not class_obj:
+        flash('Không tìm thấy lớp học hoặc bạn không có quyền truy cập.', 'error')
+        return redirect(url_for('teacher_dashboard'))
+
+    new_password = request.form.get('join_password', '').strip() or generate_join_password()
+    class_obj['join_password'] = generate_password_hash(new_password)
+    class_obj['join_password_plain'] = new_password
+    class_obj['updated_at'] = datetime.now().strftime("%d/%m/%Y %H:%M")
+    save_exam_classes(classes)
+    flash(f'Đã cập nhật mật khẩu lớp: {new_password}', 'success')
+    return redirect(url_for('teacher_class_detail', class_id=class_id))
+
+
+@app.route('/exam_system/teacher/classes/<class_id>')
+def teacher_class_detail(class_id):
+    blocked = require_teacher()
+    if blocked:
+        return blocked
+
+    class_obj = get_teacher_class(class_id)
+    if not class_obj:
+        flash('Không tìm thấy lớp học hoặc bạn không có quyền truy cập.', 'error')
+        return redirect(url_for('teacher_dashboard'))
+
+    lessons = [l for l in load_exam_lessons() if l.get('class_id') == class_id]
+    exams = [e for e in load_exam_exams() if e.get('class_id') == class_id]
+    materials = [m for m in load_exam_materials() if m.get('class_id') == class_id]
+    users = load_exam_users()
+    students = [
+        s for s in users.get('students', [])
+        if s.get('id') in class_obj.get('student_ids', [])
+    ]
+    submissions = [
+        sub for sub in load_exam_submissions()
+        if any(exam.get('id') == sub.get('exam_id') for exam in exams)
+    ]
+    class_analysis = build_teacher_class_analysis(
+        class_obj,
+        students=students,
+        exams=exams,
+        submissions=submissions
+    )
+
+    return render_template('exam_system/teacher/class_detail.html',
+                           class_obj=class_obj,
                            lessons=lessons,
-                           exams=exams)
+                           exams=exams,
+                           materials=materials,
+                           students=students,
+                           submissions=submissions,
+                           stats=build_class_stats(class_obj),
+                           class_analysis=class_analysis)
+
+
+@app.route('/exam_system/teacher/classes/<class_id>/reviews/save', methods=['POST'])
+def teacher_save_class_reviews(class_id):
+    blocked = require_teacher()
+    if blocked:
+        return blocked
+
+    classes = load_exam_classes()
+    class_obj = next(
+        (
+            c for c in classes
+            if c.get('id') == class_id and c.get('teacher_id') == session.get('exam_user_id')
+        ),
+        None
+    )
+    if not class_obj:
+        flash('Không tìm thấy lớp học hoặc bạn không có quyền truy cập.', 'error')
+        return redirect(url_for('teacher_dashboard'))
+
+    student_ids = request.form.getlist('student_id[]')
+    comments = request.form.getlist('comment[]')
+    published_ids = set(request.form.getlist('published_student_id[]'))
+    reviews = class_obj.setdefault('student_reviews', {})
+
+    for index, student_id in enumerate(student_ids):
+        comment = comments[index].strip() if index < len(comments) else ''
+        if not comment:
+            continue
+        reviews[student_id] = {
+            'comment': comment,
+            'published': student_id in published_ids,
+            'updated_at': datetime.now().strftime("%d/%m/%Y %H:%M")
+        }
+
+    class_obj['updated_at'] = datetime.now().strftime("%d/%m/%Y %H:%M")
+    save_exam_classes(classes)
+    flash('Đã lưu nhận xét cá nhân cho học sinh trong lớp.', 'success')
+    return redirect(url_for('teacher_class_detail', class_id=class_id))
+
+
+@app.route('/exam_system/teacher/materials', methods=['GET', 'POST'])
+@app.route('/exam_system/teacher/classes/<class_id>/materials', methods=['GET', 'POST'])
+def teacher_material_library(class_id=None):
+    blocked = require_teacher()
+    if blocked:
+        return blocked
+    class_obj = None
+    if class_id:
+        class_obj = get_teacher_class(class_id)
+        if not class_obj:
+            flash('Không tìm thấy lớp học hoặc bạn không có quyền truy cập.', 'error')
+            return redirect(url_for('teacher_dashboard'))
+    redirect_target = (
+        url_for('teacher_material_library', class_id=class_id)
+        if class_id else url_for('teacher_material_library')
+    )
+
+    allowed_grades = {'6', '7', '8', '9'}
+
+    if request.method == 'POST':
+        title = request.form.get('title', '').strip()
+        grade = request.form.get('grade', '').strip()
+        drive_url = request.form.get('drive_url', '').strip()
+        description = request.form.get('description', '').strip()
+
+        if not title or not grade or not drive_url:
+            flash('Vui lòng nhập tên sách, lớp và link Google Drive.', 'error')
+            return redirect(redirect_target)
+
+        if grade not in allowed_grades:
+            flash('Phân loại lớp chỉ nhận lớp 6, 7, 8 hoặc 9.', 'error')
+            return redirect(redirect_target)
+
+        if not is_google_drive_url(drive_url):
+            flash('Link học liệu phải là link Google Drive hoặc Google Docs.', 'error')
+            return redirect(redirect_target)
+
+        materials = load_exam_materials()
+        materials.insert(0, {
+            'id': str(uuid.uuid4()),
+            'title': title,
+            'grade': grade,
+            'drive_url': drive_url,
+            'description': description,
+            'class_id': class_id,
+            'teacher_id': session.get('exam_user_id'),
+            'teacher_name': session.get('exam_user_name'),
+            'created_at': datetime.now().strftime("%d/%m/%Y %H:%M"),
+            'updated_at': None
+        })
+        save_exam_materials(materials)
+        flash('Đã thêm sách vào kho học liệu.', 'success')
+        return redirect(redirect_target)
+
+    teacher_id = session.get('exam_user_id')
+    materials = [
+        m for m in load_exam_materials()
+        if m.get('teacher_id') == teacher_id and (not class_id or m.get('class_id') == class_id)
+    ]
+    materials = sorted(
+        materials,
+        key=lambda m: (m.get('grade', ''), m.get('title', '').lower())
+    )
+    return render_template('exam_system/teacher/material_library.html',
+                           materials=materials,
+                           grades=['6', '7', '8', '9'],
+                           class_obj=class_obj)
+
+
+@app.route('/exam_system/teacher/materials/<material_id>/edit',
+           methods=['GET', 'POST'])
+def teacher_edit_material(material_id):
+    blocked = require_teacher()
+    if blocked:
+        return blocked
+
+    materials = load_exam_materials()
+    material = next((m for m in materials if m.get('id') == material_id), None)
+    if not material or material.get('teacher_id') != session.get('exam_user_id'):
+        flash('Không tìm thấy sách hoặc bạn không có quyền chỉnh sửa.', 'error')
+        return redirect(url_for('teacher_material_library'))
+    class_obj = get_teacher_class(material.get('class_id')) if material.get('class_id') else None
+
+    allowed_grades = {'6', '7', '8', '9'}
+
+    if request.method == 'POST':
+        title = request.form.get('title', '').strip()
+        grade = request.form.get('grade', '').strip()
+        drive_url = request.form.get('drive_url', '').strip()
+        description = request.form.get('description', '').strip()
+
+        if not title or not grade or not drive_url:
+            flash('Vui lòng nhập tên sách, lớp và link Google Drive.', 'error')
+            return redirect(url_for('teacher_edit_material',
+                                    material_id=material_id))
+
+        if grade not in allowed_grades:
+            flash('Phân loại lớp chỉ nhận lớp 6, 7, 8 hoặc 9.', 'error')
+            return redirect(url_for('teacher_edit_material',
+                                    material_id=material_id))
+
+        if not is_google_drive_url(drive_url):
+            flash('Link học liệu phải là link Google Drive hoặc Google Docs.', 'error')
+            return redirect(url_for('teacher_edit_material',
+                                    material_id=material_id))
+
+        material.update({
+            'title': title,
+            'grade': grade,
+            'drive_url': drive_url,
+            'description': description,
+            'updated_at': datetime.now().strftime("%d/%m/%Y %H:%M")
+        })
+        save_exam_materials(materials)
+        flash('Đã cập nhật sách.', 'success')
+        if material.get('class_id'):
+            return redirect(url_for('teacher_material_library', class_id=material.get('class_id')))
+        return redirect(url_for('teacher_material_library'))
+
+    teacher_id = session.get('exam_user_id')
+    visible_materials = [
+        m for m in materials
+        if m.get('teacher_id') == teacher_id
+        and (not material.get('class_id') or m.get('class_id') == material.get('class_id'))
+    ]
+    visible_materials = sorted(
+        visible_materials,
+        key=lambda m: (m.get('grade', ''), m.get('title', '').lower())
+    )
+    return render_template('exam_system/teacher/material_library.html',
+                           materials=visible_materials,
+                           grades=['6', '7', '8', '9'],
+                           editing_material=material,
+                           class_obj=class_obj)
+
+
+@app.route('/exam_system/teacher/materials/<material_id>/delete',
+           methods=['POST'])
+def teacher_delete_material(material_id):
+    blocked = require_teacher()
+    if blocked:
+        return blocked
+
+    materials = load_exam_materials()
+    material = next((m for m in materials if m.get('id') == material_id), None)
+    if not material or material.get('teacher_id') != session.get('exam_user_id'):
+        flash('Không tìm thấy sách hoặc bạn không có quyền xóa.', 'error')
+        return redirect(url_for('teacher_material_library'))
+
+    materials = [m for m in materials if m.get('id') != material_id]
+    save_exam_materials(materials)
+    flash('Đã xóa sách khỏi kho học liệu.', 'success')
+    if material.get('class_id'):
+        return redirect(url_for('teacher_material_library', class_id=material.get('class_id')))
+    return redirect(url_for('teacher_material_library'))
+
+
+@app.route('/exam_system/materials/<material_id>/view')
+def exam_material_view(material_id):
+    user_type = session.get('exam_user_type')
+    if user_type not in {'teacher', 'student'}:
+        return redirect(url_for('exam_student_login'))
+
+    material = next(
+        (m for m in load_exam_materials() if m.get('id') == material_id),
+        None
+    )
+    if not material:
+        flash('Không tìm thấy học liệu.', 'error')
+        if user_type == 'teacher':
+            return redirect(url_for('teacher_material_library'))
+        return redirect(url_for('student_material_library'))
+
+    if user_type == 'teacher' and material.get('teacher_id') != session.get('exam_user_id'):
+        flash('Bạn không có quyền xem học liệu này trong trang quản lý giáo viên.', 'error')
+        return redirect(url_for('teacher_material_library'))
+    if user_type == 'student' and material.get('class_id'):
+        class_obj = next(
+            (c for c in load_exam_classes() if c.get('id') == material.get('class_id')),
+            None
+        )
+        if not class_obj or not student_in_class(class_obj, session.get('exam_user_id')):
+            flash('Bạn cần tham gia lớp để xem học liệu này.', 'error')
+            return redirect(url_for('student_dashboard'))
+
+    return render_template('exam_system/material_viewer.html',
+                           material=material,
+                           class_obj=next((c for c in load_exam_classes() if c.get('id') == material.get('class_id')), None),
+                           embed_url=get_google_embed_url(material.get('drive_url')))
 
 
 @app.route('/exam_system/teacher/create_lesson', methods=['GET', 'POST'])
-def teacher_create_lesson():
-    if session.get('exam_user_type') != 'teacher':
-        return redirect(url_for('exam_teacher_login'))
+@app.route('/exam_system/teacher/classes/<class_id>/create_lesson', methods=['GET', 'POST'])
+def teacher_create_lesson(class_id=None):
+    blocked = require_teacher()
+    if blocked:
+        return blocked
+    if not class_id:
+        flash('Vui lòng chọn lớp trước khi tạo bài giảng.', 'info')
+        return redirect(url_for('teacher_dashboard'))
+    class_obj = get_teacher_class(class_id)
+    if not class_obj:
+        flash('Không tìm thấy lớp học hoặc bạn không có quyền truy cập.', 'error')
+        return redirect(url_for('teacher_dashboard'))
 
     if request.method == 'POST':
         title = request.form.get('title', '').strip()
         description = request.form.get('description', '').strip()
         content = request.form.get('content', '').strip()
-        subject = request.form.get('subject', '').strip()
-        grade = request.form.get('grade', '').strip()
+        subject = request.form.get('subject', '').strip() or class_obj.get('subject', '')
+        grade = request.form.get('grade', '').strip() or class_obj.get('grade', '')
 
         attachments = []
         files = request.files.getlist('attachments')
@@ -486,6 +1996,7 @@ def teacher_create_lesson():
             'content': content,
             'attachments': attachments,
             'teacher_id': session.get('exam_user_id'),
+            'class_id': class_id,
             'created_at': datetime.now().strftime("%d/%m/%Y %H:%M"),
             'subject': subject,
             'grade': grade
@@ -496,33 +2007,143 @@ def teacher_create_lesson():
         save_exam_lessons(lessons)
 
         flash('Đã tạo bài giảng!', 'success')
-        return redirect(url_for('teacher_dashboard'))
+        return redirect(url_for('teacher_class_detail', class_id=class_id))
 
-    return render_template('exam_system/teacher/create_lesson.html')
+    return render_template('exam_system/teacher/create_lesson.html',
+                           class_obj=class_obj)
 
 
 @app.route('/exam_system/teacher/create_exam', methods=['GET', 'POST'])
-def teacher_create_exam():
-    if session.get('exam_user_type') != 'teacher':
-        return redirect(url_for('exam_teacher_login'))
+@app.route('/exam_system/teacher/classes/<class_id>/create_exam', methods=['GET', 'POST'])
+def teacher_create_exam(class_id=None):
+    blocked = require_teacher()
+    if blocked:
+        return blocked
+    if not class_id:
+        flash('Vui lòng chọn lớp trước khi tạo đề kiểm tra.', 'info')
+        return redirect(url_for('teacher_dashboard'))
+    class_obj = get_teacher_class(class_id)
+    if not class_obj:
+        flash('Không tìm thấy lớp học hoặc bạn không có quyền truy cập.', 'error')
+        return redirect(url_for('teacher_dashboard'))
 
     if request.method == 'POST':
         exam_type = request.form.get('exam_type')
         if exam_type == 'multiple_choice':
-            return redirect(url_for('teacher_create_multiple_choice'))
+            return redirect(url_for('teacher_create_multiple_choice', class_id=class_id))
         elif exam_type == 'essay':
-            return redirect(url_for('teacher_create_essay'))
+            return redirect(url_for('teacher_create_essay', class_id=class_id))
 
-    return render_template('exam_system/teacher/create_exam.html')
+    return render_template('exam_system/teacher/create_exam.html',
+                           class_obj=class_obj)
 
 
 @app.route('/exam_system/teacher/create_multiple_choice',
            methods=['GET', 'POST'])
-def teacher_create_multiple_choice():
-    if session.get('exam_user_type') != 'teacher':
-        return redirect(url_for('exam_teacher_login'))
+@app.route('/exam_system/teacher/classes/<class_id>/create_multiple_choice',
+           methods=['GET', 'POST'])
+def teacher_create_multiple_choice(class_id=None):
+    blocked = require_teacher()
+    if blocked:
+        return blocked
+    if not class_id:
+        flash('Vui lòng chọn lớp trước khi tạo đề kiểm tra.', 'info')
+        return redirect(url_for('teacher_dashboard'))
+    class_obj = get_teacher_class(class_id)
+    if not class_obj:
+        flash('Không tìm thấy lớp học hoặc bạn không có quyền truy cập.', 'error')
+        return redirect(url_for('teacher_dashboard'))
 
     if request.method == 'POST':
+        if request.form.get('manual_create') == 'yes':
+            title = request.form.get('title', '').strip()
+            description = request.form.get('description', '').strip()
+            time_limit_raw = request.form.get('time_limit', '0').strip()
+            subject = request.form.get('subject', '').strip() or class_obj.get('subject', '')
+            grade = request.form.get('grade', '').strip() or class_obj.get('grade', '')
+
+            question_texts = request.form.getlist('question[]')
+            option_a_list = request.form.getlist('option_a[]')
+            option_b_list = request.form.getlist('option_b[]')
+            option_c_list = request.form.getlist('option_c[]')
+            option_d_list = request.form.getlist('option_d[]')
+            correct_answers = request.form.getlist('correct_answer[]')
+            explanations = request.form.getlist('explanation[]')
+
+            questions = []
+            for index, question_text in enumerate(question_texts):
+                question_text = question_text.strip()
+                option_values = [
+                    option_a_list[index].strip() if index < len(option_a_list) else '',
+                    option_b_list[index].strip() if index < len(option_b_list) else '',
+                    option_c_list[index].strip() if index < len(option_c_list) else '',
+                    option_d_list[index].strip() if index < len(option_d_list) else ''
+                ]
+                correct_answer = (
+                    correct_answers[index].strip().upper()
+                    if index < len(correct_answers) else ''
+                )
+                explanation = (
+                    explanations[index].strip()
+                    if index < len(explanations) else ''
+                )
+
+                if not question_text and not any(option_values):
+                    continue
+
+                if not question_text or not all(option_values) or correct_answer not in {'A', 'B', 'C', 'D'}:
+                    flash('Vui lòng nhập đủ nội dung câu hỏi, 4 đáp án và chọn đáp án đúng cho mỗi câu.', 'error')
+                    return redirect(url_for('teacher_create_multiple_choice', class_id=class_id))
+
+                questions.append({
+                    'id': len(questions) + 1,
+                    'question': question_text,
+                    'options': [
+                        f'A. {option_values[0]}',
+                        f'B. {option_values[1]}',
+                        f'C. {option_values[2]}',
+                        f'D. {option_values[3]}'
+                    ],
+                    'correct_answer': correct_answer,
+                    'explanation': explanation
+                })
+
+            if not title:
+                flash('Vui lòng nhập tiêu đề đề kiểm tra.', 'error')
+                return redirect(url_for('teacher_create_multiple_choice', class_id=class_id))
+
+            if not questions:
+                flash('Vui lòng tạo ít nhất 1 câu hỏi trắc nghiệm.', 'error')
+                return redirect(url_for('teacher_create_multiple_choice', class_id=class_id))
+
+            try:
+                time_limit = max(0, int(time_limit_raw or 0))
+            except ValueError:
+                flash('Thời gian làm bài phải là số phút hợp lệ.', 'error')
+                return redirect(url_for('teacher_create_multiple_choice', class_id=class_id))
+
+            new_exam = {
+                'id': str(uuid.uuid4()),
+                'title': title,
+                'description': description,
+                'type': 'multiple_choice',
+                'teacher_id': session.get('exam_user_id'),
+                'class_id': class_id,
+                'created_at': datetime.now().strftime("%d/%m/%Y %H:%M"),
+                'time_limit': time_limit,
+                'subject': subject,
+                'grade': grade,
+                'status': 'active',
+                'questions': questions
+            }
+
+            exams = load_exam_exams()
+            exams.insert(0, new_exam)
+            save_exam_exams(exams)
+
+            flash(f'Đã tạo đề trắc nghiệm thủ công với {len(questions)} câu.', 'success')
+            return redirect(url_for('teacher_class_detail', class_id=class_id))
+
         if 'word_file' in request.files:
             word_file = request.files['word_file']
             if word_file and word_file.filename.endswith('.docx'):
@@ -561,7 +2182,8 @@ CHỈ TRẢ VỀ JSON, KHÔNG THÊM TEXT KHÁC."""
 
                     return render_template(
                         'exam_system/teacher/preview_questions.html',
-                        questions=questions_data['questions'])
+                        questions=questions_data['questions'],
+                        class_obj=class_obj)
                 except Exception as e:
                     flash(f'Lỗi khi parse file: {str(e)}', 'error')
 
@@ -570,8 +2192,8 @@ CHỈ TRẢ VỀ JSON, KHÔNG THÊM TEXT KHÁC."""
             title = request.form.get('title', '').strip()
             description = request.form.get('description', '').strip()
             time_limit = request.form.get('time_limit', '0')
-            subject = request.form.get('subject', '').strip()
-            grade = request.form.get('grade', '').strip()
+            subject = request.form.get('subject', '').strip() or class_obj.get('subject', '')
+            grade = request.form.get('grade', '').strip() or class_obj.get('grade', '')
 
             questions_json = request.form.get('questions_json')
             questions = json.loads(questions_json)
@@ -582,6 +2204,7 @@ CHỈ TRẢ VỀ JSON, KHÔNG THÊM TEXT KHÁC."""
                 'description': description,
                 'type': 'multiple_choice',
                 'teacher_id': session.get('exam_user_id'),
+                'class_id': class_id,
                 'created_at': datetime.now().strftime("%d/%m/%Y %H:%M"),
                 'time_limit': int(time_limit),
                 'subject': subject,
@@ -595,22 +2218,32 @@ CHỈ TRẢ VỀ JSON, KHÔNG THÊM TEXT KHÁC."""
             save_exam_exams(exams)
 
             flash('Đã tạo đề trắc nghiệm!', 'success')
-            return redirect(url_for('teacher_dashboard'))
+            return redirect(url_for('teacher_class_detail', class_id=class_id))
 
-    return render_template('exam_system/teacher/create_multiple_choice.html')
+    return render_template('exam_system/teacher/create_multiple_choice.html',
+                           class_obj=class_obj)
 
 
 @app.route('/exam_system/teacher/create_essay', methods=['GET', 'POST'])
-def teacher_create_essay():
-    if session.get('exam_user_type') != 'teacher':
-        return redirect(url_for('exam_teacher_login'))
+@app.route('/exam_system/teacher/classes/<class_id>/create_essay', methods=['GET', 'POST'])
+def teacher_create_essay(class_id=None):
+    blocked = require_teacher()
+    if blocked:
+        return blocked
+    if not class_id:
+        flash('Vui lòng chọn lớp trước khi tạo đề kiểm tra.', 'info')
+        return redirect(url_for('teacher_dashboard'))
+    class_obj = get_teacher_class(class_id)
+    if not class_obj:
+        flash('Không tìm thấy lớp học hoặc bạn không có quyền truy cập.', 'error')
+        return redirect(url_for('teacher_dashboard'))
 
     if request.method == 'POST':
         title = request.form.get('title', '').strip()
         description = request.form.get('description', '').strip()
         time_limit = request.form.get('time_limit', '0')
-        subject = request.form.get('subject', '').strip()
-        grade = request.form.get('grade', '').strip()
+        subject = request.form.get('subject', '').strip() or class_obj.get('subject', '')
+        grade = request.form.get('grade', '').strip() or class_obj.get('grade', '')
 
         # Lấy các câu hỏi tự luận
         questions = []
@@ -636,6 +2269,7 @@ def teacher_create_essay():
             'description': description,
             'type': 'essay',
             'teacher_id': session.get('exam_user_id'),
+            'class_id': class_id,
             'created_at': datetime.now().strftime("%d/%m/%Y %H:%M"),
             'time_limit': int(time_limit),
             'subject': subject,
@@ -649,19 +2283,25 @@ def teacher_create_essay():
         save_exam_exams(exams)
 
         flash('Đã tạo đề tự luận!', 'success')
-        return redirect(url_for('teacher_dashboard'))
+        return redirect(url_for('teacher_class_detail', class_id=class_id))
 
-    return render_template('exam_system/teacher/create_essay.html')
+    return render_template('exam_system/teacher/create_essay.html',
+                           class_obj=class_obj)
 
 
 @app.route('/exam_system/teacher/view_submissions/<exam_id>')
 def teacher_view_submissions(exam_id):
-    if session.get('exam_user_type') != 'teacher':
-        return redirect(url_for('exam_teacher_login'))
+    blocked = require_teacher()
+    if blocked:
+        return blocked
 
     exam = next((e for e in load_exam_exams() if e['id'] == exam_id), None)
     if not exam:
         flash('Không tìm thấy đề!', 'error')
+        return redirect(url_for('teacher_dashboard'))
+    class_obj = get_teacher_class(exam.get('class_id')) if exam.get('class_id') else None
+    if exam.get('teacher_id') != session.get('exam_user_id') or (exam.get('class_id') and not class_obj):
+        flash('Bạn không có quyền xem bài nộp của đề này.', 'error')
         return redirect(url_for('teacher_dashboard'))
 
     submissions = [
@@ -679,13 +2319,15 @@ def teacher_view_submissions(exam_id):
 
     return render_template('exam_system/teacher/view_submissions.html',
                            exam=exam,
-                           submissions=submissions)
+                           submissions=submissions,
+                           class_obj=class_obj)
 
 
 @app.route('/exam_system/teacher/view_submission/<submission_id>')
 def teacher_view_submission(submission_id):
-    if session.get('exam_user_type') != 'teacher':
-        return redirect(url_for('exam_teacher_login'))
+    blocked = require_teacher()
+    if blocked:
+        return blocked
 
     submission = next(
         (s for s in load_exam_submissions() if s['id'] == submission_id), None)
@@ -696,6 +2338,10 @@ def teacher_view_submission(submission_id):
     exam = next(
         (e for e in load_exam_exams() if e['id'] == submission['exam_id']),
         None)
+    class_obj = get_teacher_class(exam.get('class_id')) if exam and exam.get('class_id') else None
+    if not exam or exam.get('teacher_id') != session.get('exam_user_id') or (exam.get('class_id') and not class_obj):
+        flash('Bạn không có quyền xem bài làm này.', 'error')
+        return redirect(url_for('teacher_dashboard'))
     users = load_exam_users()
     student = next(
         (s for s in users['students'] if s['id'] == submission['student_id']),
@@ -704,35 +2350,205 @@ def teacher_view_submission(submission_id):
     return render_template('exam_system/teacher/view_submission_detail.html',
                            submission=submission,
                            exam=exam,
-                           student=student)
+                           student=student,
+                           class_obj=class_obj)
 
 
 @app.route('/exam_system/teacher/delete_exam/<exam_id>', methods=['POST'])
 def teacher_delete_exam(exam_id):
-    if session.get('exam_user_type') != 'teacher':
-        return redirect(url_for('exam_teacher_login'))
+    blocked = require_teacher()
+    if blocked:
+        return blocked
 
     exams = load_exam_exams()
+    exam = next((e for e in exams if e.get('id') == exam_id), None)
+    if not exam or exam.get('teacher_id') != session.get('exam_user_id'):
+        flash('Không tìm thấy đề hoặc bạn không có quyền xóa.', 'error')
+        return redirect(url_for('teacher_dashboard'))
+
+    class_id = exam.get('class_id')
     exams = [e for e in exams if e['id'] != exam_id]
     save_exam_exams(exams)
 
     flash('Đã xóa đề kiểm tra!', 'success')
+    if class_id:
+        return redirect(url_for('teacher_class_detail', class_id=class_id))
     return redirect(url_for('teacher_dashboard'))
 
 
+# ---------------- PARENT ROUTES ----------------
+@app.route('/exam_system/parent/dashboard')
+def parent_dashboard():
+    blocked = require_parent()
+    if blocked:
+        return blocked
+
+    context = get_parent_context()
+    if not context:
+        flash('Tài khoản phụ huynh chưa được gán đúng lớp và học sinh.', 'error')
+        return redirect(url_for('exam_parent_login'))
+
+    profile = build_student_learning_profile(
+        context['student'].get('id'),
+        context['class_obj'].get('id')
+    )
+    return render_template(
+        'exam_system/learning_portal.html',
+        profile=profile,
+        viewer_type='parent',
+        parent=context['parent'],
+        student=context['student'],
+        selected_class=context['class_obj']
+    )
+
+
 # ---------------- STUDENT ROUTES ----------------
+@app.route('/exam_system/student/materials')
+def student_material_library():
+    if session.get('exam_user_type') != 'student':
+        return redirect(url_for('exam_student_login'))
+
+    joined_class_ids = {c.get('id') for c in get_student_classes(session.get('exam_user_id'))}
+    materials = sorted(
+        [
+            m for m in load_exam_materials()
+            if not m.get('class_id') or m.get('class_id') in joined_class_ids
+        ],
+        key=lambda m: (m.get('grade', ''), m.get('title', '').lower())
+    )
+    grouped_materials = {
+        grade: [m for m in materials if m.get('grade') == grade]
+        for grade in ['6', '7', '8', '9']
+    }
+    return render_template('exam_system/student/material_library.html',
+                           grouped_materials=grouped_materials,
+                           grades=['6', '7', '8', '9'])
+
+
 @app.route('/exam_system/student/dashboard')
 def student_dashboard():
     if session.get('exam_user_type') != 'student':
         flash('Vui lòng đăng nhập với tư cách học sinh!', 'error')
         return redirect(url_for('exam_student_login'))
 
-    lessons = load_exam_lessons()
-    exams = [e for e in load_exam_exams() if e['status'] == 'active']
+    student_id = session.get('exam_user_id')
+    classes = get_student_classes(student_id)
 
     return render_template('exam_system/student/dashboard.html',
+                           classes=classes)
+
+
+@app.route('/exam_system/student/learning_portal')
+def student_learning_portal():
+    if session.get('exam_user_type') != 'student':
+        flash('Vui lòng đăng nhập với tư cách học sinh!', 'error')
+        return redirect(url_for('exam_student_login'))
+
+    profile = build_student_learning_profile(session.get('exam_user_id'))
+    return render_template(
+        'exam_system/learning_portal.html',
+        profile=profile,
+        viewer_type='student',
+        parent=None,
+        student=profile.get('student'),
+        selected_class=None
+    )
+
+
+@app.route('/exam_system/student/classes/<class_id>')
+def student_class_detail(class_id):
+    if session.get('exam_user_type') != 'student':
+        flash('Vui lòng đăng nhập với tư cách học sinh!', 'error')
+        return redirect(url_for('exam_student_login'))
+
+    student_id = session.get('exam_user_id')
+    class_obj = next(
+        (
+            c for c in load_exam_classes()
+            if c.get('id') == class_id and student_in_class(c, student_id)
+        ),
+        None
+    )
+    if not class_obj:
+        flash('Bạn cần tham gia lớp trước khi xem nội dung lớp này.', 'error')
+        return redirect(url_for('student_dashboard'))
+
+    lessons = [l for l in load_exam_lessons() if l.get('class_id') == class_id]
+    materials = [m for m in load_exam_materials() if m.get('class_id') == class_id]
+    exams = [
+        e for e in load_exam_exams()
+        if e.get('status') == 'active' and e.get('class_id') == class_id
+    ]
+
+    return render_template('exam_system/student/class_detail.html',
+                           class_obj=class_obj,
                            lessons=lessons,
+                           materials=materials,
                            exams=exams)
+
+
+@app.route('/exam_system/student/classes/<class_id>/learning_portal')
+def student_class_learning_portal(class_id):
+    if session.get('exam_user_type') != 'student':
+        flash('Vui lòng đăng nhập với tư cách học sinh!', 'error')
+        return redirect(url_for('exam_student_login'))
+
+    student_id = session.get('exam_user_id')
+    class_obj = next(
+        (
+            c for c in load_exam_classes()
+            if c.get('id') == class_id and student_in_class(c, student_id)
+        ),
+        None
+    )
+    if not class_obj:
+        flash('Bạn cần tham gia lớp trước khi xem báo cáo học tập.', 'error')
+        return redirect(url_for('student_dashboard'))
+
+    profile = build_student_learning_profile(student_id, class_id)
+    return render_template(
+        'exam_system/learning_portal.html',
+        profile=profile,
+        viewer_type='student',
+        parent=None,
+        student=profile.get('student'),
+        selected_class=class_obj
+    )
+
+
+@app.route('/exam_system/student/join_class', methods=['POST'])
+def student_join_class():
+    if session.get('exam_user_type') != 'student':
+        return redirect(url_for('exam_student_login'))
+
+    class_code = request.form.get('class_code', '').strip().upper()
+    join_password = request.form.get('join_password', '').strip()
+    classes = load_exam_classes()
+    class_obj = next((c for c in classes if c.get('class_code') == class_code), None)
+    if not class_obj:
+        flash('Không tìm thấy lớp học với mã này.', 'error')
+        return redirect(url_for('student_dashboard'))
+
+    stored_password = class_obj.get('join_password', '')
+    password_ok = (
+        check_password_hash(stored_password, join_password)
+        if stored_password.startswith(('pbkdf2:', 'scrypt:', 'bcrypt:'))
+        else stored_password == join_password
+    )
+    if not password_ok:
+        flash('Mật khẩu lớp không đúng.', 'error')
+        return redirect(url_for('student_dashboard'))
+
+    student_id = session.get('exam_user_id')
+    class_obj.setdefault('student_ids', [])
+    if student_id not in class_obj['student_ids']:
+        class_obj['student_ids'].append(student_id)
+        class_obj['updated_at'] = datetime.now().strftime("%d/%m/%Y %H:%M")
+        save_exam_classes(classes)
+        flash('Đã tham gia lớp học.', 'success')
+    else:
+        flash('Bạn đã ở trong lớp này rồi.', 'info')
+    return redirect(url_for('student_class_detail', class_id=class_obj.get('id')))
 
 
 @app.route('/exam_system/student/view_lesson/<lesson_id>')
@@ -745,9 +2561,16 @@ def student_view_lesson(lesson_id):
     if not lesson:
         flash('Không tìm thấy bài giảng!', 'error')
         return redirect(url_for('student_dashboard'))
+    class_obj = None
+    if lesson.get('class_id'):
+        class_obj = next((c for c in load_exam_classes() if c.get('id') == lesson.get('class_id')), None)
+        if not class_obj or not student_in_class(class_obj, session.get('exam_user_id')):
+            flash('Bạn cần tham gia lớp để xem bài giảng này.', 'error')
+            return redirect(url_for('student_dashboard'))
 
     return render_template('exam_system/student/view_lesson.html',
-                           lesson=lesson)
+                           lesson=lesson,
+                           class_obj=class_obj)
 
 
 @app.route('/exam_system/student/take_exam/<exam_id>', methods=['GET', 'POST'])
@@ -759,6 +2582,11 @@ def student_take_exam(exam_id):
     if not exam:
         flash('Không tìm thấy đề!', 'error')
         return redirect(url_for('student_dashboard'))
+    if exam.get('class_id'):
+        class_obj = next((c for c in load_exam_classes() if c.get('id') == exam.get('class_id')), None)
+        if not class_obj or not student_in_class(class_obj, session.get('exam_user_id')):
+            flash('Bạn cần tham gia lớp để làm đề này.', 'error')
+            return redirect(url_for('student_dashboard'))
 
     if request.method == 'POST':
         student_id = session.get('exam_user_id')
@@ -811,6 +2639,7 @@ Trả lời ngắn gọn, khuyến khích."""
             submission = {
                 'id': submission_id,
                 'exam_id': exam_id,
+                'class_id': exam.get('class_id'),
                 'student_id': student_id,
                 'submitted_at': datetime.now().strftime("%d/%m/%Y %H:%M"),
                 'time_taken': int(time_taken),
@@ -874,6 +2703,7 @@ NHẬN XÉT: ..."""
             submission = {
                 'id': submission_id,
                 'exam_id': exam_id,
+                'class_id': exam.get('class_id'),
                 'student_id': student_id,
                 'submitted_at': datetime.now().strftime("%d/%m/%Y %H:%M"),
                 'time_taken': int(time_taken),
@@ -903,6 +2733,9 @@ def student_view_result(submission_id):
         (s for s in load_exam_submissions() if s['id'] == submission_id), None)
     if not submission:
         flash('Không tìm thấy bài làm!', 'error')
+        return redirect(url_for('student_dashboard'))
+    if submission.get('student_id') != session.get('exam_user_id'):
+        flash('Bạn không có quyền xem bài làm này.', 'error')
         return redirect(url_for('student_dashboard'))
 
     exam = next(
@@ -1564,27 +3397,27 @@ MINDMAP_DIR = os.path.join('static', 'chatbot_mindmaps')
 
 TUTOR_PERSONA_PROMPT = """
 
-Ban la Tri-hand, mot gia su Toan than thien cho hoc sinh THCS/THPT.
-- Ban khong phai cong cu dua dap an. Ban la gia su giup hoc sinh tu suy nghi.
-- Noi tieng Viet tu nhien, gan gui, goi hoc sinh la "em".
-- Giai thich cham rai, ro tung y, khong viet dai qua muc can thiet.
-- Uu tien Toan hoc. Neu hoc sinh hoi mon khac, van giu phong cach gia su goi mo.
-- Neu hoc sinh gui de nhung chua co bai lam: KHONG dua loi giai hoan chinh.
-- Chi neu dang bai, kien thuc can dung, cong thuc, dinh ly, huong tiep can va cau hoi goi mo.
-- Neu hoc sinh da thu lam: kiem tra dung/sai, chi loi, giai thich ngan, goi y cach sua.
-- Hinh hoc/chung minh: dung phan tich nguoc: ket luan -> dieu can co -> dinh ly/can cu -> gia thiet; sau do yeu cau em viet loi giai thuan.
-- Cau truc mac dinh: nhan dien dang bai -> cong thuc/kien thuc -> goi y buoc dau -> dat 1 cau hoi cho em lam tiep.
+Bạn là Tri-hand, một gia sư Toán thân thiện cho học sinh THCS/THPT.
+- Bạn không phải công cụ đưa đáp án. Bạn là gia sư giúp học sinh tự suy nghĩ.
+- Nói tiếng Việt có dấu tự nhiên, gần gũi, gọi học sinh là "em".
+- Giải thích chậm rãi, rõ từng ý, không viết dài quá mức cần thiết.
+- Ưu tiên Toán học. Nếu học sinh hỏi môn khác, vẫn giữ phong cách gia sư gợi mở.
+- Nếu học sinh gửi đề nhưng chưa có bài làm: KHÔNG đưa lời giải hoàn chỉnh.
+- Chỉ nêu dạng bài, kiến thức cần dùng, công thức, định lý, hướng tiếp cận và câu hỏi gợi mở.
+- Nếu học sinh đã thử làm: kiểm tra đúng/sai, chỉ lỗi, giải thích ngắn, gợi ý cách sửa.
+- Hình học/chứng minh: dùng phân tích ngược: kết luận -> điều cần có -> định lý/căn cứ -> giả thiết; sau đó yêu cầu em viết lời giải thuận.
+- Cấu trúc mặc định: nhận diện dạng bài -> công thức/kiến thức -> gợi ý bước đầu -> đặt 1 câu hỏi cho em làm tiếp.
 """
 
 MATH_FORMAT_RULES = """
 
-QUY TAC HIEN THI CONG THUC TOAN:
-- Tri-hand uu tien phuc vu mon Toan, nen cong thuc phai hien thi dung va dep.
-- Viet cong thuc bang LaTeX de MathJax render tren giao dien.
-- Cong thuc ngan dat trong \\( ... \\), vi du: \\(x^2 + 2x + 1\\).
-- Cong thuc quan trong hoac can canh giua dat trong \\[ ... \\].
-- Dung \\frac{}{}, ^{}, _{}, \\sqrt{}, \\lim, \\sin, \\cos, \\tan, \\ln, \\to cho phan so, luy thua, can, gioi han, luong giac, logarit.
-- Khong viet cong thuc dang text tho neu co the viet LaTeX.
+QUY TẮC HIỂN THỊ CÔNG THỨC TOÁN:
+- Tri-hand ưu tiên phục vụ môn Toán, nên công thức phải hiển thị đúng và đẹp.
+- Viết công thức bằng LaTeX để MathJax render trên giao diện.
+- Công thức ngắn đặt trong \\( ... \\), ví dụ: \\(x^2 + 2x + 1\\).
+- Công thức quan trọng hoặc cần canh giữa đặt trong \\[ ... \\].
+- Dùng \\frac{}{}, ^{}, _{}, \\sqrt{}, \\lim, \\sin, \\cos, \\tan, \\ln, \\to cho phân số, lũy thừa, căn, giới hạn, lượng giác, logarit.
+- Không viết công thức dạng text thô nếu có thể viết LaTeX.
 """
 
 
@@ -1609,7 +3442,7 @@ def safe_text(value, fallback=''):
     return value[:180]
 
 
-def safe_formula(value):
+def normalize_latex_slashes(value):
     formula = str(value or '').strip()
     if not formula:
         return ''
@@ -1617,6 +3450,107 @@ def safe_formula(value):
     while '\\\\' in formula:
         formula = formula.replace('\\\\', '\\')
     formula = re.sub(r'\s+', ' ', formula)
+    return formula
+
+
+def extract_formula_from_text(value):
+    text = normalize_latex_slashes(value)
+    if not text:
+        return '', ''
+
+    patterns = [
+        r'\\\((.*?)\\\)',
+        r'\\\[(.*?)\\\]',
+        r'\$\$(.*?)\$\$',
+        r'\$(.*?)\$'
+    ]
+    for pattern in patterns:
+        match = re.search(pattern, text)
+        if not match:
+            continue
+
+        formula = match.group(0)
+        cleaned = re.sub(pattern, '', text, count=1).strip()
+        cleaned = re.sub(r'\s+', ' ', cleaned)
+        cleaned = re.sub(r'\s*[:：,;|-]\s*$', '', cleaned).strip()
+        return cleaned, safe_formula(formula)
+
+    bare_latex = re.search(
+        r'((?:[A-Za-z0-9_{}^+\-*/=<>|,. ]|\\[A-Za-z]+)+'
+        r'\\(?:sqrt|frac|pm|ge|le|cdot|Rightarrow|Leftrightarrow)'
+        r'(?:[A-Za-z0-9_{}^+\-*/=<>|,. ]|\\[A-Za-z]+)*)',
+        text
+    )
+    if bare_latex:
+        formula = bare_latex.group(1).strip()
+        cleaned = text.replace(bare_latex.group(1), '', 1).strip()
+        cleaned = re.sub(r'\s+', ' ', cleaned)
+        cleaned = re.sub(r'\s*[:：,;|-]\s*$', '', cleaned).strip()
+        return cleaned, safe_formula(formula)
+
+    return text, ''
+
+
+def clean_mindmap_text(value, fallback=''):
+    text, _ = extract_formula_from_text(value)
+    text = safe_text(text, fallback)
+    text = re.sub(r'\s+', ' ', text).strip()
+    return text or fallback
+
+
+def has_vietnamese_diacritics(text):
+    text = str(text or '')
+    return any(
+        ch in text
+        for ch in 'ăâêôơưđĂÂÊÔƠƯĐáàảãạắằẳẵặấầẩẫậéèẻẽẹếềểễệíìỉĩịóòỏõọốồổỗộớờởỡợúùủũụứừửữựýỳỷỹỵ'
+    )
+
+
+def is_sqrt_topic(source_text, title):
+    folded = fold_search_text(f'{title} {source_text}')
+    return any(keyword in folded for keyword in ['can bac 2', 'can bac hai', 'can thuc', 'sqrt'])
+
+
+def is_short_topic_text(source_text):
+    text = str(source_text or '').strip()
+    return bool(text) and len(text) <= 120 and '\n' not in text
+
+
+def get_curated_mindmap_title(source_text, title):
+    if is_sqrt_topic(source_text, title):
+        return 'Căn bậc hai'
+    return title
+
+
+def is_likely_math_formula(formula):
+    formula = normalize_latex_slashes(formula)
+    if not formula:
+        return False
+    if re.search(r'\\[A-Za-z]+', formula):
+        return True
+    if re.search(r'[=<>^_{}+\-*/|±√×÷≤≥]', formula):
+        return True
+    if re.fullmatch(r'\d+(?:[.,]\d+)?', formula):
+        return True
+    if re.fullmatch(r'[A-Za-z]', formula):
+        return True
+    return False
+
+
+def safe_formula(value):
+    formula = normalize_latex_slashes(value)
+    if not formula:
+        return ''
+    formula = (
+        formula
+        .replace('≥', '\\ge ')
+        .replace('≤', '\\le ')
+        .replace('×', '\\times ')
+        .replace('÷', '\\div ')
+    )
+    folded_formula = fold_search_text(formula)
+    if 'lon hon hoac bang 0' in folded_formula or 'khong am' in folded_formula:
+        return '\\(A \\ge 0\\)'
 
     delimited = (
         re.search(r'\\\((.*?)\\\)', formula)
@@ -1626,6 +3560,9 @@ def safe_formula(value):
     )
     if delimited:
         formula = delimited.group(1).strip()
+
+    if not is_likely_math_formula(formula):
+        return ''
 
     if formula.startswith('\\[') and formula.endswith('\\]'):
         formula = f"\\({formula[2:-2].strip()}\\)"
@@ -1641,27 +3578,186 @@ def safe_formula(value):
 
 def normalize_mindmap_child(child):
     if isinstance(child, dict):
-        title = safe_text(child.get('title') or child.get('text') or child.get('label'), '')
-        formula = safe_formula(child.get('formula') or child.get('math'))
+        raw_title = child.get('title') or child.get('text') or child.get('label')
+        title, title_formula = extract_formula_from_text(raw_title)
+        formula = safe_formula(child.get('formula') or child.get('math')) or title_formula
+        title = safe_text(title, '')
     else:
-        title = safe_text(child, '')
-        formula = ''
+        title, title_formula = extract_formula_from_text(child)
+        title = safe_text(title, '')
+        formula = title_formula
 
     if not title and formula:
-        title = 'Cong thuc'
+        title = 'Công thức'
 
     return {'title': title, 'formula': formula}
 
 
+def fold_search_text(text):
+    text = unicodedata.normalize('NFKD', str(text or '').lower())
+    text = ''.join(ch for ch in text if not unicodedata.combining(ch))
+    return text.replace('đ', 'd')
+
+
+def build_fallback_mindmap_branches(source_text, title):
+    topic = safe_text(title or source_text, 'Nội dung học tập')
+    folded = fold_search_text(f'{topic} {source_text}')
+
+    if any(keyword in folded for keyword in ['can bac 2', 'can thuc', 'sqrt']):
+        return [
+            {
+                'title': 'Khái niệm',
+                'note': 'Căn bậc hai của a là số x có bình phương bằng a',
+                'formula': '\\(x^2=a\\)',
+                'children': [
+                    {'title': 'Với a dương có hai căn đối nhau', 'formula': '\\(x=\\pm\\sqrt a\\)'},
+                    {'title': 'Số 0 có đúng một căn bậc hai', 'formula': '\\(\\sqrt0=0\\)'},
+                    {'title': 'Số âm không có căn bậc hai trong tập số thực', 'formula': '\\(a<0\\)'}
+                ]
+            },
+            {
+                'title': 'Căn bậc hai số học',
+                'note': 'Là căn không âm của một số không âm',
+                'formula': '\\(\\sqrt a\\ge0\\)',
+                'children': [
+                    {'title': 'Ký hiệu căn số học của a', 'formula': '\\(\\sqrt a\\)'},
+                    {'title': 'Bình phương của căn số học', 'formula': '\\((\\sqrt a)^2=a\\)'},
+                    {'title': 'Điều kiện của số dưới căn', 'formula': '\\(a\\ge0\\)'}
+                ]
+            },
+            {
+                'title': 'Điều kiện xác định',
+                'note': 'Biểu thức dưới dấu căn phải không âm',
+                'formula': '\\(A\\ge0\\)',
+                'children': [
+                    {'title': 'Ví dụ căn của x trừ 3', 'formula': '\\(x-3\\ge0\\)'},
+                    {'title': 'Suy ra miền giá trị phù hợp', 'formula': '\\(x\\ge3\\)'},
+                    {'title': 'Luôn đặt điều kiện trước khi biến đổi', 'formula': '\\(A\\ge0\\)'}
+                ]
+            },
+            {
+                'title': 'Tính chất cơ bản',
+                'note': 'Dùng để rút gọn và biến đổi căn thức',
+                'formula': '\\(\\sqrt{ab}=\\sqrt a\\sqrt b\\)',
+                'children': [
+                    {'title': 'Căn của một thương', 'formula': '\\(\\sqrt{\\frac a b}=\\frac{\\sqrt a}{\\sqrt b}\\)'},
+                    {'title': 'Căn của bình phương', 'formula': '\\(\\sqrt{A^2}=|A|\\)'},
+                    {'title': 'Bình phương căn bậc hai số học', 'formula': '\\((\\sqrt A)^2=A\\)'}
+                ]
+            },
+            {
+                'title': 'Phép tính với căn',
+                'note': 'Rút gọn, khai phương, trục căn thức ở mẫu',
+                'formula': '\\(\\sqrt{k^2A}=|k|\\sqrt A\\)',
+                'children': [
+                    {'title': 'Đưa thừa số ra ngoài dấu căn', 'formula': '\\(\\sqrt{12}=2\\sqrt3\\)'},
+                    {'title': 'Nhân chia hai căn bậc hai', 'formula': '\\(\\sqrt a\\sqrt b=\\sqrt{ab}\\)'},
+                    {'title': 'Trục căn thức đơn giản', 'formula': '\\(\\frac A{\\sqrt B}=\\frac{A\\sqrt B}{B}\\)'}
+                ]
+            },
+            {
+                'title': 'Lỗi cần tránh',
+                'note': 'Không tách căn qua phép cộng và không bỏ giá trị tuyệt đối',
+                'formula': '\\(\\sqrt{a+b}\\ne\\sqrt a+\\sqrt b\\)',
+                'children': [
+                    {'title': 'Không bỏ dấu giá trị tuyệt đối', 'formula': '\\(\\sqrt{A^2}=|A|\\)'},
+                    {'title': 'Không quên điều kiện dưới căn', 'formula': '\\(A\\ge0\\)'},
+                    {'title': 'Phân biệt căn số học và hai nghiệm', 'formula': '\\(x^2=a\\Rightarrow x=\\pm\\sqrt a\\)'}
+                ]
+            }
+        ]
+
+    sentences = [s.strip() for s in re.split(r'[.\n;:]+', source_text) if s.strip()]
+    if len(sentences) >= 3:
+        return [
+            {
+                'title': safe_text(sentence, f'Ý {index + 1}')[:42],
+                'note': 'Ý chính cần ghi nhớ',
+                'formula': '',
+                'children': [
+                    {'title': 'Từ khóa quan trọng', 'formula': ''},
+                    {'title': 'Liên hệ với bài học', 'formula': ''}
+                ]
+            }
+            for index, sentence in enumerate(sentences[:5])
+        ]
+
+    return [
+        {
+            'title': 'Khái niệm',
+            'note': f'Hiểu đúng định nghĩa của {topic}',
+            'formula': '',
+            'children': [
+                {'title': 'Từ khóa chính', 'formula': ''},
+                {'title': 'Ý nghĩa trong bài học', 'formula': ''}
+            ]
+        },
+        {
+            'title': 'Công thức',
+            'note': 'Ghi lại công thức hoặc quy tắc cần dùng',
+            'formula': '',
+            'children': [
+                {'title': 'Điều kiện áp dụng', 'formula': ''},
+                {'title': 'Kí hiệu quan trọng', 'formula': ''}
+            ]
+        },
+        {
+            'title': 'Cách làm',
+            'note': 'Chia bài thành các bước nhỏ để xử lý',
+            'formula': '',
+            'children': [
+                {'title': 'Bước 1: nhận dạng dạng bài', 'formula': ''},
+                {'title': 'Bước 2: áp dụng quy tắc', 'formula': ''}
+            ]
+        },
+        {
+            'title': 'Ví dụ',
+            'note': 'Tự chọn một bài ngắn để luyện',
+            'formula': '',
+            'children': [
+                {'title': 'Làm mẫu một ý đơn giản', 'formula': ''},
+                {'title': 'So sánh với bài tương tự', 'formula': ''}
+            ]
+        },
+        {
+            'title': 'Lưu ý',
+            'note': 'Ghi lại lỗi dễ nhầm khi học chủ đề này',
+            'formula': '',
+            'children': [
+                {'title': 'Kiểm tra điều kiện', 'formula': ''},
+                {'title': 'Không bỏ qua bước giải thích', 'formula': ''}
+            ]
+        }
+    ]
+
+
 def normalize_mindmap_data(raw_data, source_text):
-    title = safe_text(raw_data.get('title'), 'So do tu duy')
-    summary = safe_text(raw_data.get('summary'), 'Tom tat kien thuc chinh')
+    raw_data = raw_data if isinstance(raw_data, dict) else {}
+    title = safe_text(raw_data.get('title') or str(source_text).splitlines()[0][:60], 'Sơ đồ tư duy')
+    summary = safe_text(raw_data.get('summary'), 'Tóm tắt kiến thức chính')
+    source_head = safe_text(str(source_text).splitlines()[0] if source_text else '', '')
+    if (
+        source_head
+        and len(source_head) <= 80
+        and has_vietnamese_diacritics(source_head)
+        and not has_vietnamese_diacritics(title)
+    ):
+        title = source_head
+    title = get_curated_mindmap_title(source_text, title)
+    if is_sqrt_topic(source_text, title) and is_short_topic_text(source_text):
+        return {
+            'title': title,
+            'summary': f'Tổng quan về {title}: khái niệm, căn số học, điều kiện, tính chất và lỗi cần tránh.',
+            'branches': build_fallback_mindmap_branches(source_text, title)
+        }
     branches = raw_data.get('branches') if isinstance(raw_data.get('branches'), list) else []
 
     normalized = []
     for index, branch in enumerate(branches[:7]):
         if not isinstance(branch, dict):
             continue
+        branch_title, title_formula = extract_formula_from_text(branch.get('title'))
+        branch_note, note_formula = extract_formula_from_text(branch.get('note'))
         children = branch.get('children') if isinstance(branch.get('children'), list) else []
         normalized_children = []
         for child in children[:3]:
@@ -1670,21 +3766,50 @@ def normalize_mindmap_data(raw_data, source_text):
                 normalized_children.append(normalized_child)
 
         normalized.append({
-            'title': safe_text(branch.get('title'), f'Y {index + 1}'),
-            'note': safe_text(branch.get('note'), ''),
-            'formula': safe_formula(branch.get('formula') or branch.get('math')),
+            'title': safe_text(branch_title, f'Y {index + 1}'),
+            'note': safe_text(branch_note, ''),
+            'formula': safe_formula(branch.get('formula') or branch.get('math')) or title_formula or note_formula,
             'children': normalized_children
         })
 
-    if not normalized:
-        sentences = [s.strip() for s in re.split(r'[.\n]+', source_text) if s.strip()]
-        for index, sentence in enumerate(sentences[:5]):
+    ai_visible_text = ' '.join(
+        [summary]
+        + [
+            f"{branch.get('title', '')} {branch.get('note', '')} "
+            + ' '.join(child.get('title', '') for child in branch.get('children', []))
+            for branch in normalized
+        ]
+    )
+    if is_sqrt_topic(source_text, title) and not has_vietnamese_diacritics(ai_visible_text):
+        normalized = build_fallback_mindmap_branches(source_text, title)
+        summary = f'Tổng quan về {title}: định nghĩa, tính chất, điều kiện và ứng dụng.'
+
+    if len(normalized) < 3:
+        sentences = [
+            s.strip()
+            for s in re.split(r'[.\n]+', source_text)
+            if s.strip() and fold_search_text(s.strip()) != fold_search_text(title)
+        ]
+        for index, sentence in enumerate(sentences[:5 - len(normalized)]):
             normalized.append({
                 'title': sentence[:42],
-                'note': '',
+                'note': 'Ý chính cần ghi nhớ',
                 'formula': '',
-                'children': []
+                'children': [
+                    {'title': 'Từ khóa quan trọng', 'formula': ''},
+                    {'title': 'Liên hệ với bài học', 'formula': ''}
+                ]
             })
+
+    if len(normalized) < 3:
+        fallback_branches = build_fallback_mindmap_branches(source_text, title)
+        existing_titles = {fold_search_text(branch.get('title')) for branch in normalized}
+        for branch in fallback_branches:
+            if fold_search_text(branch.get('title')) in existing_titles:
+                continue
+            normalized.append(branch)
+            if len(normalized) >= 5:
+                break
 
     return {
         'title': title,
@@ -1927,6 +4052,11 @@ def render_mindmap_html(data):
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sơ đồ tư duy - {html_lib.escape(data['title'])}</title>
     <script>
+        if (window.self !== window.top) {{
+            document.documentElement.classList.add('embedded');
+        }}
+    </script>
+    <script>
         window.MathJax = {{
             tex: {{
                 inlineMath: [['\\\\(', '\\\\)'], ['$', '$']],
@@ -1961,6 +4091,12 @@ def render_mindmap_html(data):
             background: rgba(255, 255, 255, 0.94);
             border-bottom: 2px solid #2563eb;
             box-shadow: 0 10px 24px rgba(37,99,235,0.14);
+        }}
+        html.embedded .toolbar {{
+            display: none;
+        }}
+        html.embedded .canvas-wrap {{
+            margin: 12px auto 24px;
         }}
         .toolbar-title {{ font-weight: 800; }}
         .actions {{ display: flex; gap: 10px; flex-wrap: wrap; }}
@@ -2140,7 +4276,7 @@ def render_mindmap_html(data):
                 image.onerror = function() {{
                     clearTimeout(timer);
                     URL.revokeObjectURL(url);
-                    reject(new Error('Khong ve duoc SVG len canvas'));
+                    reject(new Error('Không vẽ được SVG lên canvas'));
                 }};
 
                 image.src = url;
@@ -2206,36 +4342,47 @@ def render_mindmap_html(data):
 def create_chatbot_mindmap():
     chat_history = session.get('chat_history', [])
     topic = request.form.get('mindmap_topic', '').strip()
+    is_ajax_request = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
 
     history_text = '\n'.join(
-        f"Hoc sinh: {item.get('user', '')}\nAI: {item.get('bot', '')}"
+        f"Học sinh: {item.get('user', '')}\nAI: {item.get('bot', '')}"
         for item in chat_history[-6:]
     )
     source_text = topic or history_text
 
     if not source_text.strip():
+        message = 'Em hãy hỏi hoặc trao đổi một nội dung trước, sau đó bấm Tạo sơ đồ.'
+        if is_ajax_request:
+            return jsonify({
+                'success': False,
+                'bot': message
+            }), 400
+
         session['chat_history'] = [{
-            'user': '[Tao so do tu duy]',
-            'bot': 'Em hay hoi hoac trao doi mot noi dung truoc, sau do bam Tao so do.',
+            'user': '[Tạo sơ đồ tư duy]',
+            'bot': message,
             'timestamp': datetime.now().strftime("%H:%M")
         }]
         session.modified = True
         return redirect(url_for('chatbot'))
 
     prompt = f"""
-Hay tao du lieu JSON cho mot SO DO TU DUY hoc tap tu noi dung sau.
-Chi tra ve JSON hop le, khong markdown.
+Hãy tạo dữ liệu JSON cho một SƠ ĐỒ TƯ DUY học tập từ nội dung sau.
+Chỉ trả về JSON hợp lệ, không markdown.
 
-Yeu cau su pham:
-- Tom tat dung kien thuc da trao doi, khong them dap an giai hoan chinh neu la bai tap.
-- Moi nhanh ngan gon, ro y, dung tieng Viet.
-- Tao 4 den 6 nhanh chinh, moi nhanh co 2 den 3 y con de so do thoang, khong roi.
-- Dat title ngan, summary mot cau.
-- Neu noi dung co cong thuc Toan, BAT BUOC dua cong thuc quan trong vao truong "formula".
-- Cong thuc phai viet bang LaTeX MathJax dang INLINE \\(...\\), khong dung \\[...\\] trong so do vi o nho.
-- Vi dang tra ve JSON, moi dau backslash trong LaTeX nen viet thanh \\\\, vi du "\\\\frac{{a}}{{b}}".
-- Voi cac muc nhu trung binh cong, tong, xac suat, dao ham, tich phan, hinh hoc... hay uu tien chen cong thuc vao nhanh phu hop.
-- Co the goi y visual_style/palette nhung khong bat buoc.
+Yêu cầu sư phạm:
+- Luôn viết tiếng Việt có dấu đầy đủ trong mọi trường chữ: title, summary, note, children.title.
+- Tóm tắt đúng kiến thức đã trao đổi, không thêm đáp án giải hoàn chỉnh nếu là bài tập.
+- Mỗi nhánh ngắn gọn, rõ ý, dùng tiếng Việt tự nhiên.
+- Tạo 4 đến 6 nhánh chính, mỗi nhánh có 2 đến 3 ý con để sơ đồ thoáng, không rối.
+- Đặt title ngắn, summary một câu.
+- title và note chỉ viết chữ thường ngắn gọn, TUYỆT ĐỐI không chèn LaTeX vào title hoặc note.
+- Mọi công thức, ký hiệu Toán phải đặt riêng trong trường "formula".
+- Nếu nội dung có công thức Toán, BẮT BUỘC đưa công thức quan trọng vào trường "formula".
+- Công thức phải viết bằng LaTeX MathJax dạng INLINE \\(...\\), không dùng \\[...\\] trong sơ đồ vì ô nhỏ.
+- Vì đang trả về JSON, mỗi dấu backslash trong LaTeX nên viết thành \\\\, ví dụ "\\\\frac{{a}}{{b}}".
+- Với các mục như trung bình cộng, tổng, xác suất, đạo hàm, tích phân, hình học... hãy ưu tiên chèn công thức vào nhánh phù hợp.
+- Có thể gợi ý visual_style/palette nhưng không bắt buộc.
 
 Schema:
 {{
@@ -2245,16 +4392,16 @@ Schema:
     {{
       "title": "...",
       "note": "...",
-      "formula": "\\\\(cong thuc neu co\\\\)",
+      "formula": "\\\\(công thức nếu có\\\\)",
       "children": [
-        {{"title": "...", "formula": "\\\\(cong thuc neu co\\\\)"}},
+        {{"title": "...", "formula": "\\\\(công thức nếu có\\\\)"}},
         {{"title": "...", "formula": ""}}
       ]
     }}
   ]
 }}
 
-NOI DUNG:
+NỘI DUNG:
 {source_text[:6000]}
 """
 
@@ -2264,8 +4411,8 @@ NOI DUNG:
         raw_data = load_mindmap_json(raw_json)
     except Exception:
         raw_data = {
-            'title': topic or 'So do tu duy',
-            'summary': 'Tom tat tu noi dung trao doi',
+            'title': topic or 'Sơ đồ tư duy',
+            'summary': 'Tóm tắt từ nội dung trao đổi',
             'branches': []
         }
 
@@ -2278,7 +4425,17 @@ NOI DUNG:
     with open(file_path, 'w', encoding='utf-8') as f:
         f.write(html_content)
 
-    return redirect(url_for('static', filename=f'chatbot_mindmaps/{filename}'))
+    mindmap_url = url_for('static', filename=f'chatbot_mindmaps/{filename}')
+
+    if is_ajax_request:
+        return jsonify({
+            'success': True,
+            'url': mindmap_url,
+            'title': mindmap_data.get('title', 'Sơ đồ tư duy'),
+            'filename': filename
+        })
+
+    return redirect(mindmap_url)
 
 
 # Route cho chatbot

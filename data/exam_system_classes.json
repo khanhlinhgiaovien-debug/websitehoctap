@@ -1,0 +1,150 @@
+[
+  {
+    "id": "806fe426-5835-40ee-b194-5d6ceff7802b",
+    "class_code": "SKK46P",
+    "join_password": "scrypt:32768:8:1$W6Dojog8KaYbL8mz$8e5e73d702ea5aef623a8c8d6b8dcdbe934248ce54fcaebfe72004d32d619b61c1c7c175ccb209f92fb8bffc7a991dcd67de996f0d21b298e36022208d1f6dfd",
+    "name": "8A4 - Toán",
+    "grade": "8A4",
+    "subject": "Toán",
+    "teacher_id": "teacher_003",
+    "teacher_name": "Lê Văn Nam",
+    "student_ids": [
+      "skk46p_student_01",
+      "skk46p_student_02",
+      "skk46p_student_03",
+      "skk46p_student_04",
+      "skk46p_student_05",
+      "skk46p_student_06",
+      "skk46p_student_07",
+      "skk46p_student_08",
+      "skk46p_student_09",
+      "skk46p_student_10",
+      "skk46p_student_11",
+      "skk46p_student_12",
+      "skk46p_student_13",
+      "skk46p_student_14",
+      "skk46p_student_15",
+      "skk46p_student_16",
+      "skk46p_student_17",
+      "skk46p_student_18",
+      "skk46p_student_19",
+      "skk46p_student_20"
+    ],
+    "created_at": "22/07/2026 12:22",
+    "updated_at": "22/07/2026 21:26",
+    "active": true,
+    "join_password_plain": "lop8a4",
+    "student_reviews": {
+      "skk46p_student_01": {
+        "comment": "Em làm bài chắc, biết ghi điều kiện và rút gọn căn thức khá tốt. Nên thử thêm bài vận dụng.",
+        "published": true,
+        "updated_at": "22/07/2026 21:26",
+        "seed_batch": "skk46p_half_class_20260722"
+      },
+      "skk46p_student_02": {
+        "comment": "Em đã nắm được phần cơ bản. Cần trình bày rõ hơn các bước rút gọn và ghi chú điều kiện.",
+        "published": true,
+        "updated_at": "22/07/2026 21:26",
+        "seed_batch": "skk46p_half_class_20260722"
+      },
+      "skk46p_student_03": {
+        "comment": "Em đã nắm được phần cơ bản. Cần trình bày rõ hơn các bước rút gọn và ghi chú điều kiện.",
+        "published": true,
+        "updated_at": "22/07/2026 21:26",
+        "seed_batch": "skk46p_half_class_20260722"
+      },
+      "skk46p_student_04": {
+        "comment": "Em đã nắm được phần cơ bản. Cần trình bày rõ hơn các bước rút gọn và ghi chú điều kiện.",
+        "published": true,
+        "updated_at": "22/07/2026 21:26",
+        "seed_batch": "skk46p_half_class_20260722"
+      },
+      "skk46p_student_05": {
+        "comment": "Em đã nắm được phần cơ bản. Cần trình bày rõ hơn các bước rút gọn và ghi chú điều kiện.",
+        "published": true,
+        "updated_at": "22/07/2026 21:26",
+        "seed_batch": "skk46p_half_class_20260722"
+      },
+      "skk46p_student_06": {
+        "comment": "Em cần ôn lại điều kiện xác định và cách thử lại nghiệm sau khi bình phương hai vế.",
+        "published": true,
+        "updated_at": "22/07/2026 21:26",
+        "seed_batch": "skk46p_half_class_20260722"
+      },
+      "skk46p_student_07": {
+        "comment": "Em làm bài chắc, biết ghi điều kiện và rút gọn căn thức khá tốt. Nên thử thêm bài vận dụng.",
+        "published": true,
+        "updated_at": "22/07/2026 21:26",
+        "seed_batch": "skk46p_half_class_20260722"
+      },
+      "skk46p_student_08": {
+        "comment": "Em đã nắm được phần cơ bản. Cần trình bày rõ hơn các bước rút gọn và ghi chú điều kiện.",
+        "published": true,
+        "updated_at": "22/07/2026 21:26",
+        "seed_batch": "skk46p_half_class_20260722"
+      },
+      "skk46p_student_09": {
+        "comment": "Em cần ôn lại điều kiện xác định và cách thử lại nghiệm sau khi bình phương hai vế.",
+        "published": true,
+        "updated_at": "22/07/2026 21:26",
+        "seed_batch": "skk46p_half_class_20260722"
+      },
+      "skk46p_student_10": {
+        "comment": "Em đã nắm được phần cơ bản. Cần trình bày rõ hơn các bước rút gọn và ghi chú điều kiện.",
+        "published": true,
+        "updated_at": "22/07/2026 21:26",
+        "seed_batch": "skk46p_half_class_20260722"
+      },
+      "skk46p_student_11": {
+        "comment": "Em chưa có dữ liệu bài làm trong lớp. Giáo viên cần nhắc em tham gia các bài kiểm tra để theo dõi tiến bộ.",
+        "published": false,
+        "updated_at": "22/07/2026 21:18"
+      },
+      "skk46p_student_12": {
+        "comment": "Em chưa có dữ liệu bài làm trong lớp. Giáo viên cần nhắc em tham gia các bài kiểm tra để theo dõi tiến bộ.",
+        "published": false,
+        "updated_at": "22/07/2026 21:18"
+      },
+      "skk46p_student_13": {
+        "comment": "Em chưa có dữ liệu bài làm trong lớp. Giáo viên cần nhắc em tham gia các bài kiểm tra để theo dõi tiến bộ.",
+        "published": false,
+        "updated_at": "22/07/2026 21:18"
+      },
+      "skk46p_student_14": {
+        "comment": "Em chưa có dữ liệu bài làm trong lớp. Giáo viên cần nhắc em tham gia các bài kiểm tra để theo dõi tiến bộ.",
+        "published": false,
+        "updated_at": "22/07/2026 21:18"
+      },
+      "skk46p_student_15": {
+        "comment": "Em chưa có dữ liệu bài làm trong lớp. Giáo viên cần nhắc em tham gia các bài kiểm tra để theo dõi tiến bộ.",
+        "published": false,
+        "updated_at": "22/07/2026 21:18"
+      },
+      "skk46p_student_16": {
+        "comment": "Em chưa có dữ liệu bài làm trong lớp. Giáo viên cần nhắc em tham gia các bài kiểm tra để theo dõi tiến bộ.",
+        "published": false,
+        "updated_at": "22/07/2026 21:18"
+      },
+      "skk46p_student_17": {
+        "comment": "Em chưa có dữ liệu bài làm trong lớp. Giáo viên cần nhắc em tham gia các bài kiểm tra để theo dõi tiến bộ.",
+        "published": false,
+        "updated_at": "22/07/2026 21:18"
+      },
+      "skk46p_student_18": {
+        "comment": "Em chưa có dữ liệu bài làm trong lớp. Giáo viên cần nhắc em tham gia các bài kiểm tra để theo dõi tiến bộ.",
+        "published": false,
+        "updated_at": "22/07/2026 21:18"
+      },
+      "skk46p_student_19": {
+        "comment": "Em chưa có dữ liệu bài làm trong lớp. Giáo viên cần nhắc em tham gia các bài kiểm tra để theo dõi tiến bộ.",
+        "published": false,
+        "updated_at": "22/07/2026 21:18"
+      },
+      "skk46p_student_20": {
+        "comment": "Em chưa có dữ liệu bài làm trong lớp. Giáo viên cần nhắc em tham gia các bài kiểm tra để theo dõi tiến bộ.",
+        "published": false,
+        "updated_at": "22/07/2026 21:18"
+      }
+    }
+  }
+]

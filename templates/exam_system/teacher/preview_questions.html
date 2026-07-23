@@ -27,7 +27,7 @@
             </div>
 
             <!-- Form xác nhận -->
-            <form method="POST" action="{{ url_for('teacher_create_multiple_choice') }}">
+            <form method="POST" action="{{ url_for('teacher_create_multiple_choice', class_id=class_obj.id) if class_obj else url_for('teacher_create_multiple_choice') }}">
                 <input type="hidden" name="confirm" value="yes">
                 <input type="hidden" name="questions_json" id="questions_json" value='{{ questions | tojson }}'>
 
@@ -212,7 +212,7 @@
                     <button type="submit" class="btn btn-success btn-lg">
                         <i class="fas fa-check"></i> Xác Nhận & Lưu Đề Thi
                     </button>
-                    <a href="{{ url_for('teacher_create_multiple_choice') }}" class="btn btn-secondary btn-lg">
+                    <a href="{{ url_for('teacher_create_multiple_choice', class_id=class_obj.id) if class_obj else url_for('teacher_create_multiple_choice') }}" class="btn btn-secondary btn-lg">
                         <i class="fas fa-arrow-left"></i> Quay Lại
                     </a>
                     <button type="button" class="btn btn-warning btn-lg" onclick="editAll()">

@@ -440,7 +440,7 @@
         </div>
 
         <div style="margin-top: 30px; text-align: center;">
-            <a href="{{ url_for('teacher_dashboard') }}" class="btn btn-secondary">
+            <a href="{{ url_for('teacher_class_detail', class_id=class_obj.id) if class_obj else url_for('teacher_dashboard') }}" class="btn btn-secondary">
                 ← Quay lại Dashboard
             </a>
         </div>

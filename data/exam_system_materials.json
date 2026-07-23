@@ -1,0 +1,37 @@
+[
+  {
+    "id": "material_skk46p_seed_bo_tro_can_thuc_01",
+    "title": "Phiếu luyện tập bổ trợ căn thức",
+    "grade": "8A4",
+    "drive_url": "https://docs.google.com/document/d/demo-skk46p-can-thuc/preview",
+    "description": "Tài liệu test mô phỏng phiếu bài tập do giáo viên chia sẻ cho lớp SKK46P.",
+    "class_id": "806fe426-5835-40ee-b194-5d6ceff7802b",
+    "teacher_id": "teacher_003",
+    "teacher_name": "Lê Văn Nam",
+    "created_at": "20/07/2026 22:26",
+    "updated_at": "22/07/2026 21:26"
+  },
+  {
+    "id": "018d3155-9cc4-486f-befe-191613780937",
+    "title": "bt toán",
+    "grade": "8",
+    "drive_url": "https://docs.google.com/document/d/1J6jdGU7ZcCNKvq253AKbkyAPVohyXjv5/edit?usp=sharing&ouid=110351607490036124767&rtpof=true&sd=true",
+    "description": "không mô tả",
+    "class_id": "806fe426-5835-40ee-b194-5d6ceff7802b",
+    "teacher_id": "teacher_003",
+    "teacher_name": "Lê Văn Nam",
+    "created_at": "22/07/2026 16:53",
+    "updated_at": null
+  },
+  {
+    "id": "a67edc74-0855-46e8-9165-a6dcdddfd2b4",
+    "title": "sách a",
+    "grade": "6",
+    "drive_url": "https://docs.google.com/document/d/1pUAuG4D1B1ZE_GSIacKISdLgtN54fo-Y0jjuLReAlvU/edit?usp=sharing",
+    "description": "ko có ghi chú",
+    "teacher_id": "teacher_003",
+    "teacher_name": "Lê Văn Nam",
+    "created_at": "13/07/2026 20:03",
+    "updated_at": null
+  }
+]

@@ -5,20 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard - Học sinh</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
             background: #f5f7fa;
             min-height: 100vh;
+            color: #1f2937;
         }
-        
         .navbar {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #2563eb 0%, #0f766e 100%);
             color: white;
             padding: 15px 30px;
             display: flex;
@@ -26,365 +21,179 @@
             align-items: center;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
-        
-        .navbar-brand {
-            font-size: 24px;
-            font-weight: bold;
-        }
-        
-        .navbar-user {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-        
+        .navbar-brand { font-size: 24px; font-weight: 800; }
+        .navbar-user { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
         .btn-logout {
-            background: rgba(255,255,255,0.2);
+            background: rgba(255,255,255,0.18);
             color: white;
             border: 1px solid rgba(255,255,255,0.3);
-            padding: 8px 20px;
-            border-radius: 20px;
+            padding: 8px 16px;
+            border-radius: 8px;
             text-decoration: none;
             font-size: 14px;
-            transition: all 0.3s;
         }
-        
-        .btn-logout:hover {
-            background: rgba(255,255,255,0.3);
-        }
-        
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 30px 20px;
-        }
-        
-        .welcome-section {
+        .container { max-width: 1180px; margin: 0 auto; padding: 30px 20px; }
+        .panel {
             background: white;
-            border-radius: 15px;
-            padding: 30px;
-            margin-bottom: 30px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 22px;
+            margin-bottom: 24px;
+            box-shadow: 0 8px 22px rgba(15, 23, 42, 0.06);
         }
-        
-        .welcome-section h1 {
-            color: #333;
-            margin-bottom: 10px;
+        .panel h1, .panel h2 { color: #123a7a; }
+        .alert {
+            padding: 14px 18px;
+            border-radius: 8px;
+            margin-bottom: 18px;
+            font-size: 14px;
         }
-        
-        .welcome-section p {
-            color: #666;
-            font-size: 16px;
+        .alert-success { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+        .alert-error { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
+        .alert-info { background: #dbeafe; color: #1e40af; border: 1px solid #bfdbfe; }
+        .join-form {
+            display: grid;
+            grid-template-columns: 1fr 1fr auto;
+            gap: 10px;
+            margin-top: 16px;
         }
-        
+        input {
+            height: 42px;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            padding: 0 12px;
+            font: inherit;
+        }
+        .btn-primary {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 42px;
+            background: #2563eb;
+            color: white;
+            padding: 10px 18px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 700;
+            border: none;
+            cursor: pointer;
+        }
         .tabs {
             display: flex;
             gap: 10px;
-            margin-bottom: 30px;
-            border-bottom: 2px solid #e0e0e0;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #e5e7eb;
         }
-        
         .tab {
-            padding: 12px 25px;
+            padding: 12px 18px;
             background: none;
             border: none;
-            color: #666;
+            color: #64748b;
             font-size: 16px;
-            font-weight: 600;
+            font-weight: 700;
             cursor: pointer;
             border-bottom: 3px solid transparent;
-            transition: all 0.3s;
         }
-        
-        .tab.active {
-            color: #667eea;
-            border-bottom-color: #667eea;
-        }
-        
-        .tab-content {
-            display: none;
-        }
-        
-        .tab-content.active {
-            display: block;
-        }
-        
-        .section-title {
-            font-size: 22px;
-            color: #333;
-            margin-bottom: 20px;
-            font-weight: 600;
-        }
-        
+        .tab.active { color: #2563eb; border-bottom-color: #2563eb; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
         .grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 20px;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 16px;
         }
-        
         .card {
             background: white;
-            border-radius: 15px;
-            padding: 20px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-            transition: transform 0.3s, box-shadow 0.3s;
-            cursor: pointer;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 18px;
+            box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
         }
-        
-        .card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        .class-link {
+            color: inherit;
+            text-decoration: none;
         }
-        
-        .card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 15px;
-        }
-        
-        .card-title {
-            font-size: 18px;
-            font-weight: 600;
-            color: #333;
-            margin-bottom: 8px;
-        }
-        
-        .card-description {
-            color: #666;
+        .card.clickable { cursor: pointer; transition: transform .2s, box-shadow .2s; }
+        .card.clickable:hover { transform: translateY(-2px); box-shadow: 0 10px 24px rgba(15, 23, 42, 0.1); }
+        .card-title { font-size: 18px; font-weight: 800; margin-bottom: 8px; }
+        .card-description { color: #64748b; font-size: 14px; line-height: 1.6; margin: 12px 0; }
+        .btn-inline {
+            width: fit-content;
+            min-height: 36px;
+            padding: 8px 14px;
             font-size: 14px;
-            line-height: 1.6;
-            margin-bottom: 15px;
         }
-        
-        .card-meta {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            font-size: 13px;
-            color: #999;
-        }
-        
+        .meta { display: flex; flex-wrap: wrap; gap: 8px; color: #64748b; font-size: 13px; }
         .badge {
             display: inline-block;
-            padding: 5px 12px;
-            border-radius: 20px;
+            padding: 5px 10px;
+            border-radius: 999px;
             font-size: 12px;
-            font-weight: 600;
+            font-weight: 700;
+            background: #e0f2fe;
+            color: #075985;
         }
-        
-        .badge-subject {
-            background: #e3f2fd;
-            color: #1976d2;
-        }
-        
-        .badge-grade {
-            background: #f3e5f5;
-            color: #7b1fa2;
-        }
-        
-        .badge-active {
-            background: #e8f5e9;
-            color: #388e3c;
-        }
-        
-        .badge-time {
-            background: #fff3e0;
-            color: #f57c00;
-        }
-        
-        .btn-primary {
-            display: inline-block;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 10px 25px;
-            border-radius: 25px;
-            text-decoration: none;
-            font-weight: 600;
-            font-size: 14px;
-            transition: transform 0.2s;
-            border: none;
-            cursor: pointer;
-        }
-        
-        .btn-primary:hover {
-            transform: translateY(-2px);
-        }
-        
-        .empty-state {
-            text-align: center;
-            padding: 60px 20px;
-            color: #999;
-        }
-        
-        .empty-state-icon {
-            font-size: 64px;
-            margin-bottom: 20px;
-        }
-        
-        .empty-state h3 {
-            font-size: 20px;
-            margin-bottom: 10px;
-            color: #666;
-        }
-        
-        .alert {
-            padding: 15px 20px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            font-size: 14px;
-        }
-        
-        .alert-success {
-            background: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-        
-        .alert-error {
-            background: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-        
-        .alert-info {
-            background: #d1ecf1;
-            color: #0c5460;
-            border: 1px solid #bee5eb;
+        .empty-state { text-align: center; padding: 40px 20px; color: #64748b; }
+        @media (max-width: 720px) {
+            .navbar { align-items: flex-start; flex-direction: column; gap: 10px; }
+            .join-form { grid-template-columns: 1fr; }
         }
     </style>
 </head>
 <body>
     <nav class="navbar">
-        <div class="navbar-brand">🎓 CLB Học Thuật</div>
+        <div class="navbar-brand">Hệ thống học tập</div>
         <div class="navbar-user">
+            <a href="{{ url_for('student_material_library') }}" class="btn-logout">Kho học liệu</a>
+            <a href="{{ url_for('student_learning_portal') }}" class="btn-logout">Cổng học tập</a>
             <span>Xin chào, <strong>{{ session.exam_user_name }}</strong></span>
-            <a href="{{ url_for('student_my_submissions') }}" class="btn-logout" style="background: rgba(255,255,255,0.3);">📝 Bài làm của tôi</a>
+            <a href="{{ url_for('student_my_submissions') }}" class="btn-logout">Bài làm của tôi</a>
             <a href="{{ url_for('exam_logout') }}" class="btn-logout">Đăng xuất</a>
         </div>
     </nav>
-    
-    <div class="container">
+
+    <main class="container">
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
                 {% for category, message in messages %}
-                    <div class="alert alert-{{ category }}">
-                        {{ message }}
-                    </div>
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
                 {% endfor %}
             {% endif %}
         {% endwith %}
-        
-        <div class="welcome-section">
-            <h1>👋 Chào mừng trở lại!</h1>
-            <p>Hãy bắt đầu học tập và rèn luyện kỹ năng của bạn hôm nay.</p>
-        </div>
-        
-        <div class="tabs">
-            <button class="tab active" onclick="showTab('lessons')">📚 Bài giảng</button>
-            <button class="tab" onclick="showTab('exams')">📝 Đề kiểm tra</button>
-        </div>
-        
-        <!-- Tab Bài giảng -->
-        <div id="lessons" class="tab-content active">
-            <h2 class="section-title">Bài giảng có sẵn</h2>
-            
-            {% if lessons %}
+
+        <section class="panel">
+            <h1>Dashboard học sinh</h1>
+            <p>Tham gia lớp bằng mã lớp và mật khẩu giáo viên cung cấp.</p>
+            <form class="join-form" method="POST" action="{{ url_for('student_join_class') }}">
+                <input name="class_code" placeholder="Mã lớp" required>
+                <input name="join_password" type="password" placeholder="Mật khẩu lớp" required>
+                <button class="btn-primary" type="submit">Vào lớp</button>
+            </form>
+        </section>
+
+        <section class="panel">
+            <h2>Lớp của tôi</h2>
+            {% if classes %}
                 <div class="grid">
-                    {% for lesson in lessons %}
-                        <div class="card" onclick="window.location.href='{{ url_for('student_view_lesson', lesson_id=lesson.id) }}'">
-                            <div class="card-header">
-                                <div>
-                                    <div class="card-title">{{ lesson.title }}</div>
-                                    <div class="card-meta">
-                                        <span class="badge badge-subject">{{ lesson.subject }}</span>
-                                        <span class="badge badge-grade">Lớp {{ lesson.grade }}</span>
-                                    </div>
-                                </div>
+                    {% for class_obj in classes %}
+                        <a class="card clickable class-link" href="{{ url_for('student_class_detail', class_id=class_obj.id) }}">
+                            <div class="card-title">{{ class_obj.name }}</div>
+                            <div class="meta">
+                                <span class="badge">Lớp {{ class_obj.grade }}</span>
+                                <span class="badge">{{ class_obj.subject }}</span>
+                                <span class="badge">{{ class_obj.class_code }}</span>
                             </div>
                             <div class="card-description">
-                                {{ lesson.description[:100] }}{% if lesson.description|length > 100 %}...{% endif %}
+                                Giáo viên: {{ class_obj.teacher_name or 'Giáo viên' }}
                             </div>
-                            <div class="card-meta">
-                                <span>📅 {{ lesson.created_at }}</span>
-                                {% if lesson.attachments %}
-                                    <span>📎 {{ lesson.attachments|length }} tài liệu</span>
-                                {% endif %}
-                            </div>
-                        </div>
+                            <span class="btn-primary btn-inline">Vào lớp</span>
+                        </a>
                     {% endfor %}
                 </div>
             {% else %}
-                <div class="empty-state">
-                    <div class="empty-state-icon">📚</div>
-                    <h3>Chưa có bài giảng nào</h3>
-                    <p>Các bài giảng sẽ xuất hiện ở đây khi giáo viên tạo mới.</p>
-                </div>
+                <div class="empty-state">Bạn chưa tham gia lớp nào.</div>
             {% endif %}
-        </div>
-        
-        <!-- Tab Đề kiểm tra -->
-        <div id="exams" class="tab-content">
-            <h2 class="section-title">Đề kiểm tra đang mở</h2>
-            
-            {% if exams %}
-                <div class="grid">
-                    {% for exam in exams %}
-                        <div class="card">
-                            <div class="card-header">
-                                <div>
-                                    <div class="card-title">{{ exam.title }}</div>
-                                    <div class="card-meta">
-                                        <span class="badge badge-subject">{{ exam.subject }}</span>
-                                        <span class="badge badge-grade">Lớp {{ exam.grade }}</span>
-                                        <span class="badge badge-active">
-                                            {% if exam.type == 'multiple_choice' %}Trắc nghiệm{% else %}Tự luận{% endif %}
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="card-description">
-                                {{ exam.description }}
-                            </div>
-                            <div class="card-meta" style="margin-bottom: 15px;">
-                                <span>📅 {{ exam.created_at }}</span>
-                                {% if exam.time_limit > 0 %}
-                                    <span class="badge badge-time">⏱️ {{ exam.time_limit }} phút</span>
-                                {% endif %}
-                                {% if exam.type == 'multiple_choice' %}
-                                    <span>❓ {{ exam.questions|length }} câu</span>
-                                {% else %}
-                                    <span>❓ {{ exam.essay_questions|length }} câu</span>
-                                {% endif %}
-                            </div>
-                            <a href="{{ url_for('student_take_exam', exam_id=exam.id) }}" class="btn-primary">Làm bài ngay</a>
-                        </div>
-                    {% endfor %}
-                </div>
-            {% else %}
-                <div class="empty-state">
-                    <div class="empty-state-icon">📝</div>
-                    <h3>Chưa có đề kiểm tra nào</h3>
-                    <p>Các đề kiểm tra sẽ xuất hiện ở đây khi giáo viên tạo mới.</p>
-                </div>
-            {% endif %}
-        </div>
-    </div>
-    
-    <script>
-        function showTab(tabName) {
-            // Hide all tabs
-            document.querySelectorAll('.tab-content').forEach(content => {
-                content.classList.remove('active');
-            });
-            document.querySelectorAll('.tab').forEach(tab => {
-                tab.classList.remove('active');
-            });
-            
-            // Show selected tab
-            document.getElementById(tabName).classList.add('active');
-            event.target.classList.add('active');
-        }
-    </script>
+        </section>
+    </main>
 </body>
 </html>

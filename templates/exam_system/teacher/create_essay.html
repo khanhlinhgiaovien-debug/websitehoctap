@@ -206,7 +206,7 @@
                     <button type="submit" class="btn btn-warning btn-lg">
                         <i class="fas fa-save"></i> Tạo Đề Tự Luận
                     </button>
-                    <a href="{{ url_for('teacher_create_exam') }}" class="btn btn-secondary btn-lg">
+                    <a href="{{ url_for('teacher_create_exam', class_id=class_obj.id) if class_obj else url_for('teacher_create_exam') }}" class="btn btn-secondary btn-lg">
                         <i class="fas fa-times"></i> Hủy
                     </a>
                 </div>

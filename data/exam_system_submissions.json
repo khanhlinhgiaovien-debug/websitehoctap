@@ -1,1 +1,1112 @@
-[]
+[
+  {
+    "id": "sub_skk46p_seed_essay_10",
+    "exam_id": "exam_skk46p_seed_tu_luan_can_thuc_03q",
+    "class_id": "806fe426-5835-40ee-b194-5d6ceff7802b",
+    "student_id": "skk46p_student_10",
+    "submitted_at": "22/07/2026 23:26",
+    "time_taken": 18,
+    "essay_answers": {
+      "1": "3x - 9 >= 0 nên x >= 3.",
+      "2": "sqrt(72) = 6sqrt(2), sqrt(18) = 3sqrt(2), tổng bằng 9sqrt(2).",
+      "3": "x - 2 = 25 nên x = 27; thử lại sqrt(25) = 5, nhận x = 27."
+    },
+    "score": 9.0,
+    "ai_feedback": "Tổng điểm: 9/10",
+    "detailed_results": [
+      {
+        "question_id": 1,
+        "question": "Tìm điều kiện xác định của biểu thức sqrt(3x - 9) và giải thích.",
+        "student_answer": "3x - 9 >= 0 nên x >= 3.",
+        "points": 3,
+        "score": 3,
+        "feedback": "Lời giải đầy đủ, lập luận rõ ràng."
+      },
+      {
+        "question_id": 2,
+        "question": "Rút gọn sqrt(72) + sqrt(18).",
+        "student_answer": "sqrt(72) = 6sqrt(2), sqrt(18) = 3sqrt(2), tổng bằng 9sqrt(2).",
+        "points": 3,
+        "score": 3,
+        "feedback": "Lời giải đầy đủ, lập luận rõ ràng."
+      },
+      {
+        "question_id": 3,
+        "question": "Giải phương trình sqrt(x - 2) = 5 và thử lại nghiệm.",
+        "student_answer": "x - 2 = 25 nên x = 27; thử lại sqrt(25) = 5, nhận x = 27.",
+        "points": 4,
+        "score": 3,
+        "feedback": "Trình bày đúng hướng; cần ghi rõ hơn bước kiểm tra điều kiện."
+      }
+    ],
+    "seed_batch": "skk46p_half_class_20260722"
+  },
+  {
+    "id": "sub_skk46p_seed_mcq_10",
+    "exam_id": "exam_skk46p_seed_luyen_tap_can_thuc_06q",
+    "class_id": "806fe426-5835-40ee-b194-5d6ceff7802b",
+    "student_id": "skk46p_student_10",
+    "submitted_at": "22/07/2026 18:26",
+    "time_taken": 12,
+    "answers": {
+      "1": "A",
+      "2": "A",
+      "3": "C",
+      "4": "B",
+      "5": "C",
+      "6": "A"
+    },
+    "score": 8.33,
+    "ai_feedback": "Bài làm đã có dữ liệu test. Học sinh cần xem lại các câu sai và ghi chú điều kiện xác định.",
+    "detailed_results": [
+      {
+        "question_id": 1,
+        "question": "Điều kiện xác định của sqrt(2x - 6) là gì?",
+        "is_correct": true,
+        "student_answer": "A",
+        "correct_answer": "A",
+        "explanation": "Cần 2x - 6 >= 0 nên x >= 3."
+      },
+      {
+        "question_id": 2,
+        "question": "Rút gọn sqrt(98) được kết quả nào?",
+        "is_correct": true,
+        "student_answer": "A",
+        "correct_answer": "A",
+        "explanation": "sqrt(98) = sqrt(49 * 2) = 7sqrt(2)."
+      },
+      {
+        "question_id": 3,
+        "question": "sqrt((-5)^2) bằng bao nhiêu?",
+        "is_correct": false,
+        "student_answer": "C",
+        "correct_answer": "B",
+        "explanation": "sqrt(a^2) = |a|, nên sqrt((-5)^2) = 5."
+      },
+      {
+        "question_id": 4,
+        "question": "Phương trình sqrt(x + 1) = 4 có nghiệm là?",
+        "is_correct": true,
+        "student_answer": "B",
+        "correct_answer": "B",
+        "explanation": "Bình phương hai vế: x + 1 = 16 nên x = 15."
+      },
+      {
+        "question_id": 5,
+        "question": "Biểu thức nào không xác định trong tập số thực?",
+        "is_correct": true,
+        "student_answer": "C",
+        "correct_answer": "C",
+        "explanation": "Số dưới dấu căn bậc hai không được âm trong tập số thực."
+      },
+      {
+        "question_id": 6,
+        "question": "Nếu sqrt(x) = 0 thì x bằng bao nhiêu?",
+        "is_correct": true,
+        "student_answer": "A",
+        "correct_answer": "A",
+        "explanation": "sqrt(0) = 0 và x phải không âm."
+      }
+    ],
+    "seed_batch": "skk46p_half_class_20260722"
+  },
+  {
+    "id": "sub_skk46p_seed_essay_09",
+    "exam_id": "exam_skk46p_seed_tu_luan_can_thuc_03q",
+    "class_id": "806fe426-5835-40ee-b194-5d6ceff7802b",
+    "student_id": "skk46p_student_09",
+    "submitted_at": "22/07/2026 22:26",
+    "time_taken": 17,
+    "essay_answers": {
+      "1": "3x - 9 >= 0 nên x >= 3.",
+      "2": "sqrt(72) = 6sqrt(2), sqrt(18) = 3sqrt(2), tổng bằng 9sqrt(2).",
+      "3": "x - 2 = 25 nên x = 27; thử lại sqrt(25) = 5, nhận x = 27."
+    },
+    "score": 5.0,
+    "ai_feedback": "Tổng điểm: 5/10",
+    "detailed_results": [
+      {
+        "question_id": 1,
+        "question": "Tìm điều kiện xác định của biểu thức sqrt(3x - 9) và giải thích.",
+        "student_answer": "3x - 9 >= 0 nên x >= 3.",
+        "points": 3,
+        "score": 1,
+        "feedback": "Trình bày đúng hướng; cần ghi rõ hơn bước kiểm tra điều kiện."
+      },
+      {
+        "question_id": 2,
+        "question": "Rút gọn sqrt(72) + sqrt(18).",
+        "student_answer": "sqrt(72) = 6sqrt(2), sqrt(18) = 3sqrt(2), tổng bằng 9sqrt(2).",
+        "points": 3,
+        "score": 2,
+        "feedback": "Trình bày đúng hướng; cần ghi rõ hơn bước kiểm tra điều kiện."
+      },
+      {
+        "question_id": 3,
+        "question": "Giải phương trình sqrt(x - 2) = 5 và thử lại nghiệm.",
+        "student_answer": "x - 2 = 25 nên x = 27; thử lại sqrt(25) = 5, nhận x = 27.",
+        "points": 4,
+        "score": 2,
+        "feedback": "Trình bày đúng hướng; cần ghi rõ hơn bước kiểm tra điều kiện."
+      }
+    ],
+    "seed_batch": "skk46p_half_class_20260722"
+  },
+  {
+    "id": "sub_skk46p_seed_mcq_09",
+    "exam_id": "exam_skk46p_seed_luyen_tap_can_thuc_06q",
+    "class_id": "806fe426-5835-40ee-b194-5d6ceff7802b",
+    "student_id": "skk46p_student_09",
+    "submitted_at": "22/07/2026 17:26",
+    "time_taken": 11,
+    "answers": {
+      "1": "B",
+      "2": "B",
+      "3": "B",
+      "4": "B",
+      "5": "D",
+      "6": "B"
+    },
+    "score": 3.33,
+    "ai_feedback": "Bài làm đã có dữ liệu test. Học sinh cần xem lại các câu sai và ghi chú điều kiện xác định.",
+    "detailed_results": [
+      {
+        "question_id": 1,
+        "question": "Điều kiện xác định của sqrt(2x - 6) là gì?",
+        "is_correct": false,
+        "student_answer": "B",
+        "correct_answer": "A",
+        "explanation": "Cần 2x - 6 >= 0 nên x >= 3."
+      },
+      {
+        "question_id": 2,
+        "question": "Rút gọn sqrt(98) được kết quả nào?",
+        "is_correct": false,
+        "student_answer": "B",
+        "correct_answer": "A",
+        "explanation": "sqrt(98) = sqrt(49 * 2) = 7sqrt(2)."
+      },
+      {
+        "question_id": 3,
+        "question": "sqrt((-5)^2) bằng bao nhiêu?",
+        "is_correct": true,
+        "student_answer": "B",
+        "correct_answer": "B",
+        "explanation": "sqrt(a^2) = |a|, nên sqrt((-5)^2) = 5."
+      },
+      {
+        "question_id": 4,
+        "question": "Phương trình sqrt(x + 1) = 4 có nghiệm là?",
+        "is_correct": true,
+        "student_answer": "B",
+        "correct_answer": "B",
+        "explanation": "Bình phương hai vế: x + 1 = 16 nên x = 15."
+      },
+      {
+        "question_id": 5,
+        "question": "Biểu thức nào không xác định trong tập số thực?",
+        "is_correct": false,
+        "student_answer": "D",
+        "correct_answer": "C",
+        "explanation": "Số dưới dấu căn bậc hai không được âm trong tập số thực."
+      },
+      {
+        "question_id": 6,
+        "question": "Nếu sqrt(x) = 0 thì x bằng bao nhiêu?",
+        "is_correct": false,
+        "student_answer": "B",
+        "correct_answer": "A",
+        "explanation": "sqrt(0) = 0 và x phải không âm."
+      }
+    ],
+    "seed_batch": "skk46p_half_class_20260722"
+  },
+  {
+    "id": "sub_skk46p_seed_essay_08",
+    "exam_id": "exam_skk46p_seed_tu_luan_can_thuc_03q",
+    "class_id": "806fe426-5835-40ee-b194-5d6ceff7802b",
+    "student_id": "skk46p_student_08",
+    "submitted_at": "22/07/2026 21:26",
+    "time_taken": 16,
+    "essay_answers": {
+      "1": "3x - 9 >= 0 nên x >= 3.",
+      "2": "sqrt(72) = 6sqrt(2), sqrt(18) = 3sqrt(2), tổng bằng 9sqrt(2).",
+      "3": "x - 2 = 25 nên x = 27; thử lại sqrt(25) = 5, nhận x = 27."
+    },
+    "score": 9.0,
+    "ai_feedback": "Tổng điểm: 9/10",
+    "detailed_results": [
+      {
+        "question_id": 1,
+        "question": "Tìm điều kiện xác định của biểu thức sqrt(3x - 9) và giải thích.",
+        "student_answer": "3x - 9 >= 0 nên x >= 3.",
+        "points": 3,
+        "score": 3,
+        "feedback": "Lời giải đầy đủ, lập luận rõ ràng."
+      },
+      {
+        "question_id": 2,
+        "question": "Rút gọn sqrt(72) + sqrt(18).",
+        "student_answer": "sqrt(72) = 6sqrt(2), sqrt(18) = 3sqrt(2), tổng bằng 9sqrt(2).",
+        "points": 3,
+        "score": 2,
+        "feedback": "Trình bày đúng hướng; cần ghi rõ hơn bước kiểm tra điều kiện."
+      },
+      {
+        "question_id": 3,
+        "question": "Giải phương trình sqrt(x - 2) = 5 và thử lại nghiệm.",
+        "student_answer": "x - 2 = 25 nên x = 27; thử lại sqrt(25) = 5, nhận x = 27.",
+        "points": 4,
+        "score": 4,
+        "feedback": "Lời giải đầy đủ, lập luận rõ ràng."
+      }
+    ],
+    "seed_batch": "skk46p_half_class_20260722"
+  },
+  {
+    "id": "sub_skk46p_seed_mcq_08",
+    "exam_id": "exam_skk46p_seed_luyen_tap_can_thuc_06q",
+    "class_id": "806fe426-5835-40ee-b194-5d6ceff7802b",
+    "student_id": "skk46p_student_08",
+    "submitted_at": "22/07/2026 16:26",
+    "time_taken": 10,
+    "answers": {
+      "1": "A",
+      "2": "A",
+      "3": "B",
+      "4": "C",
+      "5": "C",
+      "6": "A"
+    },
+    "score": 8.33,
+    "ai_feedback": "Bài làm đã có dữ liệu test. Học sinh cần xem lại các câu sai và ghi chú điều kiện xác định.",
+    "detailed_results": [
+      {
+        "question_id": 1,
+        "question": "Điều kiện xác định của sqrt(2x - 6) là gì?",
+        "is_correct": true,
+        "student_answer": "A",
+        "correct_answer": "A",
+        "explanation": "Cần 2x - 6 >= 0 nên x >= 3."
+      },
+      {
+        "question_id": 2,
+        "question": "Rút gọn sqrt(98) được kết quả nào?",
+        "is_correct": true,
+        "student_answer": "A",
+        "correct_answer": "A",
+        "explanation": "sqrt(98) = sqrt(49 * 2) = 7sqrt(2)."
+      },
+      {
+        "question_id": 3,
+        "question": "sqrt((-5)^2) bằng bao nhiêu?",
+        "is_correct": true,
+        "student_answer": "B",
+        "correct_answer": "B",
+        "explanation": "sqrt(a^2) = |a|, nên sqrt((-5)^2) = 5."
+      },
+      {
+        "question_id": 4,
+        "question": "Phương trình sqrt(x + 1) = 4 có nghiệm là?",
+        "is_correct": false,
+        "student_answer": "C",
+        "correct_answer": "B",
+        "explanation": "Bình phương hai vế: x + 1 = 16 nên x = 15."
+      },
+      {
+        "question_id": 5,
+        "question": "Biểu thức nào không xác định trong tập số thực?",
+        "is_correct": true,
+        "student_answer": "C",
+        "correct_answer": "C",
+        "explanation": "Số dưới dấu căn bậc hai không được âm trong tập số thực."
+      },
+      {
+        "question_id": 6,
+        "question": "Nếu sqrt(x) = 0 thì x bằng bao nhiêu?",
+        "is_correct": true,
+        "student_answer": "A",
+        "correct_answer": "A",
+        "explanation": "sqrt(0) = 0 và x phải không âm."
+      }
+    ],
+    "seed_batch": "skk46p_half_class_20260722"
+  },
+  {
+    "id": "sub_skk46p_seed_essay_07",
+    "exam_id": "exam_skk46p_seed_tu_luan_can_thuc_03q",
+    "class_id": "806fe426-5835-40ee-b194-5d6ceff7802b",
+    "student_id": "skk46p_student_07",
+    "submitted_at": "22/07/2026 20:26",
+    "time_taken": 15,
+    "essay_answers": {
+      "1": "3x - 9 >= 0 nên x >= 3.",
+      "2": "sqrt(72) = 6sqrt(2), sqrt(18) = 3sqrt(2), tổng bằng 9sqrt(2).",
+      "3": "x - 2 = 25 nên x = 27; thử lại sqrt(25) = 5, nhận x = 27."
+    },
+    "score": 10.0,
+    "ai_feedback": "Tổng điểm: 10/10",
+    "detailed_results": [
+      {
+        "question_id": 1,
+        "question": "Tìm điều kiện xác định của biểu thức sqrt(3x - 9) và giải thích.",
+        "student_answer": "3x - 9 >= 0 nên x >= 3.",
+        "points": 3,
+        "score": 3,
+        "feedback": "Lời giải đầy đủ, lập luận rõ ràng."
+      },
+      {
+        "question_id": 2,
+        "question": "Rút gọn sqrt(72) + sqrt(18).",
+        "student_answer": "sqrt(72) = 6sqrt(2), sqrt(18) = 3sqrt(2), tổng bằng 9sqrt(2).",
+        "points": 3,
+        "score": 3,
+        "feedback": "Lời giải đầy đủ, lập luận rõ ràng."
+      },
+      {
+        "question_id": 3,
+        "question": "Giải phương trình sqrt(x - 2) = 5 và thử lại nghiệm.",
+        "student_answer": "x - 2 = 25 nên x = 27; thử lại sqrt(25) = 5, nhận x = 27.",
+        "points": 4,
+        "score": 4,
+        "feedback": "Lời giải đầy đủ, lập luận rõ ràng."
+      }
+    ],
+    "seed_batch": "skk46p_half_class_20260722"
+  },
+  {
+    "id": "sub_skk46p_seed_mcq_07",
+    "exam_id": "exam_skk46p_seed_luyen_tap_can_thuc_06q",
+    "class_id": "806fe426-5835-40ee-b194-5d6ceff7802b",
+    "student_id": "skk46p_student_07",
+    "submitted_at": "22/07/2026 15:26",
+    "time_taken": 9,
+    "answers": {
+      "1": "A",
+      "2": "A",
+      "3": "B",
+      "4": "B",
+      "5": "C",
+      "6": "A"
+    },
+    "score": 10.0,
+    "ai_feedback": "Bài làm đã có dữ liệu test. Học sinh cần xem lại các câu sai và ghi chú điều kiện xác định.",
+    "detailed_results": [
+      {
+        "question_id": 1,
+        "question": "Điều kiện xác định của sqrt(2x - 6) là gì?",
+        "is_correct": true,
+        "student_answer": "A",
+        "correct_answer": "A",
+        "explanation": "Cần 2x - 6 >= 0 nên x >= 3."
+      },
+      {
+        "question_id": 2,
+        "question": "Rút gọn sqrt(98) được kết quả nào?",
+        "is_correct": true,
+        "student_answer": "A",
+        "correct_answer": "A",
+        "explanation": "sqrt(98) = sqrt(49 * 2) = 7sqrt(2)."
+      },
+      {
+        "question_id": 3,
+        "question": "sqrt((-5)^2) bằng bao nhiêu?",
+        "is_correct": true,
+        "student_answer": "B",
+        "correct_answer": "B",
+        "explanation": "sqrt(a^2) = |a|, nên sqrt((-5)^2) = 5."
+      },
+      {
+        "question_id": 4,
+        "question": "Phương trình sqrt(x + 1) = 4 có nghiệm là?",
+        "is_correct": true,
+        "student_answer": "B",
+        "correct_answer": "B",
+        "explanation": "Bình phương hai vế: x + 1 = 16 nên x = 15."
+      },
+      {
+        "question_id": 5,
+        "question": "Biểu thức nào không xác định trong tập số thực?",
+        "is_correct": true,
+        "student_answer": "C",
+        "correct_answer": "C",
+        "explanation": "Số dưới dấu căn bậc hai không được âm trong tập số thực."
+      },
+      {
+        "question_id": 6,
+        "question": "Nếu sqrt(x) = 0 thì x bằng bao nhiêu?",
+        "is_correct": true,
+        "student_answer": "A",
+        "correct_answer": "A",
+        "explanation": "sqrt(0) = 0 và x phải không âm."
+      }
+    ],
+    "seed_batch": "skk46p_half_class_20260722"
+  },
+  {
+    "id": "sub_skk46p_seed_essay_06",
+    "exam_id": "exam_skk46p_seed_tu_luan_can_thuc_03q",
+    "class_id": "806fe426-5835-40ee-b194-5d6ceff7802b",
+    "student_id": "skk46p_student_06",
+    "submitted_at": "22/07/2026 19:26",
+    "time_taken": 20,
+    "essay_answers": {
+      "1": "3x - 9 >= 0 nên x >= 3.",
+      "2": "sqrt(72) = 6sqrt(2), sqrt(18) = 3sqrt(2), tổng bằng 9sqrt(2).",
+      "3": "x - 2 = 25 nên x = 27; thử lại sqrt(25) = 5, nhận x = 27."
+    },
+    "score": 6.0,
+    "ai_feedback": "Tổng điểm: 6/10",
+    "detailed_results": [
+      {
+        "question_id": 1,
+        "question": "Tìm điều kiện xác định của biểu thức sqrt(3x - 9) và giải thích.",
+        "student_answer": "3x - 9 >= 0 nên x >= 3.",
+        "points": 3,
+        "score": 2,
+        "feedback": "Trình bày đúng hướng; cần ghi rõ hơn bước kiểm tra điều kiện."
+      },
+      {
+        "question_id": 2,
+        "question": "Rút gọn sqrt(72) + sqrt(18).",
+        "student_answer": "sqrt(72) = 6sqrt(2), sqrt(18) = 3sqrt(2), tổng bằng 9sqrt(2).",
+        "points": 3,
+        "score": 2,
+        "feedback": "Trình bày đúng hướng; cần ghi rõ hơn bước kiểm tra điều kiện."
+      },
+      {
+        "question_id": 3,
+        "question": "Giải phương trình sqrt(x - 2) = 5 và thử lại nghiệm.",
+        "student_answer": "x - 2 = 25 nên x = 27; thử lại sqrt(25) = 5, nhận x = 27.",
+        "points": 4,
+        "score": 2,
+        "feedback": "Trình bày đúng hướng; cần ghi rõ hơn bước kiểm tra điều kiện."
+      }
+    ],
+    "seed_batch": "skk46p_half_class_20260722"
+  },
+  {
+    "id": "sub_skk46p_seed_mcq_06",
+    "exam_id": "exam_skk46p_seed_luyen_tap_can_thuc_06q",
+    "class_id": "806fe426-5835-40ee-b194-5d6ceff7802b",
+    "student_id": "skk46p_student_06",
+    "submitted_at": "22/07/2026 14:26",
+    "time_taken": 8,
+    "answers": {
+      "1": "B",
+      "2": "A",
+      "3": "C",
+      "4": "B",
+      "5": "D",
+      "6": "A"
+    },
+    "score": 5.0,
+    "ai_feedback": "Bài làm đã có dữ liệu test. Học sinh cần xem lại các câu sai và ghi chú điều kiện xác định.",
+    "detailed_results": [
+      {
+        "question_id": 1,
+        "question": "Điều kiện xác định của sqrt(2x - 6) là gì?",
+        "is_correct": false,
+        "student_answer": "B",
+        "correct_answer": "A",
+        "explanation": "Cần 2x - 6 >= 0 nên x >= 3."
+      },
+      {
+        "question_id": 2,
+        "question": "Rút gọn sqrt(98) được kết quả nào?",
+        "is_correct": true,
+        "student_answer": "A",
+        "correct_answer": "A",
+        "explanation": "sqrt(98) = sqrt(49 * 2) = 7sqrt(2)."
+      },
+      {
+        "question_id": 3,
+        "question": "sqrt((-5)^2) bằng bao nhiêu?",
+        "is_correct": false,
+        "student_answer": "C",
+        "correct_answer": "B",
+        "explanation": "sqrt(a^2) = |a|, nên sqrt((-5)^2) = 5."
+      },
+      {
+        "question_id": 4,
+        "question": "Phương trình sqrt(x + 1) = 4 có nghiệm là?",
+        "is_correct": true,
+        "student_answer": "B",
+        "correct_answer": "B",
+        "explanation": "Bình phương hai vế: x + 1 = 16 nên x = 15."
+      },
+      {
+        "question_id": 5,
+        "question": "Biểu thức nào không xác định trong tập số thực?",
+        "is_correct": false,
+        "student_answer": "D",
+        "correct_answer": "C",
+        "explanation": "Số dưới dấu căn bậc hai không được âm trong tập số thực."
+      },
+      {
+        "question_id": 6,
+        "question": "Nếu sqrt(x) = 0 thì x bằng bao nhiêu?",
+        "is_correct": true,
+        "student_answer": "A",
+        "correct_answer": "A",
+        "explanation": "sqrt(0) = 0 và x phải không âm."
+      }
+    ],
+    "seed_batch": "skk46p_half_class_20260722"
+  },
+  {
+    "id": "sub_skk46p_seed_essay_05",
+    "exam_id": "exam_skk46p_seed_tu_luan_can_thuc_03q",
+    "class_id": "806fe426-5835-40ee-b194-5d6ceff7802b",
+    "student_id": "skk46p_student_05",
+    "submitted_at": "22/07/2026 18:26",
+    "time_taken": 19,
+    "essay_answers": {
+      "1": "3x - 9 >= 0 nên x >= 3.",
+      "2": "sqrt(72) = 6sqrt(2), sqrt(18) = 3sqrt(2), tổng bằng 9sqrt(2).",
+      "3": "x - 2 = 25 nên x = 27; thử lại sqrt(25) = 5, nhận x = 27."
+    },
+    "score": 9.0,
+    "ai_feedback": "Tổng điểm: 9/10",
+    "detailed_results": [
+      {
+        "question_id": 1,
+        "question": "Tìm điều kiện xác định của biểu thức sqrt(3x - 9) và giải thích.",
+        "student_answer": "3x - 9 >= 0 nên x >= 3.",
+        "points": 3,
+        "score": 3,
+        "feedback": "Lời giải đầy đủ, lập luận rõ ràng."
+      },
+      {
+        "question_id": 2,
+        "question": "Rút gọn sqrt(72) + sqrt(18).",
+        "student_answer": "sqrt(72) = 6sqrt(2), sqrt(18) = 3sqrt(2), tổng bằng 9sqrt(2).",
+        "points": 3,
+        "score": 3,
+        "feedback": "Lời giải đầy đủ, lập luận rõ ràng."
+      },
+      {
+        "question_id": 3,
+        "question": "Giải phương trình sqrt(x - 2) = 5 và thử lại nghiệm.",
+        "student_answer": "x - 2 = 25 nên x = 27; thử lại sqrt(25) = 5, nhận x = 27.",
+        "points": 4,
+        "score": 3,
+        "feedback": "Trình bày đúng hướng; cần ghi rõ hơn bước kiểm tra điều kiện."
+      }
+    ],
+    "seed_batch": "skk46p_half_class_20260722"
+  },
+  {
+    "id": "sub_skk46p_seed_mcq_05",
+    "exam_id": "exam_skk46p_seed_luyen_tap_can_thuc_06q",
+    "class_id": "806fe426-5835-40ee-b194-5d6ceff7802b",
+    "student_id": "skk46p_student_05",
+    "submitted_at": "22/07/2026 13:26",
+    "time_taken": 12,
+    "answers": {
+      "1": "A",
+      "2": "A",
+      "3": "B",
+      "4": "B",
+      "5": "D",
+      "6": "A"
+    },
+    "score": 8.33,
+    "ai_feedback": "Bài làm đã có dữ liệu test. Học sinh cần xem lại các câu sai và ghi chú điều kiện xác định.",
+    "detailed_results": [
+      {
+        "question_id": 1,
+        "question": "Điều kiện xác định của sqrt(2x - 6) là gì?",
+        "is_correct": true,
+        "student_answer": "A",
+        "correct_answer": "A",
+        "explanation": "Cần 2x - 6 >= 0 nên x >= 3."
+      },
+      {
+        "question_id": 2,
+        "question": "Rút gọn sqrt(98) được kết quả nào?",
+        "is_correct": true,
+        "student_answer": "A",
+        "correct_answer": "A",
+        "explanation": "sqrt(98) = sqrt(49 * 2) = 7sqrt(2)."
+      },
+      {
+        "question_id": 3,
+        "question": "sqrt((-5)^2) bằng bao nhiêu?",
+        "is_correct": true,
+        "student_answer": "B",
+        "correct_answer": "B",
+        "explanation": "sqrt(a^2) = |a|, nên sqrt((-5)^2) = 5."
+      },
+      {
+        "question_id": 4,
+        "question": "Phương trình sqrt(x + 1) = 4 có nghiệm là?",
+        "is_correct": true,
+        "student_answer": "B",
+        "correct_answer": "B",
+        "explanation": "Bình phương hai vế: x + 1 = 16 nên x = 15."
+      },
+      {
+        "question_id": 5,
+        "question": "Biểu thức nào không xác định trong tập số thực?",
+        "is_correct": false,
+        "student_answer": "D",
+        "correct_answer": "C",
+        "explanation": "Số dưới dấu căn bậc hai không được âm trong tập số thực."
+      },
+      {
+        "question_id": 6,
+        "question": "Nếu sqrt(x) = 0 thì x bằng bao nhiêu?",
+        "is_correct": true,
+        "student_answer": "A",
+        "correct_answer": "A",
+        "explanation": "sqrt(0) = 0 và x phải không âm."
+      }
+    ],
+    "seed_batch": "skk46p_half_class_20260722"
+  },
+  {
+    "id": "sub_skk46p_seed_essay_04",
+    "exam_id": "exam_skk46p_seed_tu_luan_can_thuc_03q",
+    "class_id": "806fe426-5835-40ee-b194-5d6ceff7802b",
+    "student_id": "skk46p_student_04",
+    "submitted_at": "22/07/2026 17:26",
+    "time_taken": 18,
+    "essay_answers": {
+      "1": "3x - 9 >= 0 nên x >= 3.",
+      "2": "sqrt(72) = 6sqrt(2), sqrt(18) = 3sqrt(2), tổng bằng 9sqrt(2).",
+      "3": "x - 2 = 25 nên x = 27; thử lại sqrt(25) = 5, nhận x = 27."
+    },
+    "score": 7.0,
+    "ai_feedback": "Tổng điểm: 7/10",
+    "detailed_results": [
+      {
+        "question_id": 1,
+        "question": "Tìm điều kiện xác định của biểu thức sqrt(3x - 9) và giải thích.",
+        "student_answer": "3x - 9 >= 0 nên x >= 3.",
+        "points": 3,
+        "score": 2,
+        "feedback": "Trình bày đúng hướng; cần ghi rõ hơn bước kiểm tra điều kiện."
+      },
+      {
+        "question_id": 2,
+        "question": "Rút gọn sqrt(72) + sqrt(18).",
+        "student_answer": "sqrt(72) = 6sqrt(2), sqrt(18) = 3sqrt(2), tổng bằng 9sqrt(2).",
+        "points": 3,
+        "score": 2,
+        "feedback": "Trình bày đúng hướng; cần ghi rõ hơn bước kiểm tra điều kiện."
+      },
+      {
+        "question_id": 3,
+        "question": "Giải phương trình sqrt(x - 2) = 5 và thử lại nghiệm.",
+        "student_answer": "x - 2 = 25 nên x = 27; thử lại sqrt(25) = 5, nhận x = 27.",
+        "points": 4,
+        "score": 3,
+        "feedback": "Trình bày đúng hướng; cần ghi rõ hơn bước kiểm tra điều kiện."
+      }
+    ],
+    "seed_batch": "skk46p_half_class_20260722"
+  },
+  {
+    "id": "sub_skk46p_seed_mcq_04",
+    "exam_id": "exam_skk46p_seed_luyen_tap_can_thuc_06q",
+    "class_id": "806fe426-5835-40ee-b194-5d6ceff7802b",
+    "student_id": "skk46p_student_04",
+    "submitted_at": "22/07/2026 12:26",
+    "time_taken": 11,
+    "answers": {
+      "1": "A",
+      "2": "B",
+      "3": "B",
+      "4": "C",
+      "5": "C",
+      "6": "B"
+    },
+    "score": 5.0,
+    "ai_feedback": "Bài làm đã có dữ liệu test. Học sinh cần xem lại các câu sai và ghi chú điều kiện xác định.",
+    "detailed_results": [
+      {
+        "question_id": 1,
+        "question": "Điều kiện xác định của sqrt(2x - 6) là gì?",
+        "is_correct": true,
+        "student_answer": "A",
+        "correct_answer": "A",
+        "explanation": "Cần 2x - 6 >= 0 nên x >= 3."
+      },
+      {
+        "question_id": 2,
+        "question": "Rút gọn sqrt(98) được kết quả nào?",
+        "is_correct": false,
+        "student_answer": "B",
+        "correct_answer": "A",
+        "explanation": "sqrt(98) = sqrt(49 * 2) = 7sqrt(2)."
+      },
+      {
+        "question_id": 3,
+        "question": "sqrt((-5)^2) bằng bao nhiêu?",
+        "is_correct": true,
+        "student_answer": "B",
+        "correct_answer": "B",
+        "explanation": "sqrt(a^2) = |a|, nên sqrt((-5)^2) = 5."
+      },
+      {
+        "question_id": 4,
+        "question": "Phương trình sqrt(x + 1) = 4 có nghiệm là?",
+        "is_correct": false,
+        "student_answer": "C",
+        "correct_answer": "B",
+        "explanation": "Bình phương hai vế: x + 1 = 16 nên x = 15."
+      },
+      {
+        "question_id": 5,
+        "question": "Biểu thức nào không xác định trong tập số thực?",
+        "is_correct": true,
+        "student_answer": "C",
+        "correct_answer": "C",
+        "explanation": "Số dưới dấu căn bậc hai không được âm trong tập số thực."
+      },
+      {
+        "question_id": 6,
+        "question": "Nếu sqrt(x) = 0 thì x bằng bao nhiêu?",
+        "is_correct": false,
+        "student_answer": "B",
+        "correct_answer": "A",
+        "explanation": "sqrt(0) = 0 và x phải không âm."
+      }
+    ],
+    "seed_batch": "skk46p_half_class_20260722"
+  },
+  {
+    "id": "sub_skk46p_seed_essay_03",
+    "exam_id": "exam_skk46p_seed_tu_luan_can_thuc_03q",
+    "class_id": "806fe426-5835-40ee-b194-5d6ceff7802b",
+    "student_id": "skk46p_student_03",
+    "submitted_at": "22/07/2026 16:26",
+    "time_taken": 17,
+    "essay_answers": {
+      "1": "3x - 9 >= 0 nên x >= 3.",
+      "2": "sqrt(72) = 6sqrt(2), sqrt(18) = 3sqrt(2), tổng bằng 9sqrt(2).",
+      "3": "x - 2 = 25 nên x = 27; thử lại sqrt(25) = 5, nhận x = 27."
+    },
+    "score": 8.0,
+    "ai_feedback": "Tổng điểm: 8/10",
+    "detailed_results": [
+      {
+        "question_id": 1,
+        "question": "Tìm điều kiện xác định của biểu thức sqrt(3x - 9) và giải thích.",
+        "student_answer": "3x - 9 >= 0 nên x >= 3.",
+        "points": 3,
+        "score": 2,
+        "feedback": "Trình bày đúng hướng; cần ghi rõ hơn bước kiểm tra điều kiện."
+      },
+      {
+        "question_id": 2,
+        "question": "Rút gọn sqrt(72) + sqrt(18).",
+        "student_answer": "sqrt(72) = 6sqrt(2), sqrt(18) = 3sqrt(2), tổng bằng 9sqrt(2).",
+        "points": 3,
+        "score": 3,
+        "feedback": "Lời giải đầy đủ, lập luận rõ ràng."
+      },
+      {
+        "question_id": 3,
+        "question": "Giải phương trình sqrt(x - 2) = 5 và thử lại nghiệm.",
+        "student_answer": "x - 2 = 25 nên x = 27; thử lại sqrt(25) = 5, nhận x = 27.",
+        "points": 4,
+        "score": 3,
+        "feedback": "Trình bày đúng hướng; cần ghi rõ hơn bước kiểm tra điều kiện."
+      }
+    ],
+    "seed_batch": "skk46p_half_class_20260722"
+  },
+  {
+    "id": "sub_skk46p_seed_mcq_03",
+    "exam_id": "exam_skk46p_seed_luyen_tap_can_thuc_06q",
+    "class_id": "806fe426-5835-40ee-b194-5d6ceff7802b",
+    "student_id": "skk46p_student_03",
+    "submitted_at": "22/07/2026 11:26",
+    "time_taken": 10,
+    "answers": {
+      "1": "B",
+      "2": "A",
+      "3": "B",
+      "4": "C",
+      "5": "C",
+      "6": "A"
+    },
+    "score": 6.67,
+    "ai_feedback": "Bài làm đã có dữ liệu test. Học sinh cần xem lại các câu sai và ghi chú điều kiện xác định.",
+    "detailed_results": [
+      {
+        "question_id": 1,
+        "question": "Điều kiện xác định của sqrt(2x - 6) là gì?",
+        "is_correct": false,
+        "student_answer": "B",
+        "correct_answer": "A",
+        "explanation": "Cần 2x - 6 >= 0 nên x >= 3."
+      },
+      {
+        "question_id": 2,
+        "question": "Rút gọn sqrt(98) được kết quả nào?",
+        "is_correct": true,
+        "student_answer": "A",
+        "correct_answer": "A",
+        "explanation": "sqrt(98) = sqrt(49 * 2) = 7sqrt(2)."
+      },
+      {
+        "question_id": 3,
+        "question": "sqrt((-5)^2) bằng bao nhiêu?",
+        "is_correct": true,
+        "student_answer": "B",
+        "correct_answer": "B",
+        "explanation": "sqrt(a^2) = |a|, nên sqrt((-5)^2) = 5."
+      },
+      {
+        "question_id": 4,
+        "question": "Phương trình sqrt(x + 1) = 4 có nghiệm là?",
+        "is_correct": false,
+        "student_answer": "C",
+        "correct_answer": "B",
+        "explanation": "Bình phương hai vế: x + 1 = 16 nên x = 15."
+      },
+      {
+        "question_id": 5,
+        "question": "Biểu thức nào không xác định trong tập số thực?",
+        "is_correct": true,
+        "student_answer": "C",
+        "correct_answer": "C",
+        "explanation": "Số dưới dấu căn bậc hai không được âm trong tập số thực."
+      },
+      {
+        "question_id": 6,
+        "question": "Nếu sqrt(x) = 0 thì x bằng bao nhiêu?",
+        "is_correct": true,
+        "student_answer": "A",
+        "correct_answer": "A",
+        "explanation": "sqrt(0) = 0 và x phải không âm."
+      }
+    ],
+    "seed_batch": "skk46p_half_class_20260722"
+  },
+  {
+    "id": "sub_skk46p_seed_essay_02",
+    "exam_id": "exam_skk46p_seed_tu_luan_can_thuc_03q",
+    "class_id": "806fe426-5835-40ee-b194-5d6ceff7802b",
+    "student_id": "skk46p_student_02",
+    "submitted_at": "22/07/2026 15:26",
+    "time_taken": 16,
+    "essay_answers": {
+      "1": "3x - 9 >= 0 nên x >= 3.",
+      "2": "sqrt(72) = 6sqrt(2), sqrt(18) = 3sqrt(2), tổng bằng 9sqrt(2).",
+      "3": "x - 2 = 25 nên x = 27; thử lại sqrt(25) = 5, nhận x = 27."
+    },
+    "score": 9.0,
+    "ai_feedback": "Tổng điểm: 9/10",
+    "detailed_results": [
+      {
+        "question_id": 1,
+        "question": "Tìm điều kiện xác định của biểu thức sqrt(3x - 9) và giải thích.",
+        "student_answer": "3x - 9 >= 0 nên x >= 3.",
+        "points": 3,
+        "score": 3,
+        "feedback": "Lời giải đầy đủ, lập luận rõ ràng."
+      },
+      {
+        "question_id": 2,
+        "question": "Rút gọn sqrt(72) + sqrt(18).",
+        "student_answer": "sqrt(72) = 6sqrt(2), sqrt(18) = 3sqrt(2), tổng bằng 9sqrt(2).",
+        "points": 3,
+        "score": 2,
+        "feedback": "Trình bày đúng hướng; cần ghi rõ hơn bước kiểm tra điều kiện."
+      },
+      {
+        "question_id": 3,
+        "question": "Giải phương trình sqrt(x - 2) = 5 và thử lại nghiệm.",
+        "student_answer": "x - 2 = 25 nên x = 27; thử lại sqrt(25) = 5, nhận x = 27.",
+        "points": 4,
+        "score": 4,
+        "feedback": "Lời giải đầy đủ, lập luận rõ ràng."
+      }
+    ],
+    "seed_batch": "skk46p_half_class_20260722"
+  },
+  {
+    "id": "sub_skk46p_seed_mcq_02",
+    "exam_id": "exam_skk46p_seed_luyen_tap_can_thuc_06q",
+    "class_id": "806fe426-5835-40ee-b194-5d6ceff7802b",
+    "student_id": "skk46p_student_02",
+    "submitted_at": "22/07/2026 10:26",
+    "time_taken": 9,
+    "answers": {
+      "1": "A",
+      "2": "A",
+      "3": "C",
+      "4": "B",
+      "5": "D",
+      "6": "A"
+    },
+    "score": 6.67,
+    "ai_feedback": "Bài làm đã có dữ liệu test. Học sinh cần xem lại các câu sai và ghi chú điều kiện xác định.",
+    "detailed_results": [
+      {
+        "question_id": 1,
+        "question": "Điều kiện xác định của sqrt(2x - 6) là gì?",
+        "is_correct": true,
+        "student_answer": "A",
+        "correct_answer": "A",
+        "explanation": "Cần 2x - 6 >= 0 nên x >= 3."
+      },
+      {
+        "question_id": 2,
+        "question": "Rút gọn sqrt(98) được kết quả nào?",
+        "is_correct": true,
+        "student_answer": "A",
+        "correct_answer": "A",
+        "explanation": "sqrt(98) = sqrt(49 * 2) = 7sqrt(2)."
+      },
+      {
+        "question_id": 3,
+        "question": "sqrt((-5)^2) bằng bao nhiêu?",
+        "is_correct": false,
+        "student_answer": "C",
+        "correct_answer": "B",
+        "explanation": "sqrt(a^2) = |a|, nên sqrt((-5)^2) = 5."
+      },
+      {
+        "question_id": 4,
+        "question": "Phương trình sqrt(x + 1) = 4 có nghiệm là?",
+        "is_correct": true,
+        "student_answer": "B",
+        "correct_answer": "B",
+        "explanation": "Bình phương hai vế: x + 1 = 16 nên x = 15."
+      },
+      {
+        "question_id": 5,
+        "question": "Biểu thức nào không xác định trong tập số thực?",
+        "is_correct": false,
+        "student_answer": "D",
+        "correct_answer": "C",
+        "explanation": "Số dưới dấu căn bậc hai không được âm trong tập số thực."
+      },
+      {
+        "question_id": 6,
+        "question": "Nếu sqrt(x) = 0 thì x bằng bao nhiêu?",
+        "is_correct": true,
+        "student_answer": "A",
+        "correct_answer": "A",
+        "explanation": "sqrt(0) = 0 và x phải không âm."
+      }
+    ],
+    "seed_batch": "skk46p_half_class_20260722"
+  },
+  {
+    "id": "sub_skk46p_seed_essay_01",
+    "exam_id": "exam_skk46p_seed_tu_luan_can_thuc_03q",
+    "class_id": "806fe426-5835-40ee-b194-5d6ceff7802b",
+    "student_id": "skk46p_student_01",
+    "submitted_at": "22/07/2026 14:26",
+    "time_taken": 15,
+    "essay_answers": {
+      "1": "3x - 9 >= 0 nên x >= 3.",
+      "2": "sqrt(72) = 6sqrt(2), sqrt(18) = 3sqrt(2), tổng bằng 9sqrt(2).",
+      "3": "x - 2 = 25 nên x = 27; thử lại sqrt(25) = 5, nhận x = 27."
+    },
+    "score": 10.0,
+    "ai_feedback": "Tổng điểm: 10/10",
+    "detailed_results": [
+      {
+        "question_id": 1,
+        "question": "Tìm điều kiện xác định của biểu thức sqrt(3x - 9) và giải thích.",
+        "student_answer": "3x - 9 >= 0 nên x >= 3.",
+        "points": 3,
+        "score": 3,
+        "feedback": "Lời giải đầy đủ, lập luận rõ ràng."
+      },
+      {
+        "question_id": 2,
+        "question": "Rút gọn sqrt(72) + sqrt(18).",
+        "student_answer": "sqrt(72) = 6sqrt(2), sqrt(18) = 3sqrt(2), tổng bằng 9sqrt(2).",
+        "points": 3,
+        "score": 3,
+        "feedback": "Lời giải đầy đủ, lập luận rõ ràng."
+      },
+      {
+        "question_id": 3,
+        "question": "Giải phương trình sqrt(x - 2) = 5 và thử lại nghiệm.",
+        "student_answer": "x - 2 = 25 nên x = 27; thử lại sqrt(25) = 5, nhận x = 27.",
+        "points": 4,
+        "score": 4,
+        "feedback": "Lời giải đầy đủ, lập luận rõ ràng."
+      }
+    ],
+    "seed_batch": "skk46p_half_class_20260722"
+  },
+  {
+    "id": "sub_skk46p_seed_mcq_01",
+    "exam_id": "exam_skk46p_seed_luyen_tap_can_thuc_06q",
+    "class_id": "806fe426-5835-40ee-b194-5d6ceff7802b",
+    "student_id": "skk46p_student_01",
+    "submitted_at": "22/07/2026 09:26",
+    "time_taken": 8,
+    "answers": {
+      "1": "A",
+      "2": "B",
+      "3": "B",
+      "4": "B",
+      "5": "C",
+      "6": "A"
+    },
+    "score": 8.33,
+    "ai_feedback": "Bài làm đã có dữ liệu test. Học sinh cần xem lại các câu sai và ghi chú điều kiện xác định.",
+    "detailed_results": [
+      {
+        "question_id": 1,
+        "question": "Điều kiện xác định của sqrt(2x - 6) là gì?",
+        "is_correct": true,
+        "student_answer": "A",
+        "correct_answer": "A",
+        "explanation": "Cần 2x - 6 >= 0 nên x >= 3."
+      },
+      {
+        "question_id": 2,
+        "question": "Rút gọn sqrt(98) được kết quả nào?",
+        "is_correct": false,
+        "student_answer": "B",
+        "correct_answer": "A",
+        "explanation": "sqrt(98) = sqrt(49 * 2) = 7sqrt(2)."
+      },
+      {
+        "question_id": 3,
+        "question": "sqrt((-5)^2) bằng bao nhiêu?",
+        "is_correct": true,
+        "student_answer": "B",
+        "correct_answer": "B",
+        "explanation": "sqrt(a^2) = |a|, nên sqrt((-5)^2) = 5."
+      },
+      {
+        "question_id": 4,
+        "question": "Phương trình sqrt(x + 1) = 4 có nghiệm là?",
+        "is_correct": true,
+        "student_answer": "B",
+        "correct_answer": "B",
+        "explanation": "Bình phương hai vế: x + 1 = 16 nên x = 15."
+      },
+      {
+        "question_id": 5,
+        "question": "Biểu thức nào không xác định trong tập số thực?",
+        "is_correct": true,
+        "student_answer": "C",
+        "correct_answer": "C",
+        "explanation": "Số dưới dấu căn bậc hai không được âm trong tập số thực."
+      },
+      {
+        "question_id": 6,
+        "question": "Nếu sqrt(x) = 0 thì x bằng bao nhiêu?",
+        "is_correct": true,
+        "student_answer": "A",
+        "correct_answer": "A",
+        "explanation": "sqrt(0) = 0 và x phải không âm."
+      }
+    ],
+    "seed_batch": "skk46p_half_class_20260722"
+  }
+]

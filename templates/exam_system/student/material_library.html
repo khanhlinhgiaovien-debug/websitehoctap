@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kho học liệu</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f7fa;
+            min-height: 100vh;
+            color: #263238;
+        }
+
+        .navbar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .navbar-brand {
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .nav-link {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.3);
+            padding: 8px 18px;
+            border-radius: 20px;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 30px 20px;
+        }
+
+        .header {
+            background: white;
+            border-radius: 15px;
+            padding: 28px;
+            margin-bottom: 24px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .header h1 {
+            font-size: 30px;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            color: #667085;
+        }
+
+        .grade-section {
+            margin-bottom: 28px;
+        }
+
+        .grade-title {
+            font-size: 22px;
+            margin-bottom: 14px;
+            color: #344054;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 18px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            border: 1px solid #eef2f7;
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: #1f2937;
+        }
+
+        .card-desc {
+            min-height: 42px;
+            color: #667085;
+            font-size: 14px;
+            line-height: 1.5;
+            margin-bottom: 14px;
+        }
+
+        .card-meta {
+            color: #98a2b3;
+            font-size: 13px;
+            margin-bottom: 16px;
+        }
+
+        .btn-open {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            padding: 10px 18px;
+            border-radius: 999px;
+            font-weight: 700;
+            font-size: 14px;
+        }
+
+        .empty {
+            background: white;
+            border: 1px dashed #cbd5e1;
+            border-radius: 12px;
+            padding: 22px;
+            color: #667085;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-brand">Kho học liệu</div>
+        <div class="nav-actions">
+            <a href="{{ url_for('student_dashboard') }}" class="nav-link">Trang học sinh</a>
+            <a href="{{ url_for('exam_logout') }}" class="nav-link">Đăng xuất</a>
+        </div>
+    </nav>
+
+    <main class="container">
+        <section class="header">
+            <h1>Sách và tài liệu tham khảo</h1>
+            <p>Mở tài liệu bằng link Google Drive do giáo viên chia sẻ.</p>
+        </section>
+
+        {% for grade in grades %}
+            <section class="grade-section">
+                <h2 class="grade-title">Lớp {{ grade }}</h2>
+                {% set materials = grouped_materials.get(grade, []) %}
+                {% if materials %}
+                    <div class="grid">
+                        {% for material in materials %}
+                            <article class="card">
+                                <div class="card-title">{{ material.title }}</div>
+                                <div class="card-desc">
+                                    {{ material.description or 'Tài liệu Google Drive dành cho lớp ' ~ grade ~ '.' }}
+                                </div>
+                                <div class="card-meta">
+                                    Giáo viên: {{ material.teacher_name or 'Giáo viên' }}<br>
+                                    Cập nhật: {{ material.updated_at or material.created_at }}
+                                </div>
+                                <a class="btn-open" href="{{ url_for('exam_material_view', material_id=material.id) }}">Mở tài liệu</a>
+                            </article>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="empty">Chưa có học liệu cho lớp {{ grade }}.</div>
+                {% endif %}
+            </section>
+        {% endfor %}
+    </main>
+</body>
+</html>

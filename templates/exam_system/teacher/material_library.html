@@ -1,0 +1,146 @@
+{% extends "exam_system/base.html" %}
+
+{% block title %}Kho học liệu{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-12">
+        <h2 class="text-primary">
+            <i class="fas fa-folder-open"></i> Kho học liệu
+        </h2>
+        <p class="text-muted">Quản lý sách và tài liệu dạng link Google Drive cho học sinh lớp 6, 7, 8, 9.</p>
+        <hr>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-4">
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                    {% if editing_material %}
+                        <i class="fas fa-edit"></i> Chỉnh sửa sách
+                    {% else %}
+                        <i class="fas fa-plus-circle"></i> Thêm sách mới
+                    {% endif %}
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="POST"
+                      action="{% if editing_material %}{{ url_for('teacher_edit_material', material_id=editing_material.id) }}{% elif class_obj %}{{ url_for('teacher_material_library', class_id=class_obj.id) }}{% else %}{{ url_for('teacher_material_library') }}{% endif %}">
+                    <div class="mb-3">
+                        <label for="title" class="form-label">Tên sách <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="title" name="title"
+                               value="{{ editing_material.title if editing_material else '' }}"
+                               placeholder="VD: Sách bài tập Toán 8" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="grade" class="form-label">Phân loại lớp <span class="text-danger">*</span></label>
+                        <select class="form-control" id="grade" name="grade" required>
+                            <option value="">-- Chọn lớp --</option>
+                            {% for grade in grades %}
+                                <option value="{{ grade }}"
+                                    {% if editing_material and editing_material.grade == grade %}selected{% endif %}>
+                                    Lớp {{ grade }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="drive_url" class="form-label">Link Google Drive <span class="text-danger">*</span></label>
+                        <input type="url" class="form-control" id="drive_url" name="drive_url"
+                               value="{{ editing_material.drive_url if editing_material else '' }}"
+                               placeholder="https://drive.google.com/..." required>
+                        <small class="form-text text-muted">Hãy đặt quyền chia sẻ của file là “Bất kỳ ai có đường liên kết đều có thể xem”.</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Mô tả ngắn</label>
+                        <textarea class="form-control" id="description" name="description" rows="4"
+                                  placeholder="Ghi chú nội dung sách, chương, môn học...">{{ editing_material.description if editing_material else '' }}</textarea>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i>
+                            {% if editing_material %}Cập nhật{% else %}Thêm sách{% endif %}
+                        </button>
+                        {% if editing_material %}
+                            <a href="{{ url_for('teacher_material_library', class_id=class_obj.id) if class_obj else url_for('teacher_material_library') }}" class="btn btn-secondary">Hủy</a>
+                        {% endif %}
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-8">
+        <div class="card shadow-sm">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-book"></i> Sách đã đưa lên
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if materials %}
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead>
+                                <tr>
+                                    <th>Tên sách</th>
+                                    <th>Lớp</th>
+                                    <th>Ngày tạo</th>
+                                    <th>Link</th>
+                                    <th class="text-end">Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for material in materials %}
+                                    <tr>
+                                        <td>
+                                            <strong>{{ material.title }}</strong>
+                                            {% if material.description %}
+                                                <br><small class="text-muted">{{ material.description[:90] }}{% if material.description|length > 90 %}...{% endif %}</small>
+                                            {% endif %}
+                                        </td>
+                                        <td><span class="badge bg-secondary">Lớp {{ material.grade }}</span></td>
+                                        <td>
+                                            <small>{{ material.created_at }}</small>
+                                            {% if material.updated_at %}
+                                                <br><small class="text-muted">Sửa: {{ material.updated_at }}</small>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <a href="{{ url_for('exam_material_view', material_id=material.id) }}" class="btn btn-sm btn-outline-primary">
+                                                <i class="fas fa-book-open"></i> Mở
+                                            </a>
+                                        </td>
+                                        <td class="text-end">
+                                            <a href="{{ url_for('teacher_edit_material', material_id=material.id) }}" class="btn btn-sm btn-warning">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <form method="POST" action="{{ url_for('teacher_delete_material', material_id=material.id) }}"
+                                                  style="display:inline;"
+                                                  onsubmit="return confirm('Bạn có chắc muốn xóa sách này khỏi kho học liệu?');">
+                                                <button type="submit" class="btn btn-sm btn-danger">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="alert alert-info text-center mb-0">
+                        <i class="fas fa-info-circle"></i> Chưa có sách nào trong kho học liệu.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -61,8 +61,17 @@ Giải thích: 2x = 4 => x = 2</code></pre>
                 </div>
             </div>
 
+            <div class="create-mode-picker mb-4">
+                <button type="button" class="btn btn-primary btn-lg" id="wordModeButton" onclick="showCreateMode('word')">
+                    <i class="fas fa-file-word"></i> Import từ Word
+                </button>
+                <button type="button" class="btn btn-secondary btn-lg" id="manualModeButton" onclick="showCreateMode('manual')">
+                    <i class="fas fa-keyboard"></i> Tạo thủ công
+                </button>
+            </div>
+
             <!-- Form Upload Word -->
-            <div class="card shadow mb-4">
+            <div class="card shadow mb-4 create-mode-panel" id="wordModePanel" style="display: none;">
                 <div class="card-header bg-primary text-white">
                     <h5 class="mb-0">
                         <i class="fas fa-upload"></i> Bước 1: Upload File Word
@@ -99,21 +108,69 @@ Giải thích: 2x = 4 => x = 2</code></pre>
                 </div>
             </div>
 
-            <!-- Hoặc tạo thủ công -->
-            <div class="card shadow mb-4">
+            <!-- Tạo thủ công -->
+            <div class="card shadow mb-4 create-mode-panel" id="manualModePanel" style="display: none;">
                 <div class="card-header bg-secondary text-white">
                     <h5 class="mb-0">
-                        <i class="fas fa-keyboard"></i> Hoặc: Tạo Thủ Công (Sắp Ra Mắt)
+                        <i class="fas fa-keyboard"></i> Hoặc: Tạo Thủ Công
                     </h5>
                 </div>
                 <div class="card-body">
-                    <p class="text-muted">
-                        <i class="fas fa-tools"></i> Tính năng tạo câu hỏi thủ công đang được phát triển. 
-                        Hiện tại vui lòng sử dụng tính năng import từ Word.
-                    </p>
-                    <button class="btn btn-secondary" disabled>
-                        <i class="fas fa-plus"></i> Tạo Câu Hỏi Thủ Công
-                    </button>
+                    <form method="POST" id="manualQuestionForm">
+                        <input type="hidden" name="manual_create" value="yes">
+
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label">Tiêu đề đề kiểm tra <span class="text-danger">*</span></label>
+                                <input class="form-control" name="title" placeholder="Ví dụ: Kiểm tra 15 phút - Căn bậc hai" required>
+                            </div>
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label">Mô tả</label>
+                                <textarea class="form-control" name="description" rows="2" placeholder="Mô tả ngắn về nội dung đề kiểm tra"></textarea>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Môn học</label>
+                                <input class="form-control" name="subject" value="{{ class_obj.subject if class_obj else session.exam_subject }}">
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Lớp/Khối</label>
+                                <input class="form-control" name="grade" value="{{ class_obj.grade if class_obj else '' }}">
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Thời gian làm bài (phút)</label>
+                                <input class="form-control" name="time_limit" type="number" min="0" value="15">
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h6 class="mb-0 text-primary">
+                                <i class="fas fa-list-ol"></i> Danh sách câu hỏi
+                            </h6>
+                            <button type="button" class="btn btn-outline-primary btn-sm" onclick="addManualQuestion()">
+                                <i class="fas fa-plus"></i> Thêm câu hỏi
+                            </button>
+                        </div>
+
+                        <div class="alert alert-info">
+                            <i class="fas fa-square-root-alt"></i>
+                            Bấm vào ô cần nhập rồi chọn ký hiệu toán học trong thanh công cụ để chèn đúng vị trí con trỏ.
+                        </div>
+
+                        <div class="math-toolbar-shell mb-3">
+                            <div class="math-toolbar-title">
+                                <i class="fas fa-square-root-alt"></i> Công cụ ký hiệu toán học
+                            </div>
+                            <div class="math-toolbar" id="globalMathToolbar" aria-label="Công cụ ký hiệu toán học"></div>
+                        </div>
+
+                        <div id="manualQuestions"></div>
+
+                        <div class="text-end mt-3">
+                            <button type="submit" class="btn btn-success btn-lg">
+                                <i class="fas fa-save"></i> Lưu đề thủ công
+                            </button>
+                        </div>
+                    </form>
                 </div>
             </div>
 
@@ -145,7 +202,7 @@ Giải thích: 2x = 4 => x = 2</code></pre>
 
             <!-- Back button -->
             <div class="text-center mt-4 mb-4">
-                <a href="{{ url_for('teacher_create_exam') }}" class="btn btn-secondary btn-lg">
+                <a href="{{ url_for('teacher_create_exam', class_id=class_obj.id) if class_obj else url_for('teacher_create_exam') }}" class="btn btn-secondary btn-lg">
                     <i class="fas fa-arrow-left"></i> Quay Lại
                 </a>
             </div>
@@ -154,6 +211,25 @@ Giải thích: 2x = 4 => x = 2</code></pre>
 </div>
 
 <script>
+function showCreateMode(mode) {
+    const wordPanel = document.getElementById('wordModePanel');
+    const manualPanel = document.getElementById('manualModePanel');
+    const wordButton = document.getElementById('wordModeButton');
+    const manualButton = document.getElementById('manualModeButton');
+
+    wordPanel.style.display = mode === 'word' ? 'block' : 'none';
+    manualPanel.style.display = mode === 'manual' ? 'block' : 'none';
+    wordButton.className = mode === 'word'
+        ? 'btn btn-primary btn-lg'
+        : 'btn btn-outline-primary btn-lg';
+    manualButton.className = mode === 'manual'
+        ? 'btn btn-primary btn-lg'
+        : 'btn btn-outline-primary btn-lg';
+
+    const panel = mode === 'word' ? wordPanel : manualPanel;
+    panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
 // Hiển thị tên file khi chọn
 document.getElementById('word_file').addEventListener('change', function(e) {
     var fileName = e.target.files[0]?.name || 'Chọn file .docx...';
@@ -164,6 +240,134 @@ document.getElementById('word_file').addEventListener('change', function(e) {
 document.getElementById('uploadForm').addEventListener('submit', function() {
     document.getElementById('loading').style.display = 'block';
 });
+
+let manualQuestionCount = 0;
+let activeMathField = null;
+
+const mathSnippets = [
+    { label: '√', insert: '√()' },
+    { label: 'x²', insert: '²' },
+    { label: 'x³', insert: '³' },
+    { label: 'π', insert: 'π' },
+    { label: '±', insert: '±' },
+    { label: '≠', insert: '≠' },
+    { label: '≤', insert: '≤' },
+    { label: '≥', insert: '≥' },
+    { label: '∞', insert: '∞' },
+    { label: '|x|', insert: '|x|' },
+    { label: 'x₁', insert: 'x₁' },
+    { label: 'x₂', insert: 'x₂' },
+    { label: '∠', insert: '∠' },
+    { label: '△', insert: '△' },
+    { label: 'a/b', insert: '()/()' },
+    { label: '(a+b)²', insert: '(a + b)²' }
+];
+
+function insertAtCursor(field, value) {
+    const start = field.selectionStart ?? field.value.length;
+    const end = field.selectionEnd ?? field.value.length;
+    const before = field.value.slice(0, start);
+    const after = field.value.slice(end);
+    field.value = before + value + after;
+
+    const cursorOffset = value.includes('()') ? value.indexOf('(') + 1 : value.length;
+    const cursorPosition = start + cursorOffset;
+    field.focus();
+    field.setSelectionRange(cursorPosition, cursorPosition);
+    field.dispatchEvent(new Event('input', { bubbles: true }));
+}
+
+function addManualQuestion(data = {}) {
+    manualQuestionCount += 1;
+    const wrapper = document.createElement('div');
+    wrapper.className = 'manual-question border rounded p-3 mb-3';
+    wrapper.dataset.question = manualQuestionCount;
+    wrapper.innerHTML = `
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h6 class="mb-0 text-primary">Câu <span class="question-number">${manualQuestionCount}</span></h6>
+            <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeManualQuestion(this)" title="Xóa câu hỏi">
+                <i class="fas fa-trash"></i>
+            </button>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Nội dung câu hỏi <span class="text-danger">*</span></label>
+            <textarea class="form-control math-field" name="question[]" rows="2" required>${data.question || ''}</textarea>
+        </div>
+        <div class="row">
+            ${['A', 'B', 'C', 'D'].map(letter => `
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Đáp án ${letter} <span class="text-danger">*</span></label>
+                    <input class="form-control math-field" name="option_${letter.toLowerCase()}[]" required value="${data['option_' + letter.toLowerCase()] || ''}">
+                </div>
+            `).join('')}
+        </div>
+        <div class="row">
+            <div class="col-md-4 mb-3">
+                <label class="form-label">Đáp án đúng <span class="text-danger">*</span></label>
+                <select class="form-control" name="correct_answer[]" required>
+                    ${['A', 'B', 'C', 'D'].map(letter => `
+                        <option value="${letter}" ${data.correct_answer === letter ? 'selected' : ''}>${letter}</option>
+                    `).join('')}
+                </select>
+            </div>
+            <div class="col-md-8 mb-3">
+                <label class="form-label">Giải thích đáp án</label>
+                <input class="form-control" name="explanation[]" value="${data.explanation || ''}" placeholder="Không bắt buộc">
+            </div>
+        </div>
+    `;
+    document.getElementById('manualQuestions').appendChild(wrapper);
+    updateManualQuestionNumbers();
+}
+
+function removeManualQuestion(button) {
+    const questions = document.querySelectorAll('.manual-question');
+    if (questions.length <= 1) {
+        alert('Đề kiểm tra cần ít nhất 1 câu hỏi.');
+        return;
+    }
+    button.closest('.manual-question').remove();
+    updateManualQuestionNumbers();
+}
+
+function updateManualQuestionNumbers() {
+    document.querySelectorAll('.manual-question .question-number').forEach((item, index) => {
+        item.textContent = index + 1;
+    });
+}
+
+document.getElementById('manualQuestionForm').addEventListener('submit', function(event) {
+    if (!document.querySelectorAll('.manual-question').length) {
+        event.preventDefault();
+        alert('Vui lòng tạo ít nhất 1 câu hỏi.');
+    }
+});
+
+document.getElementById('manualQuestions').addEventListener('focusin', function(event) {
+    if (event.target.classList.contains('math-field')) {
+        activeMathField = event.target;
+    }
+});
+
+document.getElementById('globalMathToolbar').innerHTML = mathSnippets.map(item => `
+    <button type="button" class="math-tool" data-insert="${item.insert}" title="Chèn ${item.label}">
+        ${item.label}
+    </button>
+`).join('');
+
+document.getElementById('globalMathToolbar').addEventListener('click', function(event) {
+    const button = event.target.closest('.math-tool');
+    if (!button) return;
+
+    if (!activeMathField) {
+        alert('Hãy bấm vào ô câu hỏi hoặc đáp án trước khi chèn ký hiệu.');
+        return;
+    }
+
+    insertAtCursor(activeMathField, button.dataset.insert);
+});
+
+addManualQuestion();
 </script>
 
 <style>
@@ -177,6 +381,51 @@ document.getElementById('uploadForm').addEventListener('submit', function() {
 
 pre code {
     font-size: 0.85rem;
+}
+.create-mode-picker {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+.create-mode-panel {
+    scroll-margin-top: 18px;
+}
+.manual-question {
+    background: #f8fafc;
+}
+.manual-question textarea {
+    resize: vertical;
+}
+.math-toolbar-shell {
+    border: 1px solid #dbe3ef;
+    border-radius: 8px;
+    padding: 12px;
+    background: #ffffff;
+}
+.math-toolbar-title {
+    color: #123a7a;
+    font-weight: 700;
+    margin-bottom: 8px;
+}
+.math-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+.math-tool {
+    min-width: 36px;
+    height: 34px;
+    padding: 0 9px;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    background: #ffffff;
+    color: #123a7a;
+    font-weight: 700;
+    cursor: pointer;
+}
+.math-tool:hover {
+    border-color: #2563eb;
+    background: #eff6ff;
 }
 </style>
 {% endblock %}

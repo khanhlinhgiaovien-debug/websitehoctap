@@ -414,9 +414,10 @@
             {% if exam.type == 'multiple_choice' %}
                 <!-- Trắc nghiệm -->
                 {% for question in exam.questions %}
-                    <div class="question-card" id="question-{{ loop.index }}">
+                    {% set question_number = loop.index %}
+                    <div class="question-card" id="question-{{ question_number }}">
                         <div class="question-header">
-                            <div class="question-number" id="qnum-{{ loop.index }}">{{ loop.index }}</div>
+                            <div class="question-number" id="qnum-{{ question_number }}">{{ question_number }}</div>
                             <div class="question-text">{{ question.question }}</div>
                         </div>
                         
@@ -427,7 +428,7 @@
                                            id="q{{ question.id }}_{{ loop.index }}" 
                                            name="q_{{ question.id }}" 
                                            value="{{ option[0] }}"
-                                           onchange="updateProgress({{ loop.parent.loop.index }})">
+                                           onchange="updateProgress({{ question_number }})">
                                     <label for="q{{ question.id }}_{{ loop.index }}">{{ option }}</label>
                                 </div>
                             {% endfor %}

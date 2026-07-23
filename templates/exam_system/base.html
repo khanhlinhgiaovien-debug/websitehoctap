@@ -181,6 +181,19 @@
                                 {% endif %}
                             </span>
                         </li>
+                        {% if session.get('exam_user_type') == 'teacher' %}
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ url_for('teacher_dashboard') }}">
+                                    <i class="fas fa-school me-1"></i>Lớp học
+                                </a>
+                            </li>
+                        {% elif session.get('exam_user_type') == 'student' %}
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ url_for('student_material_library') }}">
+                                    <i class="fas fa-folder-open me-1"></i>Kho học liệu
+                                </a>
+                            </li>
+                        {% endif %}
                         <li class="nav-item">
                             <a class="nav-link" href="{{ url_for('exam_logout') }}">
                                 <i class="fas fa-sign-out-alt me-1"></i>Đăng xuất

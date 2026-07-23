@@ -200,7 +200,7 @@
 <body>
     <nav class="navbar">
         <div class="navbar-brand">🎓 CLB Học Thuật</div>
-        <a href="{{ url_for('student_dashboard') }}" class="btn-back">← Quay lại</a>
+        <a href="{{ url_for('student_class_detail', class_id=class_obj.id) if class_obj else url_for('student_dashboard') }}" class="btn-back">← Quay lại</a>
     </nav>
     
     <div class="container">

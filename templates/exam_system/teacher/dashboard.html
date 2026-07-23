@@ -4,248 +4,303 @@
 
 {% block content %}
 <div class="container mt-4">
-    <!-- Header -->
-    <div class="row mb-4">
-        <div class="col-md-12">
-            <h2 class="text-primary">
+    <div class="d-flex justify-content-between align-items-start mb-4">
+        <div>
+            <h2 class="text-primary mb-1">
                 <i class="fas fa-chalkboard-teacher"></i> Dashboard Giáo Viên
             </h2>
-            <p class="text-muted">Xin chào, <strong>{{ session.exam_user_name }}</strong>!</p>
-            <hr>
+            <p class="text-muted mb-0">Xin chào, <strong>{{ session.exam_user_name }}</strong>!</p>
+        </div>
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createClassModal">
+            <i class="fas fa-plus-circle"></i> Tạo lớp học
+        </button>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="card text-white bg-primary shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div>Lớp học</div>
+                            <h2 class="mb-0">{{ class_rows|length }}</h2>
+                        </div>
+                        <i class="fas fa-school fa-3x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card text-white bg-success shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div>Học sinh</div>
+                            <h2 class="mb-0">{{ class_rows|map(attribute='stats.student_count')|sum }}</h2>
+                        </div>
+                        <i class="fas fa-users fa-3x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card text-white bg-info shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div>Bài giảng</div>
+                            <h2 class="mb-0">{{ class_rows|map(attribute='stats.lesson_count')|sum }}</h2>
+                        </div>
+                        <i class="fas fa-book fa-3x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card text-white bg-warning shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div>Đề kiểm tra</div>
+                            <h2 class="mb-0">{{ class_rows|map(attribute='stats.exam_count')|sum }}</h2>
+                        </div>
+                        <i class="fas fa-file-alt fa-3x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
-    <!-- Quick Stats -->
-    <div class="row mb-4">
-        <div class="col-md-4">
-            <div class="card text-white bg-primary shadow">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h6 class="card-title">Bài Giảng</h6>
-                            <h2 class="mb-0">{{ lessons|length }}</h2>
-                        </div>
-                        <div>
-                            <i class="fas fa-book fa-3x opacity-50"></i>
-                        </div>
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0"><i class="fas fa-chart-pie"></i> Báo cáo tổng quan các lớp</h5>
+        </div>
+        <div class="card-body">
+            <div class="row g-3 mb-3">
+                <div class="col-md-3 col-6">
+                    <div class="overview-chip">
+                        <span>Lớp đang dạy</span>
+                        <strong>{{ overview_report.class_count }}</strong>
+                    </div>
+                </div>
+                <div class="col-md-3 col-6">
+                    <div class="overview-chip">
+                        <span>Học sinh quản lý</span>
+                        <strong>{{ overview_report.total_students }}</strong>
+                    </div>
+                </div>
+                <div class="col-md-3 col-6">
+                    <div class="overview-chip">
+                        <span>Bài nộp</span>
+                        <strong>{{ overview_report.total_submissions }}</strong>
+                    </div>
+                </div>
+                <div class="col-md-3 col-6">
+                    <div class="overview-chip">
+                        <span>Điểm TB chung</span>
+                        <strong>{% if overview_report.avg_score is none %}-{% else %}{{ "%.2f"|format(overview_report.avg_score) }}{% endif %}</strong>
                     </div>
                 </div>
             </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card text-white bg-success shadow">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h6 class="card-title">Đề Kiểm Tra</h6>
-                            <h2 class="mb-0">{{ exams|length }}</h2>
-                        </div>
-                        <div>
-                            <i class="fas fa-file-alt fa-3x opacity-50"></i>
-                        </div>
+
+            <div class="row g-3">
+                <div class="col-lg-4">
+                    <div class="report-box">
+                        <h6><i class="fas fa-thumbs-up text-success"></i> Ưu điểm</h6>
+                        <ul>
+                            {% for item in overview_report.strengths %}
+                                <li>{{ item }}</li>
+                            {% endfor %}
+                        </ul>
                     </div>
                 </div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card text-white bg-info shadow">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h6 class="card-title">Môn Dạy</h6>
-                            <h5 class="mb-0">{{ session.exam_subject }}</h5>
-                        </div>
-                        <div>
-                            <i class="fas fa-graduation-cap fa-3x opacity-50"></i>
-                        </div>
+                <div class="col-lg-4">
+                    <div class="report-box">
+                        <h6><i class="fas fa-exclamation-triangle text-warning"></i> Hạn chế</h6>
+                        <ul>
+                            {% for item in overview_report.weaknesses %}
+                                <li>{{ item }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+                <div class="col-lg-4">
+                    <div class="report-box">
+                        <h6><i class="fas fa-route text-primary"></i> Việc nên làm tiếp</h6>
+                        <ul>
+                            {% for item in overview_report.actions %}
+                                <li>{{ item }}</li>
+                            {% endfor %}
+                        </ul>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Quick Actions -->
-    <div class="row mb-4">
-        <div class="col-md-12">
-            <div class="card shadow-sm">
-                <div class="card-header bg-dark text-white">
-                    <h5 class="mb-0">
-                        <i class="fas fa-tools"></i> Thao Tác Nhanh
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-6 mb-2">
-                            <a href="{{ url_for('teacher_create_lesson') }}" class="btn btn-primary btn-block btn-lg">
-                                <i class="fas fa-plus-circle"></i> Tạo Bài Giảng Mới
+    <div class="card shadow-sm">
+        <div class="card-header bg-dark text-white">
+            <h5 class="mb-0"><i class="fas fa-layer-group"></i> Lớp học của tôi</h5>
+        </div>
+        <div class="card-body">
+            {% if class_rows %}
+                <div class="row">
+                    {% for row in class_rows %}
+                        {% set class_obj = row.class %}
+                        {% set stats = row.stats %}
+                        <div class="col-lg-6 mb-3">
+                            <a class="class-card" href="{{ url_for('teacher_class_detail', class_id=class_obj.id) }}">
+                                <div class="d-flex justify-content-between align-items-start mb-3">
+                                    <div>
+                                        <h4>{{ class_obj.name }}</h4>
+                                        <div class="text-muted">Lớp {{ class_obj.grade }} · {{ class_obj.subject }}</div>
+                                    </div>
+                                    <div class="text-end">
+                                        <span class="badge bg-primary">{{ class_obj.class_code }}</span>
+                                        <div class="small mt-2">
+                                            Mật khẩu:
+                                            {% if class_obj.join_password_plain %}
+                                                <code>{{ class_obj.join_password_plain }}</code>
+                                            {% else %}
+                                                <span class="text-danger fw-semibold">cần đặt lại</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="stats-grid">
+                                    <div><strong>{{ stats.student_count }}</strong><span>Học sinh</span></div>
+                                    <div><strong>{{ stats.lesson_count }}</strong><span>Bài giảng</span></div>
+                                    <div><strong>{{ stats.exam_count }}</strong><span>Đề</span></div>
+                                    <div><strong>{{ stats.submission_count }}</strong><span>Bài nộp</span></div>
+                                </div>
+                                <div class="progress mt-3" style="height: 8px;">
+                                    {% set progress_value = 0 if stats.avg_score is none else stats.avg_score * 10 %}
+                                    <div class="progress-bar bg-success" style="width: {{ progress_value }}%"></div>
+                                </div>
+                                <small class="text-muted">
+                                    Điểm trung bình:
+                                    {% if stats.avg_score is none %}Chưa có{% else %}{{ "%.2f"|format(stats.avg_score) }}{% endif %}
+                                </small>
                             </a>
                         </div>
-                        <div class="col-md-6 mb-2">
-                            <a href="{{ url_for('teacher_create_exam') }}" class="btn btn-success btn-block btn-lg">
-                                <i class="fas fa-plus-circle"></i> Tạo Đề Kiểm Tra Mới
-                            </a>
-                        </div>
-                    </div>
+                    {% endfor %}
                 </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Danh sách bài giảng -->
-    <div class="row mb-4">
-        <div class="col-md-12">
-            <div class="card shadow-sm">
-                <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0">
-                        <i class="fas fa-book-open"></i> Bài Giảng Của Tôi
-                    </h5>
+            {% else %}
+                <div class="alert alert-info text-center mb-0">
+                    <i class="fas fa-info-circle"></i> Chưa có lớp học nào. Hãy tạo lớp đầu tiên để bắt đầu quản lý.
                 </div>
-                <div class="card-body">
-                    {% if lessons %}
-                        <div class="table-responsive">
-                            <table class="table table-hover">
-                                <thead class="thead-light">
-                                    <tr>
-                                        <th>#</th>
-                                        <th>Tiêu Đề</th>
-                                        <th>Môn Học</th>
-                                        <th>Khối</th>
-                                        <th>Ngày Tạo</th>
-                                        <th>File Đính Kèm</th>
-                                        <th>Thao Tác</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for lesson in lessons %}
-                                    <tr>
-                                        <td>{{ loop.index }}</td>
-                                        <td>
-                                            <strong>{{ lesson.title }}</strong>
-                                            <br>
-                                            <small class="text-muted">{{ lesson.description[:50] }}...</small>
-                                        </td>
-                                        <td><span class="badge badge-info">{{ lesson.subject }}</span></td>
-                                        <td><span class="badge badge-secondary">{{ lesson.grade }}</span></td>
-                                        <td><small>{{ lesson.created_at }}</small></td>
-                                        <td>
-                                            {% if lesson.attachments %}
-                                                <i class="fas fa-paperclip text-success"></i> {{ lesson.attachments|length }}
-                                            {% else %}
-                                                <i class="fas fa-times text-muted"></i>
-                                            {% endif %}
-                                        </td>
-                                        <td>
-                                            <a href="{{ url_for('student_view_lesson', lesson_id=lesson.id) }}" 
-                                               class="btn btn-sm btn-info" target="_blank">
-                                                <i class="fas fa-eye"></i>
-                                            </a>
-                                        </td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                    {% else %}
-                        <div class="alert alert-info text-center">
-                            <i class="fas fa-info-circle"></i> Chưa có bài giảng nào. Hãy tạo bài giảng đầu tiên!
-                        </div>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Danh sách đề kiểm tra -->
-    <div class="row mb-4">
-        <div class="col-md-12">
-            <div class="card shadow-sm">
-                <div class="card-header bg-success text-white">
-                    <h5 class="mb-0">
-                        <i class="fas fa-clipboard-list"></i> Đề Kiểm Tra Của Tôi
-                    </h5>
-                </div>
-                <div class="card-body">
-                    {% if exams %}
-                        <div class="table-responsive">
-                            <table class="table table-hover">
-                                <thead class="thead-light">
-                                    <tr>
-                                        <th>#</th>
-                                        <th>Tiêu Đề</th>
-                                        <th>Loại</th>
-                                        <th>Môn Học</th>
-                                        <th>Khối</th>
-                                        <th>Thời Gian</th>
-                                        <th>Trạng Thái</th>
-                                        <th>Ngày Tạo</th>
-                                        <th>Thao Tác</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for exam in exams %}
-                                    <tr>
-                                        <td>{{ loop.index }}</td>
-                                        <td>
-                                            <strong>{{ exam.title }}</strong>
-                                            <br>
-                                            <small class="text-muted">{{ exam.description[:50] }}...</small>
-                                        </td>
-                                        <td>
-                                            {% if exam.type == 'multiple_choice' %}
-                                                <span class="badge badge-primary">Trắc nghiệm</span>
-                                            {% else %}
-                                                <span class="badge badge-warning">Tự luận</span>
-                                            {% endif %}
-                                        </td>
-                                        <td><span class="badge badge-info">{{ exam.subject }}</span></td>
-                                        <td><span class="badge badge-secondary">{{ exam.grade }}</span></td>
-                                        <td>
-                                            {% if exam.time_limit > 0 %}
-                                                <i class="fas fa-clock"></i> {{ exam.time_limit }} phút
-                                            {% else %}
-                                                Không giới hạn
-                                            {% endif %}
-                                        </td>
-                                        <td>
-                                            {% if exam.status == 'active' %}
-                                                <span class="badge badge-success">Hoạt động</span>
-                                            {% else %}
-                                                <span class="badge badge-secondary">Đóng</span>
-                                            {% endif %}
-                                        </td>
-                                        <td><small>{{ exam.created_at }}</small></td>
-                                        <td>
-                                            <a href="{{ url_for('teacher_view_submissions', exam_id=exam.id) }}" 
-                                               class="btn btn-sm btn-info" title="Xem bài làm">
-                                                <i class="fas fa-eye"></i>
-                                            </a>
-                                            <form method="POST" action="{{ url_for('teacher_delete_exam', exam_id=exam.id) }}" 
-                                                  style="display:inline;" 
-                                                  onsubmit="return confirm('Bạn có chắc muốn xóa đề này?');">
-                                                <button type="submit" class="btn btn-sm btn-danger" title="Xóa">
-                                                    <i class="fas fa-trash"></i>
-                                                </button>
-                                            </form>
-                                        </td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                    {% else %}
-                        <div class="alert alert-info text-center">
-                            <i class="fas fa-info-circle"></i> Chưa có đề kiểm tra nào. Hãy tạo đề kiểm tra đầu tiên!
-                        </div>
-                    {% endif %}
-                </div>
-            </div>
+            {% endif %}
         </div>
     </div>
 </div>
 
+<div class="modal fade" id="createClassModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <form class="modal-content" method="POST" action="{{ url_for('teacher_create_class') }}">
+            <div class="modal-header">
+                <h5 class="modal-title">Tạo lớp học mới</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">Tên lớp</label>
+                    <input class="form-control" name="name" placeholder="Ví dụ: 8A4 - Toán" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Khối/Lớp</label>
+                    <input class="form-control" name="grade" placeholder="Ví dụ: 8A4" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Môn học</label>
+                    <input class="form-control" name="subject" value="{{ session.exam_subject }}">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Mật khẩu học sinh vào lớp</label>
+                    <input class="form-control" name="join_password" placeholder="Bỏ trống để hệ thống tự sinh">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="submit" class="btn btn-primary">Tạo lớp</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <style>
-.opacity-50 {
-    opacity: 0.5;
+.opacity-50 { opacity: 0.5; }
+.class-card {
+    display: block;
+    color: inherit;
+    text-decoration: none;
+    border: 1px solid #dbe3ef;
+    border-radius: 8px;
+    padding: 18px;
+    background: #fff;
+    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
+    transition: transform .2s, box-shadow .2s;
+}
+.class-card:hover {
+    color: inherit;
+    transform: translateY(-2px);
+    box-shadow: 0 12px 28px rgba(15, 23, 42, 0.12);
+}
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+}
+.stats-grid div {
+    background: #f5f7fb;
+    border-radius: 8px;
+    padding: 10px;
+    text-align: center;
+}
+.stats-grid strong {
+    display: block;
+    font-size: 22px;
+    color: #123a7a;
+}
+.stats-grid span {
+    color: #64748b;
+    font-size: 12px;
+}
+.overview-chip {
+    background: #f8fafc;
+    border: 1px solid #dbe3ef;
+    border-radius: 8px;
+    padding: 14px;
+    height: 100%;
+}
+.overview-chip span {
+    display: block;
+    color: #64748b;
+    font-size: 13px;
+    font-weight: 700;
+}
+.overview-chip strong {
+    display: block;
+    color: #123a7a;
+    font-size: 28px;
+}
+.report-box {
+    background: #fff;
+    border: 1px solid #e5edf7;
+    border-radius: 8px;
+    padding: 14px;
+    height: 100%;
+}
+.report-box h6 {
+    color: #123a7a;
+    font-weight: 800;
+}
+.report-box ul {
+    margin: 0;
+    padding-left: 18px;
+}
+.report-box li {
+    color: #475569;
+    margin-bottom: 8px;
 }
 </style>
 {% endblock %}
